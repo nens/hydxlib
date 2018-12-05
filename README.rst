@@ -1,5 +1,5 @@
-GWSW-Hyd import and export voor 3Di
-===================================
+A library for the GWSW-hydx exchange format 
+===========================================
 
 In de toekomst gaat RioNED het GWSW gebruiken als standaard uitwisselingsformaat voor (hydraulische) rioleringsgegevens.
 Deze tool zorgt voor de uitwisseling tussen het GWSW-hyd en de 3Di database.
@@ -23,6 +23,7 @@ The following objects will be supported
 Current assumptions or shortages
 --------------------------------
 
+Ideas for structure code: https://github.com/nens/ribxlib
 
 Running script
 --------------
