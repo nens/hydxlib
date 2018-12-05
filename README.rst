@@ -8,10 +8,15 @@ Voor meer informatie over het databaseschema van 3Di zie https://docs.3di.lizard
 Development version
 -------------------
 The following objects will be supported
+
 * Structures
+
 ** Pumpstations
+
 ** Weirs
+
 ** Orifices
+
 
 Current assumptions or shortages
 --------------------------------
@@ -31,3 +36,4 @@ Installation::
 
     $ PIPENV_VENV_IN_PROJECT=1 pipenv --three
     $ pipenv install
+    
