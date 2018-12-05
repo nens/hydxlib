@@ -15,7 +15,7 @@ around pip and virtualenv. Install that first with ``pip install
 pipenv``. Then run::
 
   $ PIPENV_VENV_IN_PROJECT=1 pipenv --three
-  $ pipenv install
+  $ pipenv install --dev
 
 There will be a script you can run like this::
 
@@ -24,6 +24,15 @@ There will be a script you can run like this::
 It runs the `main()` function in `gwswlib/scripts.py`,
 adjust that if necessary. The script is configured in `setup.py` (see
 `entry_points`).
+
+In order to get nicely formatted python files without having to spend manual
+work on it, run the following command periodically::
+
+  $ pipenv run black gwswlib
+
+For automatic checks of your code (like missing variables), run::
+
+  $ pipenv run flake8 gwswlib
 
 
 Development version
