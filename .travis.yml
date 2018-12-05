@@ -3,7 +3,7 @@ python:
   - 3.6
 install:
   - pip install pipenv
-  - PIPENV_IGNORE_VIRTUALENVS=1 pipenv install -e .
+  - PIPENV_IGNORE_VIRTUALENVS=1 pipenv install --dev
 script:
   - pipenv run pytest
   - pipenv run flake8 gwswlib
