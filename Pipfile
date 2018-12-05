@@ -1,18 +1,14 @@
 [[source]]
-url = "https://packages.lizard.net"
+url = "https://pypi.org/simple"
 verify_ssl = true
-name = "nens"
 
 [dev-packages]
 "flake8" = "*"
-ipdb = "*"
-ipython = "*"
+"black" = "==18.9.b0"
+"zest.releaser" = "*"
 
 [packages]
-# === This package ===
-# Should always be installed like this, else setup.py is bypassed (and we would
-# have to modify PYTHONPATH at several points in the project)
-"gwswlib" = {path = ".", editable = true}
+"gwswlib" = {path = ".", editable = true, extras=["test"]}
 
 [requires]
 python_version = "3"
