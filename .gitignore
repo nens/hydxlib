@@ -1,0 +1,32 @@
+# Pyc/pyo/backup files.
+*.py[co]
+*~
+*.swp
+*.pyc
+
+# Packages/buildout/pip/pipenv
+*.egg
+*.egg-info
+sdist
+pip-log.txt
+src
+bower_components/
+node_modules/
+.DS_Store
+doc/build/
+ansible/*.retry
+.venv
+
+# Unit test / coverage reports
+.coverage
+.tox
+nosetests.xml
+htmlcov
+.codeintel
+coverage.xml
+
+# Pycharm
+.idea
+
+# Docker
+docker-compose.override.yml

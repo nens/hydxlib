@@ -1,0 +1,14 @@
+[run]
+omit =
+    */migrations/*
+    *settings.py
+source = gwswlib
+
+[report]
+show_missing = true
+
+[html]
+directory = htmlcov
+
+[xml]
+output = coverage.xml

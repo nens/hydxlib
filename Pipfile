@@ -1,0 +1,18 @@
+[[source]]
+url = "https://packages.lizard.net"
+verify_ssl = true
+name = "nens"
+
+[dev-packages]
+"flake8" = "*"
+ipdb = "*"
+ipython = "*"
+
+[packages]
+# === This package ===
+# Should always be installed like this, else setup.py is bypassed (and we would
+# have to modify PYTHONPATH at several points in the project)
+"gwswlib" = {path = ".", editable = true}
+
+[requires]
+python_version = "3"
