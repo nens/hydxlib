@@ -14,12 +14,12 @@ We're installed with `pipenv <https://docs.pipenv.org/>`_, a handy wrapper
 around pip and virtualenv. Install that first with ``pip install
 pipenv``. Then run::
 
-    $ PIPENV_VENV_IN_PROJECT=1 pipenv --three
-    $ pipenv install
+  $ PIPENV_VENV_IN_PROJECT=1 pipenv --three
+  $ pipenv install
 
 There will be a script you can run like this::
 
-    $ pipenv run run-gwswlib
+  $ pipenv run run-gwswlib
 
 It runs the `main()` function in `gwswlib/scripts.py`,
 adjust that if necessary. The script is configured in `setup.py` (see
