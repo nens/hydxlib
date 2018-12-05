@@ -2,7 +2,6 @@
 """TODO Docstring, used in the command line help text."""
 import argparse
 import logging
-import sys
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +37,7 @@ def main():
     try:
         print("Call some function from another file here")
         # ^^^ TODO: pass in options.xyz where needed.
-    except:
+    except Exception:
         logger.exception("An exception has occurred.")
         return 1
 
