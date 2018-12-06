@@ -17,6 +17,9 @@ doc/build/
 ansible/*.retry
 .venv
 
+# We're a library, so we want a fresh lockfile
+Pipfile.lock
+
 # Unit test / coverage reports
 .coverage
 .tox
