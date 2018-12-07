@@ -6,7 +6,7 @@ long_description = "\n\n".join([open("README.rst").read(), open("CHANGES.rst").r
 
 install_requires = []
 
-tests_require = ["pytest", "coverage", "mock"]
+tests_require = ["pytest", "mock", "pytest-cov", "pytest-flakes", "pytest-black"]
 
 setup(
     name="gwswlib",
