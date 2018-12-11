@@ -6,6 +6,7 @@ verify_ssl = true
 "flake8" = "*"
 "black" = "==18.9.b0"
 "zest.releaser" = "*"
+"coveralls" = "*"
 
 [packages]
 "gwswlib" = {path = ".", editable = true, extras=["test"]}
