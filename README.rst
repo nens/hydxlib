@@ -35,6 +35,10 @@ coverage. Pure luxury::
 
   $ pipenv run pytest
 
+The tests are also run automatically on "travis", you'll see it in the pull
+requests. There's also `coverage reporting
+<https://coveralls.io/github/nens/gwswlib>`_ on coveralls.io.
+
 
 Development version
 -------------------
