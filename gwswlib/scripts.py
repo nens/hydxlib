@@ -3,6 +3,8 @@
 import argparse
 import logging
 
+from gwswlib.importer import importhydx
+
 logger = logging.getLogger(__name__)
 
 
@@ -35,8 +37,7 @@ def main():
     logging.basicConfig(level=log_level, format="%(levelname)s: %(message)s")
 
     try:
-        print("Call some function from another file here")
-        # ^^^ TODO: pass in options.xyz where needed.
+        importhydx()
     except Exception:
         logger.exception("An exception has occurred.")
         return 1
