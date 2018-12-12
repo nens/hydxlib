@@ -30,9 +30,14 @@ work on it, run the following command periodically::
 
   $ pipenv run black gwswlib
 
-For automatic checks of your code (like missing variables), run::
+Run the tests regularly. This also checks with pyflakes, black and it reports
+coverage. Pure luxury::
 
-  $ pipenv run flake8 gwswlib
+  $ pipenv run pytest
+
+The tests are also run automatically on "travis", you'll see it in the pull
+requests. There's also `coverage reporting
+<https://coveralls.io/github/nens/gwswlib>`_ on coveralls.io.
 
 
 Development version

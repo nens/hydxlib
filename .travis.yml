@@ -6,4 +6,5 @@ install:
   - PIPENV_IGNORE_VIRTUALENVS=1 pipenv install --dev
 script:
   - pipenv run pytest
-  - pipenv run flake8 gwswlib
+after_success:
+  - pipenv run coveralls

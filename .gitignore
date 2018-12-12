@@ -27,6 +27,7 @@ nosetests.xml
 htmlcov
 .codeintel
 coverage.xml
+.pytest_cache
 
 # Pycharm
 .idea
