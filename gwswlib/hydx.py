@@ -158,7 +158,8 @@ class ConnectionNode:
         return [field["csvheader"] for field in cls.FIELDS]
 
     def __init__(self, codes):
-        self.uni_ide = uni_ide
+        #self.uni_ide = uni_ide
+        pass
 
     def check(self):
         pass
