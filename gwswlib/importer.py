@@ -30,9 +30,9 @@ def importhydx(hydxpath):
 
         # read csv line by line
         for line in csvreader:
-            print(dict(line))
-            connection_node = ConnectionNode(codes=line)
+            connection_node = ConnectionNode(data=line).run_import()
             hydx.connection_nodes.append(connection_node)
+            print(hydx)
 
     # read csvlines etc
 
