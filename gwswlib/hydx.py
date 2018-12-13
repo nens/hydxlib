@@ -220,17 +220,15 @@ class ConnectionNode:
                 field["type"][0] == "string"
                 and self.dataline[field["csvheader"]] is not None
             ):
-                self.node[field["csvheader"]] = \
-                    str(self.dataline[field["csvheader"]])
+                self.node[field["csvheader"]] = str(self.dataline[field["csvheader"]])
             elif (
                 field["type"][0] == "float"
                 and self.dataline[field["csvheader"]] is not None
             ):
-                self.node[field["csvheader"]] = \
-                    float(self.dataline[field["csvheader"]])
+                self.node[field["csvheader"]] = float(self.dataline[field["csvheader"]])
             else:
                 self.node[field["csvheader"]] = None
-            
+
         return self.node
 
     def check(self):

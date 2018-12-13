@@ -8,31 +8,40 @@ from gwswlib.hydx import Hydx, ConnectionNode
 logger = logging.getLogger(__name__)
 
 
-def importhydx(hydxpath):
+def importhydx(hydx_path):
     """Read set of hydx-csvfiles and return Hydx objects"""
-    print("hoi")
-
     hydx = Hydx()
+    csvfiles = [
+        "BOP1.csv",
+        "Debiet1.csv",
+        "GroeneDaken1.csv",
+        "ItObject1.csv",
+        "Knooppunt1.csv",
+        "Kunstwerk1.csv",
+        "Meta1.csv",
+        "Nwrw.csv",
+        "Oppervlak1.csv",
+        "Profiel1.csv",
+        "Verbinding1.csv",
+        "Verloop1.csv",
+    ]
 
-    # check if hydx exists
-    csvpath_knooppunt = os.path.join(hydxpath, "Knooppunt1.csv")
-    if not os.path.isfile(csvpath_knooppunt):
-        hint = "[!] ERROR : The specified file could not be found: "
-        print(hint, csvpath_knooppunt)
-        return 1
+    # check if csv file exists
+    for f in csvfiles:
+        csvpath = os.path.join(hydx_path, f)
+        if not os.path.isfile(csvpath):
+            logger.warning("The following hydx file could not be found: %s", csvpath)
 
+    csvpath_knooppunt = os.path.join(hydx_path, "Knooppunt1.csv")
     # read knooppunt.csv (as dict)
     with open(csvpath_knooppunt) as csvfile:
         csvreader = csv.DictReader(csvfile, delimiter=";")
 
-        # headercheck
         check_headers(csvreader.fieldnames, ConnectionNode.csvheaders())
 
-        # read csv line by line
         for line in csvreader:
             connection_node = ConnectionNode(data=line).run_import()
             hydx.connection_nodes.append(connection_node)
-            print(hydx)
 
     # read csvlines etc
 
@@ -41,7 +50,7 @@ def importhydx(hydxpath):
 
 
 def check_headers(found, expected):
-    """Read set of hydx-csvfiles and return Hydx objects"""
+    """Compares two header columns on extra or missing ones"""
     extra_columns = set(found) - set(expected)
     missing_columns = set(expected) - set(found)
     if extra_columns:

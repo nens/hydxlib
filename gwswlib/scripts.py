@@ -22,9 +22,9 @@ def get_parser():
     parser.add_argument(
         "--hydx",
         default=None,
-        metavar="hydxpath",
-        dest="hydxpath",
-        help="Set folder to your hydx csvfiles",
+        metavar="hydx_path",
+        dest="hydx_path",
+        help="Folder with your hydx *.csv files",
     )
     return parser
 
@@ -39,7 +39,7 @@ def main():
     logging.basicConfig(level=log_level, format="%(levelname)s: %(message)s")
 
     try:
-        importhydx(options.hydxpath)
+        importhydx(options.hydx_path)
     except Exception:
         logger.exception("An exception has occurred.")
         return 1
