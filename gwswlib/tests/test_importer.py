@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Tests for scripts.py"""
+"""Tests for importer.py"""
 from gwswlib.importer import check_headers
 
 

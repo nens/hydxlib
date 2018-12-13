@@ -23,14 +23,16 @@ def importhydx(hydxpath):
 
     # read knooppunt.csv (as dict)
     with open(csvpath_knooppunt) as csvfile:
-        reader = csv.DictReader(csvfile, delimiter=";")
+        csvreader = csv.DictReader(csvfile, delimiter=";")
 
         # headercheck
-        check_headers(reader.fieldnames, ConnectionNode.csvheaders())
-        # #
-        # for line in csv:
-        #     connection_node = ConnectionNode(codes=line)
-        #     hydx.connection_nodes.append(connection_node)
+        check_headers(csvreader.fieldnames, ConnectionNode.csvheaders())
+
+        # read csv line by line
+        for line in csvreader:
+            print(dict(line))
+            connection_node = ConnectionNode(codes=line)
+            hydx.connection_nodes.append(connection_node)
 
     # read csvlines etc
 
