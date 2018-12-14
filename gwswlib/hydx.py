@@ -55,121 +55,116 @@ class ConnectionNode:
         {
             "csvheader": "UNI_IDE",
             "fieldname": "IdentificatieKnooppuntOfVerbinding",
-            "type": "string",
+            "type": str,
             "required": True,
         },
         {
             "csvheader": "RST_IDE",
             "fieldname": "IdentificatieRioolstelsel",
-            "type": "string",
+            "type": str,
             "required": False,
         },
         {
             "csvheader": "PUT_IDE",
             "fieldname": "IdentificatieRioolput",
-            "type": "string",
+            "type": str,
             "required": True,
         },
         {
             "csvheader": "KNP_XCO",
             "fieldname": "X_coordinaat",
-            "type": "float",
+            "type": float,
             "required": True,
         },
         {
             "csvheader": "KNP_YCO",
             "fieldname": "Y_coordinaat",
-            "type": "float",
+            "type": float,
             "required": True,
         },
         {
             "csvheader": "CMP_IDE",
             "fieldname": "IdentificatieCompartiment",
-            "type": "string",
+            "type": str,
             "required": False,
         },
         {
             "csvheader": "MVD_NIV",
             "fieldname": "NiveauMaaiveld",
-            "type": "float",
+            "type": float,
             "required": True,
         },
         {
             "csvheader": "MVD_SCH",
             "fieldname": "Maaiveldschematisering",
-            "type": "string",
+            "type": str,
             "required": True,
         },
         {
             "csvheader": "WOS_OPP",
             "fieldname": "OppervlakWaterOpStraat",
-            "type": "float",
+            "type": float,
             "required": False,
         },
         {
             "csvheader": "KNP_MAT",
             "fieldname": "MateriaalPut",
-            "type": "string",
+            "type": str,
             "required": True,
         },
-        {
-            "csvheader": "KNP_VRM",
-            "fieldname": "VormPut",
-            "type": "string",
-            "required": True,
-        },
+        {"csvheader": "KNP_VRM", "fieldname": "VormPut", "type": str, "required": True},
         {
             "csvheader": "KNP_BOK",
             "fieldname": "NiveauBinnenonderkantPut",
-            "type": "float",
+            "type": float,
             "required": True,
         },
         {
             "csvheader": "KNP_BRE",
             "fieldname": "Breedte_diameterPutbodem",
-            "type": "float",
+            "type": float,
             "required": True,
         },
         {
             "csvheader": "KNP_LEN",
             "fieldname": "LengtePutbodem",
-            "type": "float",
+            "type": float,
             "required": False,
         },
         {
             "csvheader": "KNP_TYP",
             "fieldname": "TypeKnooppunt",
-            "type": "string",
+            "type": str,
             "required": True,
         },
         {
             "csvheader": "INI_NIV",
             "fieldname": "InitieleWaterstand",
-            "type": "float",
+            "type": float,
             "required": False,
         },
         {
             "csvheader": "STA_OBJ",
             "fieldname": "StatusObject",
-            "type": "string",
+            "type": str,
             "required": False,
         },
         {
             "csvheader": "AAN_MVD",
             "fieldname": "AannameMaaiveldhoogte",
-            "type": "string",
+            "type": str,
             "required": False,
         },
         {
             "csvheader": "ITO_IDE",
             "fieldname": "IdentificatieDefinitieIT_object",
-            "type": "string",
+            "type": str,
             "required": False,
         },
         {
             "csvheader": "ALG_TOE",
             "fieldname": "ToelichtingRegel",
-            "type": "string",
+            "type": str,
             "required": False,
         },
     ]
@@ -188,19 +183,14 @@ class ConnectionNode:
         for field in self.FIELDS:
             fieldname = field["fieldname"].lower()
             value = csvline[field["csvheader"]]
+            datatype = field["type"]
 
             if value == "":
                 value = None
 
             # set fields to defined data type and load into object
             if value is not None:
-                if field["type"] == "string":
-                    setattr(self, fieldname, str(value))
-                elif field["type"] == "float":
-                    setattr(self, fieldname, float(value))
-                else:
-                    setattr(self, fieldname, None)
-                    logger.warning("data type of csvcolumn not found: %s", fieldname)
+                setattr(self, fieldname, datatype(value))
             else:
                 setattr(self, fieldname, None)
 
