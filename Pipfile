@@ -13,3 +13,4 @@ verify_ssl = true
 
 [requires]
 python_version = "3"
+sqlalchemy = "*"
