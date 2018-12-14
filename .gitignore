@@ -34,3 +34,6 @@ coverage.xml
 
 # Docker
 docker-compose.override.yml
+
+# Visual Code
+.vscode

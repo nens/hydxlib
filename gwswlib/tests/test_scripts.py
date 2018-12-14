@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Tests for script.py"""
+"""Tests for scripts.py"""
 from gwswlib import scripts
 
 import mock

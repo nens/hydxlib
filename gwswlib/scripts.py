@@ -3,6 +3,8 @@
 import argparse
 import logging
 
+from gwswlib.importer import importhydx
+
 logger = logging.getLogger(__name__)
 
 
@@ -17,11 +19,13 @@ def get_parser():
         default=False,
         help="Verbose output",
     )
-    # add arguments here
-    # parser.add_argument(
-    #     'path',
-    #     metavar='FILE',
-    # )
+    parser.add_argument(
+        "--hydx",
+        default=None,
+        metavar="hydx_path",
+        dest="hydx_path",
+        help="Folder with your hydx *.csv files",
+    )
     return parser
 
 
@@ -35,8 +39,7 @@ def main():
     logging.basicConfig(level=log_level, format="%(levelname)s: %(message)s")
 
     try:
-        print("Call some function from another file here")
-        # ^^^ TODO: pass in options.xyz where needed.
+        importhydx(options.hydx_path)
     except Exception:
         logger.exception("An exception has occurred.")
         return 1
