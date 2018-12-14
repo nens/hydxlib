@@ -11,191 +11,165 @@ class Hydx:
 
 class ConnectionNode:
     MAAIVELDSCHEMATISERINGCOLL = [
-        {"Label": "Reservoir", "Code": "RES"},
-        {"Label": "Gekneveld", "Code": "KNV"},
-        {"Label": "Verlies", "Code": "VRL"},
+        {"RES": "Reservoir"},
+        {"KNV": "Gekneveld"},
+        {"VRL": "Verlies"},
     ]
 
     MATERIAALHYDXCOLL = [
-        {"Label": "Beton", "Code": "BET"},
-        {"Label": "Gewapend beton", "Code": "BET"},
-        {"Label": "Polyvinylchloride", "Code": "PVC"},
-        {"Label": "Gres", "Code": "GRE"},
-        {"Label": "Gietijzer", "Code": "GIJ"},
-        {"Label": "Metselwerk", "Code": "MSW"},
-        {"Label": "Metselwerk (baksteen)", "Code": "MSW"},
-        {"Label": "Metselwerk (bepleisterd)", "Code": "MSW"},
-        {"Label": "Metselwerk (onbepleisterd)", "Code": "MSW"},
-        {"Label": "HDPE", "Code": "HPE"},
-        {"Label": "Polyester", "Code": "HPE"},
-        {"Label": "Polyetheen", "Code": "HPE"},
-        {"Label": "Polypropyleen", "Code": "HPE"},
-        {"Label": "Plaatijzer", "Code": "PIJ"},
-        {"Label": "Staal", "Code": "STL"},
+        {"BET": "Beton"},
+        {"BET": "Gewapend beton"},
+        {"PVC": "Polyvinylchloride"},
+        {"GRE": "Gres"},
+        {"GIJ": "Gietijzer"},
+        {"MSW": "Metselwerk"},
+        {"MSW": "Metselwerk (baksteen)"},
+        {"MSW": "Metselwerk (bepleisterd)"},
+        {"MSW": "Metselwerk (onbepleisterd)"},
+        {"HPE": "HDPE"},
+        {"HPE": "Polyester"},
+        {"HPE": "Polyetheen"},
+        {"HPE": "Polypropyleen"},
+        {"PIJ": "Plaatijzer"},
+        {"STL": "Staal"},
     ]
 
-    VORMPUTCOLL = [
-        {"Label": "Rechthoekig", "Code": "RHK"},
-        {"Label": "Rond", "Code": "RND"},
-    ]
+    VORMPUTCOLL = [{"RHK": "Rechthoekig"}, {"RND": "Rond"}]
 
     TYPEKNOOPPUNTCOLL = [
-        {"Label": "Inspectieput", "Code": "INS"},
-        {"Label": "Infiltratieput", "Code": "ITP"},
-        {"Label": "Compartiment", "Code": "CMP"},
-        {"Label": "Uitlaat", "Code": "UIT"},
+        {"INS": "Inspectieput"},
+        {"ITP": "Infiltratieput"},
+        {"CMP": "Compartiment"},
+        {"UIT": "Uitlaat"},
     ]
 
-    STATUSOBJECTCOLL = [
-        {"Label": "In gebruik", "Code": "ACT"},
-        {"Label": "In ontwerp", "Code": "ONT"},
-    ]
+    STATUSOBJECTCOLL = [{"ACT": "In gebruik"}, {"ONT": "In ontwerp"}]
 
     AANNAMEHYDXCOLL = [
-        {"Label": "Expert judgement", "Code": "EXJ"},
-        {"Label": "Conform ontwerp", "Code": "ONT"},
-        {"Label": "Conform norm", "Code": "NRM"},
+        {"EXJ": "Expert judgement"},
+        {"ONT": "Conform ontwerp"},
+        {"NRM": "Conform norm"},
     ]
 
     FIELDS = [
         {
             "csvheader": "UNI_IDE",
-            "fieldname": "HydxIdentificatieKnooppuntOfVerbinding",
-            "unit": "-",
-            "type": ("string", 10),
+            "fieldname": "IdentificatieKnooppuntOfVerbinding",
+            "type": "string",
             "required": True,
         },
         {
             "csvheader": "RST_IDE",
-            "fieldname": "HydxIdentificatieRioolstelsel",
-            "unit": "-",
-            "type": ("string", 30),
+            "fieldname": "IdentificatieRioolstelsel",
+            "type": "string",
             "required": False,
         },
         {
             "csvheader": "PUT_IDE",
-            "fieldname": "HydxIdentificatieRioolput",
-            "unit": "-",
-            "type": ("string", 10),
+            "fieldname": "IdentificatieRioolput",
+            "type": "string",
             "required": True,
         },
         {
             "csvheader": "KNP_XCO",
-            "fieldname": "HydxX_coordinaat",
-            "unit": "m",
-            "type": ("float", 12.2),
+            "fieldname": "X_coordinaat",
+            "type": "float",
             "required": True,
         },
         {
             "csvheader": "KNP_YCO",
-            "fieldname": "HydxY_coordinaat",
-            "unit": "m",
-            "type": ("float", 12.2),
+            "fieldname": "Y_coordinaat",
+            "type": "float",
             "required": True,
         },
         {
             "csvheader": "CMP_IDE",
-            "fieldname": "HydxIdentificatieCompartiment",
-            "unit": "-",
-            "type": ("string", 10),
+            "fieldname": "IdentificatieCompartiment",
+            "type": "string",
             "required": False,
         },
         {
             "csvheader": "MVD_NIV",
-            "fieldname": "HydxNiveauMaaiveld",
-            "unit": "m",
-            "type": ("float", 8.2),
+            "fieldname": "NiveauMaaiveld",
+            "type": "float",
             "required": True,
         },
         {
             "csvheader": "MVD_SCH",
-            "fieldname": "HydxMaaiveldschematisering",
-            "unit": "-",
-            "type": ("string", 3),
+            "fieldname": "Maaiveldschematisering",
+            "type": "string",
             "required": True,
         },
         {
             "csvheader": "WOS_OPP",
-            "fieldname": "HydxOppervlakWaterOpStraat",
-            "unit": "m2",
-            "type": ("float", 8.2),
+            "fieldname": "OppervlakWaterOpStraat",
+            "type": "float",
             "required": False,
         },
         {
             "csvheader": "KNP_MAT",
-            "fieldname": "HydxMateriaalPut",
-            "unit": "-",
-            "type": ("string", 3),
+            "fieldname": "MateriaalPut",
+            "type": "string",
             "required": True,
         },
         {
             "csvheader": "KNP_VRM",
-            "fieldname": "HydxVormPut",
-            "unit": "-",
-            "type": ("string", 3),
+            "fieldname": "VormPut",
+            "type": "string",
             "required": True,
         },
         {
             "csvheader": "KNP_BOK",
-            "fieldname": "HydxNiveauBinnenonderkantPut",
-            "unit": "m",
-            "type": ("float", 8.2),
+            "fieldname": "NiveauBinnenonderkantPut",
+            "type": "float",
             "required": True,
         },
         {
             "csvheader": "KNP_BRE",
-            "fieldname": "HydxBreedte_diameterPutbodem",
-            "unit": "mm",
-            "type": ("float", 8),
+            "fieldname": "Breedte_diameterPutbodem",
+            "type": "float",
             "required": True,
         },
         {
             "csvheader": "KNP_LEN",
-            "fieldname": "HydxLengtePutbodem",
-            "unit": "mm",
-            "type": ("float", 8),
+            "fieldname": "LengtePutbodem",
+            "type": "float",
             "required": False,
         },
         {
             "csvheader": "KNP_TYP",
-            "fieldname": "HydxTypeKnooppunt",
-            "unit": "-",
-            "type": ("string", 3),
+            "fieldname": "TypeKnooppunt",
+            "type": "string",
             "required": True,
         },
         {
             "csvheader": "INI_NIV",
-            "fieldname": "HydxInitieleWaterstand",
-            "unit": "m",
-            "type": ("float", 8.2),
+            "fieldname": "InitieleWaterstand",
+            "type": "float",
             "required": False,
         },
         {
             "csvheader": "STA_OBJ",
-            "fieldname": "HydxStatusObject",
-            "unit": "-",
-            "type": ("string", 3),
+            "fieldname": "StatusObject",
+            "type": "string",
             "required": False,
         },
         {
             "csvheader": "AAN_MVD",
-            "fieldname": "HydxAannameMaaiveldhoogte",
-            "unit": "-",
-            "type": ("string", 3),
+            "fieldname": "AannameMaaiveldhoogte",
+            "type": "string",
             "required": False,
         },
         {
             "csvheader": "ITO_IDE",
-            "fieldname": "HydxIdentificatieDefinitieIT_object",
-            "unit": "-",
-            "type": ("string", 10),
+            "fieldname": "IdentificatieDefinitieIT_object",
+            "type": "string",
             "required": False,
         },
         {
             "csvheader": "ALG_TOE",
-            "fieldname": "HydxToelichtingRegel",
-            "unit": "-",
-            "type": ("string", 100),
+            "fieldname": "ToelichtingRegel",
+            "type": "string",
             "required": False,
         },
     ]
@@ -204,32 +178,31 @@ class ConnectionNode:
     def csvheaders(cls):
         return [field["csvheader"] for field in cls.FIELDS]
 
-    def __init__(self, data):
-        self.dataline = data
-        self.node = {}
+    def __init__(self):
+        pass
 
-    def run_import(self):
+    def __repr__(self):
+        return "<ConnectionNode %s>" % getattr(self, "identificatierioolput", None)
+
+    def import_csvline(self, csvline):
         for field in self.FIELDS:
+            fieldname = field["fieldname"].lower()
+            value = csvline[field["csvheader"]]
 
-            # set empty values to None
-            if self.dataline[field["csvheader"]] == "":
-                self.dataline[field["csvheader"]] = None
+            if value == "":
+                value = None
 
             # set fields to defined data type and load into object
-            if (
-                field["type"][0] == "string"
-                and self.dataline[field["csvheader"]] is not None
-            ):
-                self.node[field["csvheader"]] = str(self.dataline[field["csvheader"]])
-            elif (
-                field["type"][0] == "float"
-                and self.dataline[field["csvheader"]] is not None
-            ):
-                self.node[field["csvheader"]] = float(self.dataline[field["csvheader"]])
+            if value is not None:
+                if field["type"] == "string":
+                    setattr(self, fieldname, str(value))
+                elif field["type"] == "float":
+                    setattr(self, fieldname, float(value))
+                else:
+                    setattr(self, fieldname, None)
+                    logger.warning("data type of csvcolumn not found: %s", fieldname)
             else:
-                self.node[field["csvheader"]] = None
-
-        return self.node
+                setattr(self, fieldname, None)
 
     def check(self):
         pass

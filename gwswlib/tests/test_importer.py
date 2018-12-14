@@ -22,4 +22,4 @@ def test_check_headers_2(caplog):
 def test_import_knooppunt_csv_into_hydx_class():
     hydx_path = "D:\\Documents\\GitHub\\gwswlib\\gwswlib\\tests\\example_files_structures_hydx\\"
     hydx = importhydx(hydx_path)
-    assert hydx.connection_nodes[1]["KNP_XCO"] == 241318.559
+    assert hydx.connection_nodes[1].x_coordinaat == 241318.559

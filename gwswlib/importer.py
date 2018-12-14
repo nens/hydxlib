@@ -40,7 +40,8 @@ def importhydx(hydx_path):
         check_headers(csvreader.fieldnames, ConnectionNode.csvheaders())
 
         for line in csvreader:
-            connection_node = ConnectionNode(data=line).run_import()
+            connection_node = ConnectionNode()
+            connection_node.import_csvline(csvline=line)
             hydx.connection_nodes.append(connection_node)
 
     # read csvlines etc

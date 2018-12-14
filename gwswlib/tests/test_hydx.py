@@ -36,26 +36,32 @@ def test_check_init_connectionnode():
         ]
     )
     line_out = {
-        "UNI_IDE": "knp1",
-        "RST_IDE": "GEMENGD-13 Nijrees",
-        "PUT_IDE": "13_990100",
-        "KNP_XCO": 241330.836,
-        "KNP_YCO": 483540.234,
-        "CMP_IDE": None,
-        "MVD_NIV": None,
-        "MVD_SCH": None,
-        "WOS_OPP": None,
-        "KNP_MAT": None,
-        "KNP_VRM": None,
-        "KNP_BOK": None,
-        "KNP_BRE": None,
-        "KNP_LEN": None,
-        "KNP_TYP": "INS",
-        "INI_NIV": None,
-        "STA_OBJ": None,
-        "AAN_MVD": None,
-        "ITO_IDE": None,
-        "ALG_TOE": None,
+        "identificatieknooppuntofverbinding": "knp1",
+        "identificatierioolstelsel": "GEMENGD-13 Nijrees",
+        "identificatierioolput": "13_990100",
+        "x_coordinaat": 241330.836,
+        "y_coordinaat": 483540.234,
+        "identificatiecompartiment": None,
+        "niveaumaaiveld": None,
+        "maaiveldschematisering": None,
+        "oppervlakwateropstraat": None,
+        "materiaalput": None,
+        "vormput": None,
+        "niveaubinnenonderkantput": None,
+        "breedte_diameterputbodem": None,
+        "lengteputbodem": None,
+        "typeknooppunt": "INS",
+        "initielewaterstand": None,
+        "statusobject": None,
+        "aannamemaaiveldhoogte": None,
+        "identificatiedefinitieit_object": None,
+        "toelichtingregel": None,
     }
-    connection_node = ConnectionNode(data=line_in).run_import()
-    assert connection_node == line_out
+    connection_node = ConnectionNode()
+    connection_node.import_csvline(csvline=line_in)
+    assert connection_node.__dict__ == line_out
+
+
+def test_repr_connection_nodes():
+    connection_node = ConnectionNode()
+    assert repr(connection_node)
