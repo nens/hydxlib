@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 import logging
 
+from gwswlib.threedi import Threedi
+
 logger = logging.getLogger(__name__)
 
 
-def exporthydx(hydxdict, csvfile):
-    print("hoi")
+def export_hydx(hydxdict, csvfile):
+    pass
 
 
-def exportthreedi(hydxdict, database):
-    print("hoi")
+def export_threedi(hydx):
+
+    threedi = Threedi()
+    print(threedi)

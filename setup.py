@@ -4,7 +4,7 @@ version = "0.1.dev0"
 
 long_description = "\n\n".join([open("README.rst").read(), open("CHANGES.rst").read()])
 
-install_requires = ["sqlalchemy", "geoalchemy2"]
+install_requires = ["sqlalchemy"]
 
 tests_require = ["pytest", "mock", "pytest-cov", "pytest-flakes", "pytest-black"]
 

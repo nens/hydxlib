@@ -3,7 +3,8 @@
 import argparse
 import logging
 
-from gwswlib.importer import importhydx
+from gwswlib.importer import import_hydx
+from gwswlib.exporter import export_threedi
 
 logger = logging.getLogger(__name__)
 
@@ -38,4 +39,5 @@ def main():
         log_level = logging.INFO
     logging.basicConfig(level=log_level, format="%(levelname)s: %(message)s")
 
-    importhydx(options.hydx_path)
+    hydx = import_hydx(options.hydx_path)
+    export_threedi(hydx)
