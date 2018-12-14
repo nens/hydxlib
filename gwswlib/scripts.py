@@ -38,12 +38,4 @@ def main():
         log_level = logging.INFO
     logging.basicConfig(level=log_level, format="%(levelname)s: %(message)s")
 
-    try:
-        importhydx(options.hydx_path)
-    except Exception:
-        logger.exception("An exception has occurred.")
-        return 1
-
-
-if __name__ == "__main__":
-    exit(main())
+    importhydx(options.hydx_path)
