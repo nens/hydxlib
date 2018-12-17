@@ -9,7 +9,9 @@ class Hydx:
         self.connection_nodes = []
 
     def check_import_data(self):
-        self._check_on_unique(self.connection_nodes, "identificatieknooppuntofverbinding", True, "knoop")
+        self._check_on_unique(
+            self.connection_nodes, "identificatieknooppuntofverbinding", True, "knoop"
+        )
 
     def _check_on_unique(
         self,
@@ -34,7 +36,11 @@ class Hydx:
                 doubles.append(record)
                 logging.warning(
                     "double values in %s of %s for records with %s: %s",
-                unique_field, item_name_for_logging, unique_field, record.__dict__[unique_field])
+                    unique_field,
+                    item_name_for_logging,
+                    unique_field,
+                    record.__dict__[unique_field],
+                )
 
                 if remove_doubles:
                     records.remove(record)
@@ -50,26 +56,6 @@ class ConnectionNode:
         {"KNV": "Gekneveld"},
         {"VRL": "Verlies"},
     ]
-
-    MATERIAALHYDXCOLL = [
-        {"BET": "Beton"},
-        {"BET": "Gewapend beton"},
-        {"PVC": "Polyvinylchloride"},
-        {"GRE": "Gres"},
-        {"GIJ": "Gietijzer"},
-        {"MSW": "Metselwerk"},
-        {"MSW": "Metselwerk (baksteen)"},
-        {"MSW": "Metselwerk (bepleisterd)"},
-        {"MSW": "Metselwerk (onbepleisterd)"},
-        {"HPE": "HDPE"},
-        {"HPE": "Polyester"},
-        {"HPE": "Polyetheen"},
-        {"HPE": "Polypropyleen"},
-        {"PIJ": "Plaatijzer"},
-        {"STL": "Staal"},
-    ]
-
-    VORMPUTCOLL = [{"RHK": "Rechthoekig"}, {"RND": "Rond"}]
 
     TYPEKNOOPPUNTCOLL = [
         {"INS": "Inspectieput"},

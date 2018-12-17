@@ -2,10 +2,9 @@
 """Tests for threedi.py"""
 from gwswlib.threedi import Threedi
 
-from mock import patch
 
-
-def test_touch_threedi():
-    pass
-    # threedi = Threedi(threedi.hydx)
-    # threedi.import_hydx()
+def test_get_manhole_shape(caplog):
+    shape_code = 'RND'
+    record_code = 'test'
+    Threedi.get_manhole_shape(shape_code, record_code)
+    assert "Unknown" not in caplog.text
