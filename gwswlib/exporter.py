@@ -11,6 +11,5 @@ def export_hydx(hydxdict, csvfile):
 
 
 def export_threedi(hydx):
-
     threedi = Threedi()
-    print(threedi)
+    threedi.import_hydx(hydx)

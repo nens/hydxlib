@@ -17,7 +17,10 @@ class Threedi:
         pass
 
     def import_hydx(self, hydx):
+        # threedi() = hydx
         connection_node = ConnectionNode()
         manhole = Manhole()
-        print(connection_node, manhole)
+        print(connection_node.id, manhole.id)
         pass
+    
+    
