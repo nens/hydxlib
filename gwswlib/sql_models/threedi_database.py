@@ -179,3 +179,38 @@ class ThreediDatabase(object):
             with self.engine.begin() as connection:
                 result = connection.execute(text(select_statement))
                 return bool(result.fetchone()[0])
+
+
+# def get_database_properties(db_key):
+#     """
+#     Get the properties of a specific database.
+
+#     Args: (str) db_key: The database key, a string where the
+#                         database type (spatialite/ postgres) and
+#                         name of the database are combined.
+
+#     Returns: (dict) db: A dictionary containing the database properties,
+#                         such as db_key, db_entry and db_settings.
+#     """
+#     db = {}
+#     db["db_key"] = db_key
+#     db["db_entry"] = get_databases()[db_key]
+
+#     _db_settings = db["db_entry"]["db_settings"]
+
+#     if db["db_entry"]["db_type"] == "spatialite":
+#         host = _db_settings["db_path"]
+#         db["db_settings"] = {
+#             "host": host,
+#             "port": "",
+#             "name": "",
+#             "username": "",
+#             "password": "",
+#             "schema": "",
+#             "database": "",
+#             "db_path": host,
+#         }
+#     else:
+#         db["db_settings"] = _db_settings
+#         db["db_settings"]["schema"] = "public"
+#     return db
