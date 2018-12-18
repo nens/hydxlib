@@ -44,10 +44,8 @@ def import_hydx(hydx_path):
             connection_node.import_csvline(csvline=line)
             hydx.connection_nodes.append(connection_node)
 
-    # checks
-    print(hydx.connection_nodes)
     hydx.check_import_data()
-    print(hydx.connection_nodes)
+
     return hydx
 
 

@@ -54,9 +54,6 @@ class Threedi:
         for connection_node in hydx.connection_nodes:
             self.parse_connection_node(connection_node)
 
-        print(self.connection_nodes[1])
-        print(self.manholes[1])
-
     def parse_connection_node(self, hydx_connection_node):
         """ parse hydx.connection_node into threedi.connection_node and threedi.manhole
 
@@ -68,7 +65,8 @@ class Threedi:
         connection_node = {
             "code": hydx_connection_node.identificatieknooppuntofverbinding,
             "initial_waterlevel": hydx_connection_node.initielewaterstand,
-            "geom": point(hydx_connection_node.x_coordinaat,
+            "geom": point(
+                hydx_connection_node.x_coordinaat,
                 hydx_connection_node.y_coordinaat,
                 28992,
             ),
@@ -88,13 +86,16 @@ class Threedi:
             ),
             "bottom_level": hydx_connection_node.niveaubinnenonderkantput,
             "material": self.get_material_type(
-                hydx_connection_node.materiaalput, hydx_connection_node.identificatierioolput
+                hydx_connection_node.materiaalput,
+                hydx_connection_node.identificatierioolput,
             ),
             "calculation_type": self.get_calculation_type(
-                hydx_connection_node.materiaalput, hydx_connection_node.identificatierioolput
+                hydx_connection_node.materiaalput,
+                hydx_connection_node.identificatierioolput,
             ),
             "manhole_indicator": self.get_manhole_indicator(
-                hydx_connection_node.typeknooppunt, hydx_connection_node.identificatierioolput
+                hydx_connection_node.typeknooppunt,
+                hydx_connection_node.identificatierioolput,
             ),
         }
 
