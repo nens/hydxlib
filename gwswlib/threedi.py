@@ -41,9 +41,6 @@ class Threedi:
     def __init__(self):
         pass
 
-    def __repr__(self):
-        pass
-
     def import_hydx(self, hydx):
         self.connection_nodes = []
         self.manholes = []
@@ -81,17 +78,23 @@ class Threedi:
                 name_for_logging="manhole shape",
             ),
             "bottom_level": hydx_connection_node.niveaubinnenonderkantput,
-            "material": self.get_material_type(
+            "material": self.get_mapping_value(
+                MATERIAL_MAPPING,
                 hydx_connection_node.materiaalput,
                 hydx_connection_node.identificatierioolput,
+                name_for_logging="manhole material",
             ),
-            "calculation_type": self.get_calculation_type(
+            "calculation_type": self.get_mapping_value(
+                CALCULATION_TYPE_MAPPING,
                 hydx_connection_node.materiaalput,
                 hydx_connection_node.identificatierioolput,
+                name_for_logging="manhole surface schematization",
             ),
-            "manhole_indicator": self.get_manhole_indicator(
+            "manhole_indicator": self.get_mapping_value(
+                MANHOLE_INDICATOR_MAPPING,
                 hydx_connection_node.typeknooppunt,
                 hydx_connection_node.identificatierioolput,
+                name_for_logging="manhole indicator",
             ),
         }
 
@@ -99,43 +102,10 @@ class Threedi:
 
     def get_mapping_value(self, mapping, hydx_value, record_code, name_for_logging):
         if hydx_value in mapping:
-            return mapping[shape_code]
+            return mapping[hydx_value]
         else:
             logging.warning(
                 "Unknown %s: %s (code %r)", name_for_logging, hydx_value, record_code
-            )
-            return None
-
-    def get_material_type(self, material_code, record_code):
-        try:
-            return MATERIAL_MAPPING[material_code]
-        except KeyError:
-            logging.warning(
-                'Unknown "Materiaal" in gwsw record - material code %s for record with code %s',
-                material_code,
-                record_code,
-            )
-            return None
-
-    def get_calculation_type(self, calculation_type_code, record_code):
-        try:
-            return CALCULATION_TYPE_MAPPING[calculation_type_code]
-        except KeyError:
-            logging.warning(
-                'Unknown "Maaiveldschematisering" in gwsw record - calculation type code %s for record with code %s',
-                calculation_type_code,
-                record_code,
-            )
-            return None
-
-    def get_manhole_indicator(self, manhole_indicator_code, record_code):
-        try:
-            return MANHOLE_INDICATOR_MAPPING[manhole_indicator_code]
-        except KeyError:
-            logging.warning(
-                'Unknown "Type knooppunt" in gwsw record - manhole indicator code %s for record with code %s',
-                manhole_indicator_code,
-                record_code,
             )
             return None
 
