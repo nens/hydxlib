@@ -45,7 +45,7 @@ def write_threedi_to_db(threedi):
 
     commit_counts = {}
 
-    # temporarily db setup!
+    # TODO temporarily db setup!
     db = ThreediDatabase(
         {
             "host": "localhost",

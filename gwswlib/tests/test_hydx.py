@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 """Tests for hydx.py"""
 from collections import OrderedDict
+from unittest import TestCase
+import pytest
 
 from gwswlib.hydx import ConnectionNode
+from gwswlib.importer import import_hydx
 
 
 def test_touch_csvheaders():
@@ -65,3 +68,19 @@ def test_check_init_connectionnode():
 def test_repr_connection_nodes():
     connection_node = ConnectionNode()
     assert repr(connection_node)
+
+
+class TestHydx(TestCase):
+    def setUp(self):
+        hydx_path = "gwswlib/tests/example_files_structures_hydx/"
+        self.hydx = import_hydx(hydx_path)
+
+    @pytest.fixture(autouse=True)
+    def inject_fixtures(self, caplog):
+        self._caplog = caplog
+
+    def test_check_on_unique(self):
+        self.hydx._check_on_unique(
+            self.hydx.connection_nodes, "identificatieknooppuntofverbinding"
+        )
+        assert "double" in self._caplog.text

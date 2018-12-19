@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+from collections import Counter
 
 logger = logging.getLogger(__name__)
 
@@ -10,44 +11,21 @@ class Hydx:
 
     def check_import_data(self):
         self._check_on_unique(
-            self.connection_nodes, "identificatieknooppuntofverbinding", True, "knoop"
+            self.connection_nodes, "identificatieknooppuntofverbinding"
         )
 
-    def _check_on_unique(
-        self,
-        records,
-        unique_field,
-        remove_doubles=False,
-        item_name_for_logging="",
-        log_level=logging.WARNING,
-    ):
-
+    def _check_on_unique(self, records, unique_field):
         values = [m.__dict__[unique_field] for m in records]
+        counter = Counter(values)
+        doubles = [key for key, count in counter.items() if count > 1]
 
-        if len(set(values)) == len(values):
-            return True, set()
-
-        doubles = []
-        value_set = set()
-
-        for i in reversed(range(0, len(records))):
-            record = records[i]
-            if record.__dict__[unique_field] in value_set:
-                doubles.append(record)
-                logging.warning(
-                    "double values in %s of %s for records with %s: %s",
-                    unique_field,
-                    item_name_for_logging,
-                    unique_field,
-                    record.__dict__[unique_field],
-                )
-
-                if remove_doubles:
-                    records.remove(record)
-            else:
-                value_set.add(record.__dict__[unique_field])
-
-        return False, doubles
+        for double in doubles:
+            logging.error(
+                "double values in %s for records with %s %r",
+                records[0].__class__.__name__,
+                unique_field,
+                double,
+            )
 
 
 class ConnectionNode:

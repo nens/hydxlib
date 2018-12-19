@@ -2,14 +2,18 @@
 """Tests for threedi.py"""
 from gwswlib.threedi import Threedi
 
-from mock import patch
 
-
-@patch("gwswlib.threedi.Threedi")
-def test_get_manhole_shape(caplog):
-    shape_code = "RXND"
+def test_get_manhole_shape_wrong(caplog):
+    shape_code = "SQR"
     record_code = "01_TEST"
     threedi = Threedi()
     threedi.get_manhole_shape(shape_code, record_code)
-    print(caplog.text)
     assert "Unknown" in caplog.text
+
+
+def test_check_manhole_shape_right(caplog):
+    shape_code = "RND"
+    record_code = "01_TEST"
+    threedi = Threedi()
+    shape = threedi.get_manhole_shape(shape_code, record_code)
+    assert shape == "rnd"

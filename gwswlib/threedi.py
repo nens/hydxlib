@@ -3,26 +3,23 @@ import logging
 
 from gwswlib.sql_models.constants import Constants
 
-# from gwswlib.sql_models.constants import Constants
-
 
 logger = logging.getLogger(__name__)
 
+MAPPING = {"MANHOLE_SHAPE_MAPPING": "Putvorm"}
 
 MANHOLE_SHAPE_MAPPING = {
     "RND": Constants.MANHOLE_SHAPE_ROUND,
     "RHK": Constants.MANHOLE_SHAPE_RECTANGLE,
 }
 
-# skipping "VRL"
+# for now skipping "VRL"
 CALCULATION_TYPE_MAPPING = {
     "KNV": Constants.CALCULATION_TYPE_ISOLATED,
     "RES": Constants.CALCULATION_TYPE_CONNECTED,
 }
 
 MATERIAL_MAPPING = {
-    None: None,
-    "": None,
     "BET": Constants.MATERIAL_TYPE_CONCRETE,
     "PVC": Constants.MATERIAL_TYPE_PVC,
     "GRE": Constants.MATERIAL_TYPE_STONEWARE,
@@ -33,7 +30,7 @@ MATERIAL_MAPPING = {
     "STL": Constants.MATERIAL_TYPE_STEEL,
 }
 
-# skipping "CMP" and "ITP"
+# for now skipping "CMP" and "ITP"
 MANHOLE_INDICATOR_MAPPING = {
     "INS": Constants.MANHOLE_INDICATOR_MANHOLE,
     "UIT": Constants.MANHOLE_INDICATOR_OUTLET,
@@ -52,14 +49,10 @@ class Threedi:
         self.manholes = []
 
         for connection_node in hydx.connection_nodes:
-            self.parse_connection_node(connection_node)
+            self.add_connection_node(connection_node)
 
-    def parse_connection_node(self, hydx_connection_node):
-        """ parse hydx.connection_node into threedi.connection_node and threedi.manhole
-
-        :param connection_node:
-        :return:
-        """
+    def add_connection_node(self, hydx_connection_node):
+        """Add hydx.connection_node into threedi.connection_node and threedi.manhole"""
 
         # get connection_nodes attributes
         connection_node = {
@@ -81,8 +74,11 @@ class Threedi:
             "surface_level": hydx_connection_node.niveaumaaiveld,
             "width": hydx_connection_node.breedte_diameterputbodem,
             "length": hydx_connection_node.lengteputbodem,
-            "shape": self.get_manhole_shape(
-                hydx_connection_node.vormput, hydx_connection_node.identificatierioolput
+            "shape": self.get_mapping_value(
+                MANHOLE_SHAPE_MAPPING,
+                hydx_connection_node.vormput,
+                hydx_connection_node.identificatierioolput,
+                name_for_logging="manhole shape",
             ),
             "bottom_level": hydx_connection_node.niveaubinnenonderkantput,
             "material": self.get_material_type(
@@ -101,14 +97,12 @@ class Threedi:
 
         self.manholes.append(manhole)
 
-    def get_manhole_shape(self, shape_code, record_code):
-        try:
-            return MANHOLE_SHAPE_MAPPING[shape_code]
-        except KeyError:
+    def get_mapping_value(self, mapping, hydx_value, record_code, name_for_logging):
+        if hydx_value in mapping:
+            return mapping[shape_code]
+        else:
             logging.warning(
-                'Unknown "Putvorm" in gwsw record - shape code %s for record with code %s',
-                shape_code,
-                record_code,
+                "Unknown %s: %s (code %r)", name_for_logging, hydx_value, record_code
             )
             return None
 

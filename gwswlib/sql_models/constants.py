@@ -1,11 +1,11 @@
-def reversed_dict(d):
+def reversed_dict(choices):
     """Create a reverse lookup dictionary"""
-    return dict([(b, a) for a, b in d])
+    return dict([(b, a) for a, b in choices])
 
 
-def choices_as_set(d):
+def choices_as_set(choices):
     """Handy to check if domain is correct"""
-    return set([b for a, b in d])
+    return set([b for a, b in choices])
 
 
 class Constants(object):
