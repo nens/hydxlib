@@ -78,12 +78,6 @@ class Threedi:
                 name_for_logging="manhole shape",
             ),
             "bottom_level": hydx_connection_node.niveaubinnenonderkantput,
-            "material": self.get_mapping_value(
-                MATERIAL_MAPPING,
-                hydx_connection_node.materiaalput,
-                hydx_connection_node.identificatierioolput,
-                name_for_logging="manhole material",
-            ),
             "calculation_type": self.get_mapping_value(
                 CALCULATION_TYPE_MAPPING,
                 hydx_connection_node.materiaalput,

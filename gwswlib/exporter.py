@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+from sqlalchemy.orm import load_only
 
 from gwswlib.threedi import Threedi
 from gwswlib.sql_models.threedi_database import ThreediDatabase
@@ -45,8 +46,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
 
     commit_counts = {}
 
-    # TODO temporarily db setup!
-    print(threedi_db_settings)
     db = ThreediDatabase(
         {
             "host": threedi_db_settings["threedi_host"],
@@ -82,7 +81,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
 
         session.commit()
     # crs_list = []
-    # for crs in threedi['profiles'].values():
+    # for crs in threedi.profiles.values():
     #     crs_list.append(CrossSectionDefinition(**crs))
 
     # commit_counts['profiles'] = len(crs_list)
@@ -111,13 +110,17 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     session.bulk_save_objects(con_list)
     session.commit()
 
-    # con_list = session.query(ConnectionNode).options(
-    #     load_only("id", "code")).order_by(ConnectionNode.id).all()
-    # con_dict = {m.code: m.id for m in con_list}
-    # del con_list
+    con_list = (
+        session.query(ConnectionNode)
+        .options(load_only("id", "code"))
+        .order_by(ConnectionNode.id)
+        .all()
+    )
+    con_dict = {m.code: m.id for m in con_list}
+    del con_list
 
     # # add extra references for link nodes (one node, multiple linked codes
-    # for link in threedi['links']:
+    # for link in threedi.links:
     #     try:
     #         if link['end_node.code'] in con_dict:
     #             con_dict[link['end_node.code']
@@ -139,21 +142,26 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     # con_dict[None] = None
     # con_dict[''] = None
 
-    # man_list = []
-    # for manhole in threedi['manholes']:
-    #     del manhole['geom']
-    #     del manhole['storage_area']
+    man_list = []
+    for manhole in threedi.manholes:
+        unique_values = [m.__dict__["connection_node_id"] for m in man_list]
+        manhole["connection_node_id"] = con_dict[manhole["code"]]
 
-    #     manhole['connection_node_id'] = con_dict[manhole['code']]
-    #     man_list.append(Manhole(**manhole))
+        if manhole["connection_node_id"] not in unique_values:
+            man_list.append(Manhole(**manhole))
+        else:
+            logging.error(
+                "Manhole with %r could not be created in 3di due to double values in ConnectionNode",
+                manhole["code"],
+            )
 
-    # commit_counts['manholes'] = len(man_list)
-    # session.bulk_save_objects(man_list)
-    # session.commit()
-    # del man_list
+    commit_counts["manholes"] = len(man_list)
+    session.bulk_save_objects(man_list)
+    session.commit()
+    del man_list
 
     # pipe_list = []
-    # for pipe in threedi['pipes']:
+    # for pipe in threedi.pipes:
     #     try:
     #         pipe['connection_node_start_id'] = con_dict[
     #             pipe['start_node.code']]
@@ -195,7 +203,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     # del pipe_list
 
     # obj_list = []
-    # for pump in threedi['pumpstations']:
+    # for pump in threedi.pumpstations:
     #     try:
     #         pump['connection_node_start_id'] = con_dict[
     #             pump['start_node.code']]
@@ -227,7 +235,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
 
     #     obj_list.append(Pumpstation(**pump))
 
-    # for weir in threedi['weirs']:
+    # for weir in threedi.weirs:
     #     try:
     #         weir['connection_node_start_id'] = con_dict[
     #             weir['start_node.code']]
@@ -264,7 +272,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
 
     #     obj_list.append(Weir(**weir))
 
-    # for orif in threedi['orifices']:
+    # for orif in threedi.orifices:
     #     try:
     #         orif['connection_node_start_id'] = con_dict[
     #             orif['start_node.code']]
@@ -309,7 +317,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     # # Outlets (must be saved after weirs, orifice, pumpstation, etc.
     # # because of constraints)
     # outlet_list = []
-    # for outlet in threedi['outlets']:
+    # for outlet in threedi.outlets:
     #     try:
     #         outlet['connection_node_id'] = con_dict[outlet['node.code']]
 
@@ -331,7 +339,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
 
     # # Impervious surfaces
     # imp_list = []
-    # for imp in threedi['impervious_surfaces']:
+    # for imp in threedi.impervious_surfaces:
     #     imp_list.append(ImperviousSurface(**imp))
 
     # commit_counts['impervious_surfaces'] = len(imp_list)
@@ -344,7 +352,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     # del imp_list
 
     # map_list = []
-    # for imp_map in threedi['impervious_surface_maps']:
+    # for imp_map in threedi.impervious_surface_maps:
     #     try:
     #         imp_map['connection_node_id'] = con_dict[imp_map['node.code']]
     #     except KeyError:

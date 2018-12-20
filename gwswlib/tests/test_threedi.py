@@ -71,7 +71,6 @@ class TestThreedi(TestCase):
             "length": None,
             "shape": None,
             "bottom_level": None,
-            "material": None,
             "calculation_type": None,
             "manhole_indicator": 0,
         }

@@ -49,5 +49,6 @@ class TestThreedi(TestCase):
         assert len(output.connection_nodes) == 7
 
     def test_write_to_db_con_nodes_huge(self):
+        commit_counts_expected = {"connection_nodes": 7, "manholes": 6}
         commit_counts = write_threedi_to_db(self.threedi, self.threedi_db_settings)
-        assert "connection_nodes" in commit_counts
+        assert commit_counts == commit_counts_expected

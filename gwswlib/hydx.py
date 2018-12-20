@@ -14,7 +14,7 @@ class Hydx:
             self.connection_nodes, "identificatieknooppuntofverbinding"
         )
 
-    def _check_on_unique(self, records, unique_field):
+    def _check_on_unique(self, records, unique_field, remove_double=False):
         values = [m.__dict__[unique_field] for m in records]
         counter = Counter(values)
         doubles = [key for key, count in counter.items() if count > 1]
