@@ -117,4 +117,3 @@ def main():
     else:
         logging.warning("no available export type is selected")
         raise
-    

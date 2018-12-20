@@ -30,6 +30,13 @@ class TestThreedi(TestCase):
     def setUp(self):
         self.threedi = Threedi()
         hydx_path = "gwswlib/tests/example_files_structures_hydx/"
+        self.threedi_db_settings = {
+            "threedi_dbname": "test_gwsw",
+            "threedi_host": "localhost",
+            "threedi_user": "postgres",
+            "threedi_password": "postgres",
+            "threedi_port": 5432,
+        }
         self.hydx = import_hydx(hydx_path)
         self.threedi.import_hydx(self.hydx)
 
@@ -38,9 +45,9 @@ class TestThreedi(TestCase):
         self._caplog = caplog
 
     def test_export_threedi(self):
-        output = export_threedi(self.hydx)
+        output = export_threedi(self.hydx, self.threedi_db_settings)
         assert len(output.connection_nodes) == 7
 
     def test_write_to_db_con_nodes_huge(self):
-        commit_counts = write_threedi_to_db(self.threedi)
+        commit_counts = write_threedi_to_db(self.threedi, self.threedi_db_settings)
         assert "connection_nodes" in commit_counts

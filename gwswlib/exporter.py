@@ -49,11 +49,11 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     print(threedi_db_settings)
     db = ThreediDatabase(
         {
-            "host": threedi_db_settings['threedi_host'],
-            "port": threedi_db_settings['threedi_port'],
-            "database": threedi_db_settings['threedi_dbname'],
-            "username": threedi_db_settings['threedi_user'],
-            "password": threedi_db_settings['threedi_password'],
+            "host": threedi_db_settings["threedi_host"],
+            "port": threedi_db_settings["threedi_port"],
+            "database": threedi_db_settings["threedi_dbname"],
+            "username": threedi_db_settings["threedi_user"],
+            "password": threedi_db_settings["threedi_password"],
         },
         "postgres",
     )
