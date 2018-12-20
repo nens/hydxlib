@@ -23,16 +23,16 @@ def export_hydx(hydxdict, csvfile):
     pass
 
 
-def export_threedi(hydx):
+def export_threedi(hydx, threedi_db_settings):
     threedi = Threedi()
     threedi.import_hydx(hydx)
-    commit_counts = write_threedi_to_db(threedi)
+    commit_counts = write_threedi_to_db(threedi, threedi_db_settings)
     print(commit_counts)
 
     return threedi
 
 
-def write_threedi_to_db(threedi):
+def write_threedi_to_db(threedi, threedi_db_settings):
     """
         writes threedi to model database
 
@@ -46,13 +46,14 @@ def write_threedi_to_db(threedi):
     commit_counts = {}
 
     # TODO temporarily db setup!
+    print(threedi_db_settings)
     db = ThreediDatabase(
         {
-            "host": "localhost",
-            "port": "5432",
-            "database": "test_gwsw",
-            "username": "postgres",
-            "password": "postgres",
+            "host": threedi_db_settings['threedi_host'],
+            "port": threedi_db_settings['threedi_port'],
+            "database": threedi_db_settings['threedi_dbname'],
+            "username": threedi_db_settings['threedi_user'],
+            "password": threedi_db_settings['threedi_password'],
         },
         "postgres",
     )
