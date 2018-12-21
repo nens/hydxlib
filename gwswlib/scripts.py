@@ -7,12 +7,21 @@ Author: Arnold van 't Veld - Nelen & Schuurmans
 """
 from argparse import ArgumentParser, RawTextHelpFormatter
 import logging
+import os
 import sys
 
 from gwswlib.importer import import_hydx
 from gwswlib.exporter import export_threedi
 
 logger = logging.getLogger(__name__)
+
+
+if "TRAVIS" in os.environ:
+    # TODO: temporary measure, Reinout will have to investigate proper db env
+    # variables. If we run on travis-ci, the default password should be empty.
+    TODO_TREEDI_DB_PASSWORD = ""
+else:
+    TODO_TREEDI_DB_PASSWORD = "postgres"
 
 
 class OptionException(Exception):
@@ -99,7 +108,7 @@ def get_parser():
     )
     group_threedi.add_argument(
         "--threedi_password",
-        default="postgres",
+        default=TODO_TREEDI_DB_PASSWORD,
         metavar="PASSWORD",
         dest="threedi_password",
         help="password of your threedi database\n (default: 'postgres')",
