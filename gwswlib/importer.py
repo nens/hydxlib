@@ -3,7 +3,7 @@ import logging
 import os
 import csv
 
-from gwswlib.hydx import Hydx, ConnectionNode
+from gwswlib.hydx import Hydx, ConnectionNode, Connection
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +44,20 @@ def import_hydx(hydx_path):
             connection_node.import_csvline(csvline=line)
             hydx.connection_nodes.append(connection_node)
 
+    csvpath_knooppunt = os.path.join(hydx_path, "Verbinding1.csv")
+    # read knooppunt.csv (as dict)
+    with open(csvpath_knooppunt) as csvfile:
+        csvreader = csv.DictReader(csvfile, delimiter=";")
+
+        check_headers(csvreader.fieldnames, Connection.csvheaders())
+
+        for line in csvreader:
+            connection = Connection()
+            print(line)
+            connection.import_csvline(csvline=line)
+            print(connection.__dict__)
+            hydx.connections.append(connection)
+
     hydx.check_import_data()
 
     return hydx
@@ -58,7 +72,3 @@ def check_headers(found, expected):
 
     if missing_columns:
         logger.error("missing columns found: %s", missing_columns)
-
-
-def importthreedi(database, hydxdict):
-    print("hoi")

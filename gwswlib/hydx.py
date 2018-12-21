@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 class Hydx:
     def __init__(self):
         self.connection_nodes = []
+        self.connections = []
 
     def check_import_data(self):
         self._check_on_unique(
@@ -28,28 +29,29 @@ class Hydx:
             )
 
 
-class ConnectionNode:
-    MAAIVELDSCHEMATISERINGCOLL = [
-        {"RES": "Reservoir"},
-        {"KNV": "Gekneveld"},
-        {"VRL": "Verlies"},
-    ]
+class Generic:
+    @classmethod
+    def csvheaders(cls):
+        return [field["csvheader"] for field in cls.FIELDS]
 
-    TYPEKNOOPPUNTCOLL = [
-        {"INS": "Inspectieput"},
-        {"ITP": "Infiltratieput"},
-        {"CMP": "Compartiment"},
-        {"UIT": "Uitlaat"},
-    ]
+    def import_csvline(self, csvline):
+        # AV - function looks like hydroObjectListFromSUFHYD in turtleurbanclasses.py
+        for field in self.FIELDS:
+            fieldname = field["fieldname"].lower()
+            value = csvline[field["csvheader"]]
+            datatype = field["type"]
 
-    STATUSOBJECTCOLL = [{"ACT": "In gebruik"}, {"ONT": "In ontwerp"}]
+            if value == "":
+                value = None
 
-    AANNAMEHYDXCOLL = [
-        {"EXJ": "Expert judgement"},
-        {"ONT": "Conform ontwerp"},
-        {"NRM": "Conform norm"},
-    ]
+            # set fields to defined data type and load into object
+            if value is not None:
+                setattr(self, fieldname, datatype(value))
+            else:
+                setattr(self, fieldname, None)
 
+
+class ConnectionNode(Generic):
     FIELDS = [
         {
             "csvheader": "UNI_IDE",
@@ -168,35 +170,151 @@ class ConnectionNode:
         },
     ]
 
-    @classmethod
-    def csvheaders(cls):
-        return [field["csvheader"] for field in cls.FIELDS]
-
     def __init__(self):
         pass
 
     def __repr__(self):
         return "<ConnectionNode %s>" % getattr(self, "identificatierioolput", None)
 
-    def import_csvline(self, csvline):
-        # AV - function looks like hydroObjectListFromSUFHYD in turtleurbanclasses.py
-        for field in self.FIELDS:
-            fieldname = field["fieldname"].lower()
-            value = csvline[field["csvheader"]]
-            datatype = field["type"]
 
-            if value == "":
-                value = None
+class Connection(Generic):
+    FIELDS = [
+        {
+            "csvheader": "UNI_IDE",
+            "fieldname": "IdentificatieKnooppuntOfVerbinding",
+            "type": str,
+            "required": True,
+        },
+        {
+            "csvheader": "KN1_IDE",
+            "fieldname": "IdentificatieKnooppunt1",
+            "type": str,
+            "required": True,
+        },
+        {
+            "csvheader": "KN2_IDE",
+            "fieldname": "IdentificatieKnooppunt2",
+            "type": str,
+            "required": True,
+        },
+        {
+            "csvheader": "VRB_TYP",
+            "fieldname": "TypeVerbinding",
+            "type": str,
+            "required": True,
+        },
+        {
+            "csvheader": "LEI_IDE",
+            "fieldname": "IdentificatieLeiding",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "BOB_KN1",
+            "fieldname": "BobKnooppunt1",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "BOB_KN2",
+            "fieldname": "BobKnooppunt2",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "STR_RCH",
+            "fieldname": "Stromingsrichting",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "VRB_LEN",
+            "fieldname": "LengteVerbinding",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "INZ_TYP",
+            "fieldname": "TypeInzameling",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "INV_KN1",
+            "fieldname": "InstroomverliescoefficientKnooppunt1",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "UTV_KN1",
+            "fieldname": "UitstroomverliescoefficientKnooppunt1",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "INV_KN2",
+            "fieldname": "InstroomverliescoefficientKnooppunt2",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "UTV_KN2",
+            "fieldname": "UitstroomverliescoefficientKnooppunt2",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "ITO_IDE",
+            "fieldname": "IdentificatieDefinitieIT_object",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "PRO_IDE",
+            "fieldname": "IdentificatieProfieldefinitie",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "STA_OBJ",
+            "fieldname": "StatusObject",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "AAN_BB1",
+            "fieldname": "AannameBobKnooppunt1",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "AAN_BB2",
+            "fieldname": "AannameBobKnooppunt2",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "INI_NIV",
+            "fieldname": "InitieleWaterstand",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "ALG_TOE",
+            "fieldname": "ToelichtingRegel",
+            "type": str,
+            "required": False,
+        },
+    ]
 
-            # set fields to defined data type and load into object
-            if value is not None:
-                setattr(self, fieldname, datatype(value))
-            else:
-                setattr(self, fieldname, None)
+    def __init__(self):
+        pass
 
-
-class Connection:
-    pass
+    def __repr__(self):
+        return "<Connection %s - %s>" % (
+            getattr(self, "identificatieknooppunt1", None),
+            getattr(self, "identificatieknooppunt2", None),
+        )
 
 
 class Structure:

@@ -4,7 +4,7 @@ from collections import OrderedDict
 from unittest import TestCase
 import pytest
 
-from gwswlib.hydx import ConnectionNode
+from gwswlib.hydx import ConnectionNode, Connection
 from gwswlib.importer import import_hydx
 
 
@@ -68,6 +68,65 @@ def test_check_init_connectionnode():
 def test_repr_connection_nodes():
     connection_node = ConnectionNode()
     assert repr(connection_node)
+
+
+def test_check_init_connection():
+    line_in = OrderedDict(
+        [
+            ("UNI_IDE", "ovs1"),
+            ("KN1_IDE", "knp1"),
+            ("KN2_IDE", "knp2"),
+            ("VRB_TYP", "OVS"),
+            ("LEI_IDE", ""),
+            ("BOB_KN1", ""),
+            ("BOB_KN2", ""),
+            ("STR_RCH", "OPN"),
+            ("VRB_LEN", ""),
+            ("INZ_TYP", ""),
+            ("INV_KN1", ""),
+            ("UTV_KN1", ""),
+            ("INV_KN2", ""),
+            ("UTV_KN2", ""),
+            ("ITO_IDE", ""),
+            ("PRO_IDE", ""),
+            ("STA_OBJ", ""),
+            ("AAN_BB1", ""),
+            ("AAN_BB2", ""),
+            ("INI_NIV", ""),
+            ("ALG_TOE", ""),
+        ]
+    )
+    line_out = {
+        "identificatieknooppuntofverbinding": "ovs1",
+        "identificatieknooppunt1": "knp1",
+        "identificatieknooppunt2": "knp2",
+        "typeverbinding": "OVS",
+        "identificatieleiding": None,
+        "bobknooppunt1": None,
+        "bobknooppunt2": None,
+        "stromingsrichting": "OPN",
+        "lengteverbinding": None,
+        "typeinzameling": None,
+        "instroomverliescoefficientknooppunt1": None,
+        "uitstroomverliescoefficientknooppunt1": None,
+        "instroomverliescoefficientknooppunt2": None,
+        "uitstroomverliescoefficientknooppunt2": None,
+        "identificatiedefinitieit_object": None,
+        "identificatieprofieldefinitie": None,
+        "statusobject": None,
+        "aannamebobknooppunt1": None,
+        "aannamebobknooppunt2": None,
+        "initielewaterstand": None,
+        "toelichtingregel": None,
+    }
+    connection = Connection()
+    connection.import_csvline(csvline=line_in)
+    assert connection.__dict__ == line_out
+
+
+def test_repr_connection():
+    connection = Connection()
+    assert repr(connection)
 
 
 class TestHydx(TestCase):
