@@ -19,6 +19,45 @@ SET search_path = public, pg_catalog;
 
 SET default_with_oids = false;
 
+-- Function: public.count_node(anyarray, integer)
+
+-- DROP FUNCTION public.count_node(anyarray, integer);
+
+CREATE OR REPLACE FUNCTION public.count_node(
+    anyarray,
+    node_id integer)
+  RETURNS integer AS
+$BODY$
+                DECLARE
+                  table_name text;
+                  sel_count integer;
+                  counter integer;
+                BEGIN
+                counter := 0;
+                FOREACH table_name IN ARRAY $1
+                LOOP
+                  RAISE NOTICE 'processing table %',table_name;
+                  EXECUTE format('
+                 SELECT COUNT(*) FROM %I AS x
+                    WHERE x.connection_node_start_id = %L
+                    OR x.connection_node_end_id = %L'
+                      , table_name, $2, $2)
+                     INTO sel_count;
+                  RAISE NOTICE 'counted % appearences of
+                     connection_node_id % ', sel_count, $2;
+                  counter := counter + sel_count;
+                  IF counter > 1 THEN
+                 EXIT;
+                  END IF;
+                END LOOP;
+                RETURN counter;
+                END
+                $BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION public.count_node(anyarray, integer)
+  OWNER TO postgres;
+
 --
 -- TOC entry 230 (class 1259 OID 12491347)
 -- Name: v2_1d_boundary_conditions; Type: TABLE; Schema: public; Owner: -
