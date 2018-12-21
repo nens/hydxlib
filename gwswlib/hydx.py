@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+from collections import Counter
 
 logger = logging.getLogger(__name__)
 
@@ -8,6 +9,24 @@ class Hydx:
     def __init__(self):
         self.connection_nodes = []
 
+    def check_import_data(self):
+        self._check_on_unique(
+            self.connection_nodes, "identificatieknooppuntofverbinding"
+        )
+
+    def _check_on_unique(self, records, unique_field, remove_double=False):
+        values = [m.__dict__[unique_field] for m in records]
+        counter = Counter(values)
+        doubles = [key for key, count in counter.items() if count > 1]
+
+        for double in doubles:
+            logging.error(
+                "double values in %s for records with %s %r",
+                records[0].__class__.__name__,
+                unique_field,
+                double,
+            )
+
 
 class ConnectionNode:
     MAAIVELDSCHEMATISERINGCOLL = [
@@ -15,26 +34,6 @@ class ConnectionNode:
         {"KNV": "Gekneveld"},
         {"VRL": "Verlies"},
     ]
-
-    MATERIAALHYDXCOLL = [
-        {"BET": "Beton"},
-        {"BET": "Gewapend beton"},
-        {"PVC": "Polyvinylchloride"},
-        {"GRE": "Gres"},
-        {"GIJ": "Gietijzer"},
-        {"MSW": "Metselwerk"},
-        {"MSW": "Metselwerk (baksteen)"},
-        {"MSW": "Metselwerk (bepleisterd)"},
-        {"MSW": "Metselwerk (onbepleisterd)"},
-        {"HPE": "HDPE"},
-        {"HPE": "Polyester"},
-        {"HPE": "Polyetheen"},
-        {"HPE": "Polypropyleen"},
-        {"PIJ": "Plaatijzer"},
-        {"STL": "Staal"},
-    ]
-
-    VORMPUTCOLL = [{"RHK": "Rechthoekig"}, {"RND": "Rond"}]
 
     TYPEKNOOPPUNTCOLL = [
         {"INS": "Inspectieput"},
@@ -180,6 +179,7 @@ class ConnectionNode:
         return "<ConnectionNode %s>" % getattr(self, "identificatierioolput", None)
 
     def import_csvline(self, csvline):
+        # AV - function looks like hydroObjectListFromSUFHYD in turtleurbanclasses.py
         for field in self.FIELDS:
             fieldname = field["fieldname"].lower()
             value = csvline[field["csvheader"]]
@@ -193,9 +193,6 @@ class ConnectionNode:
                 setattr(self, fieldname, datatype(value))
             else:
                 setattr(self, fieldname, None)
-
-    def check(self):
-        pass
 
 
 class Connection:

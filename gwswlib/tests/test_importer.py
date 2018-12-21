@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Tests for importer.py"""
-from gwswlib.importer import check_headers, importhydx
+from gwswlib.importer import check_headers, import_hydx
 
 
 def test_check_headers(caplog):
@@ -21,5 +21,5 @@ def test_check_headers_2(caplog):
 
 def test_import_knooppunt_csv_into_hydx_class():
     hydx_path = "gwswlib/tests/example_files_structures_hydx/"
-    hydx = importhydx(hydx_path)
+    hydx = import_hydx(hydx_path)
     assert hydx.connection_nodes[1].x_coordinaat == 241318.559

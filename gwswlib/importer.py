@@ -8,7 +8,7 @@ from gwswlib.hydx import Hydx, ConnectionNode
 logger = logging.getLogger(__name__)
 
 
-def importhydx(hydx_path):
+def import_hydx(hydx_path):
     """Read set of hydx-csvfiles and return Hydx objects"""
     hydx = Hydx()
     csvfiles = [
@@ -44,9 +44,8 @@ def importhydx(hydx_path):
             connection_node.import_csvline(csvline=line)
             hydx.connection_nodes.append(connection_node)
 
-    # read csvlines etc
+    hydx.check_import_data()
 
-    #
     return hydx
 
 

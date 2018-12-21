@@ -6,6 +6,11 @@ Deze tool zorgt voor de uitwisseling tussen het GWSW-hyd en de 3Di database.
 Voor meer informatie over GWSW-hyd zie https://apps.gwsw.nl/item_definition
 Voor meer informatie over het databaseschema van 3Di zie https://docs.3di.lizard.net/en/stable/d_before_you_begin.html#database-overview
 
+Purporse of this script is to exchange information between different formats.
+This means that this library doesn't improve lacking or incorrect data.
+For example, it doesn't remove double manholes on the same location.
+This libary does provide all kinds of checks with warning and error messages.
+
 
 Installation
 ------------

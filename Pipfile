@@ -13,3 +13,6 @@ verify_ssl = true
 
 [requires]
 python_version = "3"
+sqlalchemy = "*"
+geoalchemy2 = "*"
+psycopg2 = "*"
