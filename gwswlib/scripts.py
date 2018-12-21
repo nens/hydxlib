@@ -5,7 +5,7 @@ A library for the GWSW-hydx exchange format
 Consists of a import and export functionality for currently hydx and threedi.
 Author: Arnold van 't Veld - Nelen & Schuurmans
 """
-from argparse import ArgumentParser, RawTextHelpFormatter
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import logging
 import os
 import sys
@@ -49,7 +49,9 @@ def run_import_export(
 
 def get_parser():
     """ Return argument parser. """
-    parser = ArgumentParser(description=__doc__, formatter_class=RawTextHelpFormatter)
+    parser = ArgumentParser(
+        description=__doc__, formatter_class=ArgumentDefaultsHelpFormatter
+    )
     parser.add_argument(
         "-v",
         "--verbose",
@@ -62,17 +64,15 @@ def get_parser():
         "--import",
         dest="import_type",
         default="hydx",
-        metavar="IMPORT_TYPE",
         choices=["hydx", "threedi"],
-        help="select your import operator:\n hydx (default) or threedi (not implemented)",
+        help="select your import operator",
     )
     parser.add_argument(
         "--export",
         dest="export_type",
         default="threedi",
-        metavar="EXPORT_TYPE",
         choices=["hydx", "threedi", "json"],
-        help="select your import operator:\n hydx (not implemented), threedi or json (not implemented)",
+        help="select your export operator",
     )
 
     group_import_hydx = parser.add_argument_group("Import or export a hydx")
@@ -81,8 +81,7 @@ def get_parser():
         default="gwswlib\\tests\\example_files_structures_hydx",
         metavar="HYDX_PATH",
         dest="hydx_path",
-        help='Folder with your hydx *.csv files\n\
-            (example: "gwswlib\\tests\\example_files_structures_hydx\\")',
+        help="Folder with your hydx *.csv files",
     )
     group_threedi = parser.add_argument_group("Import or export a 3di database")
     group_threedi.add_argument(
@@ -90,28 +89,28 @@ def get_parser():
         metavar="DBNAME",
         default="test_gwsw",
         dest="threedi_dbname",
-        help="name of your threedi database\n (example: 'test_gwsw')",
+        help="name of your threedi database",
     )
     group_threedi.add_argument(
         "--threedi_host",
         default="localhost",
         metavar="HOST",
         dest="threedi_host",
-        help="host of your threedi database\n (default: 'localhost')",
+        help="host of your threedi database",
     )
     group_threedi.add_argument(
         "--threedi_user",
         default="postgres",
         metavar="USERNAME",
         dest="threedi_user",
-        help="username of your threedi database\n (default: 'postgres')",
+        help="username of your threedi database",
     )
     group_threedi.add_argument(
         "--threedi_password",
         default=TODO_TREEDI_DB_PASSWORD,
         metavar="PASSWORD",
         dest="threedi_password",
-        help="password of your threedi database\n (default: 'postgres')",
+        help="password of your threedi database",
     )
     group_threedi.add_argument(
         "--threedi_port",
@@ -119,7 +118,7 @@ def get_parser():
         type=int,
         metavar="PORT",
         dest="threedi_port",
-        help="port of your threedi database\n (default: '5432')",
+        help="port of your threedi database",
     )
     return parser
 
