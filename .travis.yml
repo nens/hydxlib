@@ -1,9 +1,20 @@
 language: python
 python:
   - 3.6
+services:
+  - postgresql
+addons:
+  postgresql: 9.6
+  apt:
+    packages:
+    - postgresql-9.6-postgis-2.3
 install:
   - pip install pipenv
   - PIPENV_IGNORE_VIRTUALENVS=1 pipenv install --dev
+before_script:
+  - psql -c 'create database test_gwsw;' -U postgres
+  - psql -U postgres -c "create extension postgis" test_gwsw
+  - psql -U postgres test_gwsw < gwswlib/tests/threedi_database_schema/work_empty_schema_2018-12-21.sql
 script:
   - pipenv run pytest
 after_success:
