@@ -57,7 +57,85 @@ $BODY$
   COST 100;
 ALTER FUNCTION public.count_node(anyarray, integer)
   OWNER TO postgres;
+  
+-- Function: public.intersects_connection_node(geometry, integer, integer)
 
+-- DROP FUNCTION public.intersects_connection_node(geometry, integer, integer);
+
+CREATE OR REPLACE FUNCTION public.intersects_connection_node(
+    channel_geom geometry,
+    channel_start_id integer,
+    channel_end_id integer)
+  RETURNS integer AS
+$BODY$
+                SELECT COUNT(*)::integer FROM v2_connection_nodes AS c
+                  WHERE
+                    ($2 = c.id OR $3 = c.id)
+                  AND
+                    (ST_Intersects(c.the_geom, ST_StartPoint($1))
+                      OR
+                     ST_Intersects(c.the_geom, ST_EndPoint($1)))
+              $BODY$
+  LANGUAGE sql STABLE
+  COST 100;
+ALTER FUNCTION public.intersects_connection_node(geometry, integer, integer)
+  OWNER TO postgres;
+  
+-- Function: public.intersects_channel(geometry, integer)
+
+-- DROP FUNCTION public.intersects_channel(geometry, integer);
+
+CREATE OR REPLACE FUNCTION public.intersects_channel(
+    x_sec_geom geometry,
+    x_sec_channel_id integer)
+  RETURNS integer AS
+$BODY$
+        DECLARE
+          result integer;
+        BEGIN
+            SELECT COUNT(*)::integer FROM v2_channel AS c
+            WHERE ($2 = c.id)
+            AND
+            (ST_Intersects(c.the_geom, $1))
+            INTO result;
+            IF result > 0 THEN
+               UPDATE
+                  v2_channel
+               SET
+                  the_geom = ST_LineMerge(
+                     ST_Union(
+                        ST_Line_Substring(v2_channel.the_geom, 0, ST_Line_Locate_Point(v2_channel.the_geom, $1)),
+                        ST_Line_Substring(v2_channel.the_geom, ST_Line_Locate_Point(v2_channel.the_geom, $1), 1)
+                     ))
+                WHERE ($2 = v2_channel.id);
+            END IF;
+            return result;
+        END
+        $BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION public.intersects_channel(geometry, integer)
+  OWNER TO postgres;
+
+-- Function: public.on_channel(integer, geometry)
+
+-- DROP FUNCTION public.on_channel(integer, geometry);
+
+CREATE OR REPLACE FUNCTION public.on_channel(
+    channel_pk integer,
+    pnt_geom geometry)
+  RETURNS integer AS
+$BODY$
+           SELECT COUNT(*)::integer FROM v2_channel AS c
+           WHERE  c.id = $1
+           AND ST_Intersects(c.the_geom, $2);
+           $BODY$
+  LANGUAGE sql STABLE
+  COST 100;
+ALTER FUNCTION public.on_channel(integer, geometry)
+  OWNER TO postgres;
+
+  
 --
 -- TOC entry 230 (class 1259 OID 12491347)
 -- Name: v2_1d_boundary_conditions; Type: TABLE; Schema: public; Owner: -
