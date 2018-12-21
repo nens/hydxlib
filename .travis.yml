@@ -12,8 +12,8 @@ install:
   - pip install pipenv
   - PIPENV_IGNORE_VIRTUALENVS=1 pipenv install --dev
 before_script:
-  - psql -U postgres -c "create extension postgis"
   - psql -c 'create database test_gwsw;' -U postgres
+  - psql -U postgres -c "create extension postgis" test_gwsw
   - psql -U postgres test_gwsw < gwswlib/tests/threedi_database_schema/work_empty_schema_2018-12-21.sql
 script:
   - pipenv run pytest
