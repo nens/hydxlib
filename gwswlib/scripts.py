@@ -94,7 +94,7 @@ def get_parser():
         default="postgres",
         metavar="USERNAME",
         dest="threedi_user",
-        help="username of your threedi database\n (default: 'postgres')",
+        help="username of your threedi database",
     )
     group_threedi.add_argument(
         "--threedi_password",
