@@ -143,6 +143,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     # con_dict[''] = None
 
     man_list = []
+    threedi.manholes.reverse()
     for manhole in threedi.manholes:
         unique_values = [m.__dict__["connection_node_id"] for m in man_list]
         manhole["connection_node_id"] = con_dict[manhole["code"]]
