@@ -8,7 +8,7 @@ from gwswlib.sql_models.threedi_database import ThreediDatabase
 from gwswlib.importer import import_hydx
 from gwswlib.threedi import Threedi
 from gwswlib.exporter import export_threedi, write_threedi_to_db
-from gwswlib.hydx import Hydx
+from gwswlib.hydx import Hydx, Connection
 
 
 def test_check_connection_db(caplog):
@@ -56,9 +56,10 @@ def test_import_hydx_unknown_connection_types(caplog):
             ("ALG_TOE", ""),
         ]
     )
-    csvfilename = "Verbinding1.csv"
     hydx = Hydx()
-    hydx.import_csvline(unknown_connection_line, csvfilename)
+    connection = Connection()
+    connection.import_csvline(unknown_connection_line)
+    hydx.connections.append(connection)
     threedi = Threedi()
     threedi.import_hydx(hydx)
     assert '"typeverbinding" is not recognized' in caplog.text
@@ -92,9 +93,10 @@ def test_import_hydx_known_pipe_connection(caplog):
             ("ALG_TOE", ""),
         ]
     )
-    csvfilename = "Verbinding1.csv"
     hydx = Hydx()
-    hydx.import_csvline(connection_line_pipe, csvfilename)
+    connection = Connection()
+    connection.import_csvline(connection_line_pipe)
+    hydx.connections.append(connection)
     threedi = Threedi()
     threedi.import_hydx(hydx)
     assert '"typeverbinding" is not connected' in caplog.text

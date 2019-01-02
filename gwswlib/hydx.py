@@ -11,21 +11,23 @@ class Hydx:
         self.connections = []
         self.structures = []
 
-    def import_csvline(self, line, csvfilename):
+    def import_csvfile(self, csvreader, csvfilename):
 
         if csvfilename == "Knooppunt1.csv":
-            hydxelement = ConnectionNode()
-            hydxelement.import_csvline(csvline=line)
-            self.connection_nodes.append(hydxelement)
+            for line in csvreader:
+                hydxelement = ConnectionNode()
+                hydxelement.import_csvline(csvline=line)
+                self.connection_nodes.append(hydxelement)
         elif csvfilename == "Verbinding1.csv":
-            hydxelement = Connection()
-            hydxelement.import_csvline(csvline=line)
-            print(hydxelement)
-            self.connections.append(hydxelement)
+            for line in csvreader:
+                hydxelement = Connection()
+                hydxelement.import_csvline(csvline=line)
+                self.connections.append(hydxelement)
         elif csvfilename == "Kunstwerk1.csv":
-            hydxelement = Structure()
-            hydxelement.import_csvline(csvline=line)
-            self.structures.append(hydxelement)
+            for line in csvreader:
+                hydxelement = Structure()
+                hydxelement.import_csvline(csvline=line)
+                self.structures.append(hydxelement)
 
     def csvheaders(csvfilename):
         if csvfilename == "Knooppunt1.csv":

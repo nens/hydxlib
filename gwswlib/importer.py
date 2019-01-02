@@ -61,8 +61,7 @@ def import_hydx(hydx_path):
         with open(csvpath) as csvfile:
             csvreader = csv.DictReader(csvfile, delimiter=";")
             check_headers(csvreader.fieldnames, Hydx.csvheaders(f))
-            for line in csvreader:
-                hydx.import_csvline(line, f)
+            hydx.import_csvfile(csvreader, f)
 
     hydx.check_import_data()
 
