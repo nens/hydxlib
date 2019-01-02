@@ -45,19 +45,37 @@ class Threedi:
         self.connection_nodes = []
         self.manholes = []
         self.connections = []
+        self.structures = []
 
         for connection_node in hydx.connection_nodes:
+            check_if_element_is_created_twice(
+                connection_node.identificatieknooppuntofverbinding, self.connection_nodes, "Connection node"
+            )
             self.add_connection_node(connection_node)
 
         for connection in hydx.connections:
-            print(connection.typeverbinding)
+            check_if_element_is_created_twice(
+                connection.identificatieknooppuntofverbinding, self.connections, "Connection"
+            )
+
             if connection.typeverbinding in ["GSL", "OPL", "ITR"]:
                 logger.warning(
                     'The following "typeverbinding" is not connected in this importer: %s',
                     connection.typeverbinding,
                 )
             elif connection.typeverbinding in ["PMP", "OVS", "DRL"]:
-                pass
+                linkedstructures = [
+                    structure
+                    for structure in hydx.structures
+                    if structure.identificatieknooppuntofverbinding
+                    == connection.identificatieknooppuntofverbinding
+                ]
+                if len(linkedstructures) != 1:
+                    logging.error(
+                        "Only first structure is created for structures with double values %r",
+                        connection.identificatieknooppuntofverbinding,
+                    )
+                self.add_structure(connection, linkedstructures[0])
             else:
                 logger.warning(
                     'The following "typeverbinding" is not recognized: %s',
@@ -110,8 +128,10 @@ class Threedi:
 
         self.manholes.append(manhole)
 
-    def add_connection(self, hydx_connection):
+    def add_structure(self, hydx_connection, hydx_structure):
         """Add hydx.structure and hydx.connection into threedi.pumpstation"""
+        print(hydx_connection, hydx_structure)
+        pass
 
     def get_mapping_value(self, mapping, hydx_value, record_code, name_for_logging):
         if hydx_value in mapping:
@@ -126,3 +146,9 @@ class Threedi:
 def point(x, y, srid_input=28992):
 
     return x, y, srid_input
+
+
+def check_if_element_is_created_twice(checked_element, created_elements, element_type):
+    added_elements = [element["code"] for element in created_elements]
+    if checked_element in added_elements:
+        logger.error("%s is created twice with code %r", element_type, checked_element)

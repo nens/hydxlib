@@ -4,7 +4,7 @@ from unittest import TestCase
 import pytest
 
 from gwswlib.importer import import_hydx
-from gwswlib.threedi import Threedi
+from gwswlib.threedi import Threedi, check_if_element_is_created_twice
 from gwswlib.sql_models.constants import Constants
 
 
@@ -34,6 +34,25 @@ def test_get_mapping_value_right(caplog):
         MANHOLE_SHAPE_MAPPING, shape_code, record_code, name_for_logging="manhole shape"
     )
     assert shape == "rnd"
+
+
+def test_check_if_element_is_created_twice(caplog):
+    checked_element = "knp6"
+    created_elements = [
+        {
+            "code": "knp1",
+            "initial_waterlevel": None,
+            "geom": (241330.836, 483540.234, 28992),
+        },
+        {
+            "code": "knp6",
+            "initial_waterlevel": None,
+            "geom": (241463.858, 483356.833, 28992),
+        },
+    ]
+    element_type = "Connection node"
+    check_if_element_is_created_twice(checked_element, created_elements, element_type)
+    assert "Connection node is created twice" in caplog.text
 
 
 class TestThreedi(TestCase):

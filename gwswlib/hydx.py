@@ -46,6 +46,8 @@ class Hydx:
         self._check_on_unique(
             self.connection_nodes, "identificatieknooppuntofverbinding"
         )
+        self._check_on_unique(self.connections, "identificatieknooppuntofverbinding")
+        self._check_on_unique(self.structures, "identificatieknooppuntofverbinding")
 
     def _check_on_unique(self, records, unique_field, remove_double=False):
         values = [m.__dict__[unique_field] for m in records]
@@ -343,9 +345,9 @@ class Connection(Generic):
         pass
 
     def __repr__(self):
-        return "<Connection %s - %s>" % (
-            getattr(self, "identificatieknooppunt1", None),
-            getattr(self, "identificatieknooppunt2", None),
+        return "<Connection %s: %s>" % (
+            getattr(self, "typeverbinding", None),
+            getattr(self, "identificatieknooppuntofverbinding", None),
         )
 
 
@@ -495,7 +497,7 @@ class Structure(Generic):
         pass
 
     def __repr__(self):
-        return "<Structure %s - %s>" % (
+        return "<Structure %s: %s>" % (
             getattr(self, "typekunstwerk", None),
             getattr(self, "identificatieknooppuntofverbinding", None),
         )
