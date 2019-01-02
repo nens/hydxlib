@@ -3,7 +3,7 @@ import logging
 import os
 import csv
 
-from gwswlib.hydx import Hydx, ConnectionNode, Connection
+from gwswlib.hydx import Hydx
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 def import_hydx(hydx_path):
     """Read set of hydx-csvfiles and return Hydx objects"""
     hydx = Hydx()
-    csvfiles = [
+
+    hydxcsvfiles = [
         "BOP1.csv",
         "Debiet1.csv",
         "GroeneDaken1.csv",
@@ -25,38 +26,42 @@ def import_hydx(hydx_path):
         "Verbinding1.csv",
         "Verloop1.csv",
     ]
+    connectedcsvfiles = [
+        # "BOP1.csv",
+        # "Debiet1.csv",
+        # "GroeneDaken1.csv",
+        # "ItObject1.csv",
+        "Knooppunt1.csv",
+        "Kunstwerk1.csv",
+        # "Meta1.csv",
+        # "Nwrw.csv",
+        # "Oppervlak1.csv",
+        # "Profiel1.csv",
+        "Verbinding1.csv",
+        # "Verloop1.csv",
+    ]
 
     # check if csv file exists
-    for f in csvfiles:
+    existing_files = []
+    for f in hydxcsvfiles:
         csvpath = os.path.join(hydx_path, f)
         if not os.path.isfile(csvpath):
             logger.warning("The following hydx file could not be found: %s", csvpath)
+        elif f not in connectedcsvfiles:
+            logger.warning(
+                "The following hydx file is currently not connected in this importer: %s",
+                csvpath,
+            )
+        else:
+            existing_files.append(f)
 
-    csvpath_knooppunt = os.path.join(hydx_path, "Knooppunt1.csv")
-    # read knooppunt.csv (as dict)
-    with open(csvpath_knooppunt) as csvfile:
-        csvreader = csv.DictReader(csvfile, delimiter=";")
-
-        check_headers(csvreader.fieldnames, ConnectionNode.csvheaders())
-
-        for line in csvreader:
-            connection_node = ConnectionNode()
-            connection_node.import_csvline(csvline=line)
-            hydx.connection_nodes.append(connection_node)
-
-    csvpath_knooppunt = os.path.join(hydx_path, "Verbinding1.csv")
-    # read knooppunt.csv (as dict)
-    with open(csvpath_knooppunt) as csvfile:
-        csvreader = csv.DictReader(csvfile, delimiter=";")
-
-        check_headers(csvreader.fieldnames, Connection.csvheaders())
-
-        for line in csvreader:
-            connection = Connection()
-            print(line)
-            connection.import_csvline(csvline=line)
-            print(connection.__dict__)
-            hydx.connections.append(connection)
+    for f in existing_files:
+        csvpath = os.path.join(hydx_path, f)
+        with open(csvpath) as csvfile:
+            csvreader = csv.DictReader(csvfile, delimiter=";")
+            check_headers(csvreader.fieldnames, Hydx.csvheaders(f))
+            for line in csvreader:
+                hydx.import_csvline(line, f)
 
     hydx.check_import_data()
 

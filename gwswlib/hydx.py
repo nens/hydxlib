@@ -9,6 +9,39 @@ class Hydx:
     def __init__(self):
         self.connection_nodes = []
         self.connections = []
+        self.structures = []
+
+    def import_csvline(self, line, csvfilename):
+
+        if csvfilename == "Knooppunt1.csv":
+            hydxelement = ConnectionNode()
+            hydxelement.import_csvline(csvline=line)
+            self.connection_nodes.append(hydxelement)
+        elif csvfilename == "Verbinding1.csv":
+            hydxelement = Connection()
+            hydxelement.import_csvline(csvline=line)
+            self.connections.append(hydxelement)
+        elif csvfilename == "Kunstwerk1.csv":
+            hydxelement = Structure()
+            print(line)
+            hydxelement.import_csvline(csvline=line)
+            print(hydxelement.__dict__)
+            self.structures.append(hydxelement)
+
+    def csvheaders(csvfilename):
+        if csvfilename == "Knooppunt1.csv":
+            hydxelement = ConnectionNode()
+        elif csvfilename == "Verbinding1.csv":
+            hydxelement = Connection()
+        elif csvfilename == "Kunstwerk1.csv":
+            hydxelement = Structure()
+        else:
+            logger.warning(
+                "Headers of the follwoing file could not be checked: %s", csvfilename
+            )
+            return
+
+        return hydxelement.csvheaders()
 
     def check_import_data(self):
         self._check_on_unique(
@@ -317,8 +350,156 @@ class Connection(Generic):
         )
 
 
-class Structure:
-    pass
+class Structure(Generic):
+    FIELDS = [
+        {
+            "csvheader": "UNI_IDE",
+            "fieldname": "IdentificatieKnooppuntOfVerbinding",
+            "type": str,
+            "required": True,
+        },
+        {
+            "csvheader": "KWK_TYP",
+            "fieldname": "TypeKunstwerk",
+            "type": str,
+            "required": True,
+        },
+        {
+            "csvheader": "BWS_NIV",
+            "fieldname": "Buitenwaterstand",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "PRO_BOK",
+            "fieldname": "NiveauBinnenonderkantProfiel",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "DRL_COE",
+            "fieldname": "ContractiecoefficientDoorlaatprofiel",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "DRL_CAP",
+            "fieldname": "MaximaleCapaciteitDoorlaat",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "OVS_BRE",
+            "fieldname": "BreedteOverstortdrempel",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "OVS_NIV",
+            "fieldname": "NiveauOverstortdrempel",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "OVS_VOH",
+            "fieldname": "VrijeOverstorthoogte",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "OVS_COE",
+            "fieldname": "AfvoercoefficientOverstortdrempel",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "PMP_CAP",
+            "fieldname": "Pompcapaciteit",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "PMP_AN1",
+            "fieldname": "AanslagniveauBenedenstrooms",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "PMP_AF1",
+            "fieldname": "AfslagniveauBenedenstrooms",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "PMP_AN2",
+            "fieldname": "AanslagniveauBovenstrooms",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "PMP_AF2",
+            "fieldname": "AfslagniveauBovenstrooms",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "QDH_NIV",
+            "fieldname": "NiveauverschilDebiet_verhangrelatie",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "QDH_DEB",
+            "fieldname": "DebietverschilDebiet_verhangrelatie",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "AAN_OVN",
+            "fieldname": "AannameNiveauOverstortdrempel",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "AAN_OVB",
+            "fieldname": "AannameBreedteOverstortdrempel",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "AAN_CAP",
+            "fieldname": "AannamePompcapaciteitPomp",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "AAN_ANS",
+            "fieldname": "AannameAanslagniveauPomp",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "AAN_AFS",
+            "fieldname": "AannameAfslagniveauPomp",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "ALG_TOE",
+            "fieldname": "ToelichtingRegel",
+            "type": str,
+            "required": False,
+        },
+    ]
+
+    def __init__(self):
+        pass
+
+    def __repr__(self):
+        return "<Connection %s - %s>" % (
+            getattr(self, "identificatieknooppunt1", None),
+            getattr(self, "identificatieknooppunt2", None),
+        )
 
 
 class Meta:
