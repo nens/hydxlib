@@ -76,7 +76,7 @@ class Threedi:
                     if structure.identificatieknooppuntofverbinding
                     == connection.identificatieknooppuntofverbinding
                 ]
-                print(linkedstructures)
+
                 if len(linkedstructures) > 1:
                     logging.error(
                         "Only first structure is created for structures with double values %r",
@@ -145,10 +145,7 @@ class Threedi:
     def add_structure(self, hydx_connection, hydx_structure):
         """Add hydx.structure and hydx.connection into threedi.pumpstation"""
 
-        element_codes, element_display_names = self.get_code(
-            hydx_connection.identificatieknooppunt1,
-            hydx_connection.identificatieknooppunt2,
-        )
+        element_codes, element_display_names = self.get_code(hydx_connection)
 
         if hydx_structure.typekunstwerk == "PMP":
             if hydx_structure.aanslagniveaubovenstrooms is not None:
@@ -161,11 +158,11 @@ class Threedi:
                 pumpstation_stop_level = hydx_structure.afslagniveaubenedenstrooms
 
             pumpstation = {
-                "code": element_codes,
+                "code": hydx_connection.identificatieknooppuntofverbinding,
                 "display_name": element_display_names,
                 "start_node.code": hydx_connection.identificatieknooppunt1,
                 "end_node.code": hydx_connection.identificatieknooppunt2,
-                "type": pumpstation_type,
+                "type_": pumpstation_type,
                 "start_level": pumpstation_start_level,
                 "lower_stop_level": pumpstation_stop_level,
                 # upper_stop_level is not supported by hydx
@@ -184,7 +181,7 @@ class Threedi:
             )
             return None
 
-    def get_code(self, code1, code2=None, default_code=""):
+    def get_code(self, connection, default_code=""):
         """
         Args:
             code1(string): object code
@@ -194,26 +191,40 @@ class Threedi:
         Returns:
             (string): combined area code
         """
-        if code1 is None or code1 == "":
-            code1 = default_code
-        if code2 is None or code2 == "":
-            code2 = default_code
+        connection_code = connection.identificatieknooppuntofverbinding
+        code1 = connection.identificatieknooppunt1
+        code2 = connection.identificatieknooppunt2
+
+        manh_list = [manhole["code"] for manhole in self.manholes]
+        if code1 not in manh_list:
+            logging.error(
+                "Connection node %r could not be found for record %r",
+                code1,
+                connection_code,
+            )
+            if code1 is None or code1 == "":
+                code1 = default_code
+        if code2 not in manh_list:
+            logging.error(
+                "Connection node %r could not be found for record %r",
+                code2,
+                connection_code,
+            )
+            if code2 is None or code2 == "":
+                code2 = default_code
         element_codes = code1 + "-" + code2
 
-        display_name1 = [
-            element["display_name"]
-            for element in self.manholes
-            if element["code"] == code1
-        ][0]
-        display_name2 = [
-            element["display_name"]
-            for element in self.manholes
-            if element["code"] == code2
-        ][0]
-
-        if display_name1 is None or display_name1 == "":
+        manh_dict = {
+            manhole["code"]: manhole["display_name"] for manhole in self.manholes
+        }
+        if code1 in manh_dict:
+            display_name1 = manh_dict[code1]
+        else:
             display_name1 = default_code
-        if display_name2 is None or display_name2 == "":
+
+        if code2 in manh_dict:
+            display_name2 = manh_dict[code2]
+        else:
             display_name2 = default_code
         element_display_names = display_name1 + "-" + display_name2
 

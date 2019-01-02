@@ -80,6 +80,18 @@ def test_import_hydx_known_pipe_connection(caplog):
     assert '"typeverbinding" is not implemented' in caplog.text
 
 
+def test_structure_does_not_exist_error(caplog):
+    hydx = mock.Mock()
+    hydx.structures = []
+    hydx.connection_nodes = []
+    hydx.connections = [
+        mock.Mock(identificatieknooppuntofverbinding="pmp1", typeverbinding="PMP")
+    ]
+    threedi = Threedi()
+    threedi.import_hydx(hydx)
+    assert "Structure does not exist for connection" in caplog.text
+
+
 class TestThreedi(TestCase):
     def setUp(self):
         self.threedi = Threedi()
@@ -123,3 +135,39 @@ class TestThreedi(TestCase):
         connection_node = self.hydx.connection_nodes[0]
         self.threedi.add_connection_node(connection_node)
         assert self.threedi.manholes[0] == manhole_0
+
+    def test_add_pumpstation(self):
+        pumpstation_0 = {
+            "code": "pmp1",
+            "display_name": "13_990430-13_990420-1",
+            "start_node.code": "knp3",
+            "end_node.code": "knp4",
+            "type_": 1,
+            "start_level": 7.47,
+            "lower_stop_level": 7.32,
+            "upper_stop_level": None,
+            "capacity": 10.0,
+            "sewerage": True,
+        }
+        self.threedi.import_hydx(self.hydx)
+        # select first manhole from dataset for check
+        connection = self.hydx.connections[0]
+        structure = self.hydx.structures[0]
+        self.threedi.add_structure(connection, structure)
+        assert self.threedi.pumpstations[0] == pumpstation_0
+
+    def test_add_first_pump_with_same_code(self):
+        self.threedi.import_hydx(self.hydx)
+        # select first manhole from dataset for check
+        connection = self.hydx.connections[0]
+        structure = self.hydx.structures[0]
+        self.threedi.add_structure(connection, structure)
+        assert "Only first structure is created" in self._caplog.text
+
+    def test_add_pump_type_2(self):
+        self.threedi.import_hydx(self.hydx)
+        # select first manhole from dataset for check
+        connection = self.hydx.connections[0]
+        structure = self.hydx.structures[0]
+        self.threedi.add_structure(connection, structure)
+        assert self.threedi.pumpstations[3]["type_"] == 2
