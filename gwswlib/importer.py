@@ -41,7 +41,6 @@ def import_hydx(hydx_path):
         # "Verloop1.csv",
     ]
 
-    # check if csv file exists
     existing_files = []
     for f in hydxcsvfiles:
         csvpath = os.path.join(hydx_path, f)
@@ -54,6 +53,8 @@ def import_hydx(hydx_path):
             )
         else:
             existing_files.append(f)
+
+    # TODO check if number of csvfiles loaded is same as number inside meta1.csv
 
     for f in existing_files:
         csvpath = os.path.join(hydx_path, f)

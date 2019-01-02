@@ -44,9 +44,25 @@ class Threedi:
     def import_hydx(self, hydx):
         self.connection_nodes = []
         self.manholes = []
+        self.connections = []
 
         for connection_node in hydx.connection_nodes:
             self.add_connection_node(connection_node)
+
+        for connection in hydx.connections:
+            print(connection.typeverbinding)
+            if connection.typeverbinding in ["GSL", "OPL", "ITR"]:
+                logger.warning(
+                    'The following "typeverbinding" is not connected in this importer: %s',
+                    connection.typeverbinding,
+                )
+            elif connection.typeverbinding in ["PMP", "OVS", "DRL"]:
+                pass
+            else:
+                logger.warning(
+                    'The following "typeverbinding" is not recognized: %s',
+                    connection.typeverbinding,
+                )
 
     def add_connection_node(self, hydx_connection_node):
         """Add hydx.connection_node into threedi.connection_node and threedi.manhole"""
@@ -93,6 +109,9 @@ class Threedi:
         }
 
         self.manholes.append(manhole)
+
+    def add_connection(self, hydx_connection):
+        """Add hydx.structure and hydx.connection into threedi.pumpstation"""
 
     def get_mapping_value(self, mapping, hydx_value, record_code, name_for_logging):
         if hydx_value in mapping:

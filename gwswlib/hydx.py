@@ -20,12 +20,11 @@ class Hydx:
         elif csvfilename == "Verbinding1.csv":
             hydxelement = Connection()
             hydxelement.import_csvline(csvline=line)
+            print(hydxelement)
             self.connections.append(hydxelement)
         elif csvfilename == "Kunstwerk1.csv":
             hydxelement = Structure()
-            print(line)
             hydxelement.import_csvline(csvline=line)
-            print(hydxelement.__dict__)
             self.structures.append(hydxelement)
 
     def csvheaders(csvfilename):
@@ -496,9 +495,9 @@ class Structure(Generic):
         pass
 
     def __repr__(self):
-        return "<Connection %s - %s>" % (
-            getattr(self, "identificatieknooppunt1", None),
-            getattr(self, "identificatieknooppunt2", None),
+        return "<Structure %s - %s>" % (
+            getattr(self, "typekunstwerk", None),
+            getattr(self, "identificatieknooppuntofverbinding", None),
         )
 
 
