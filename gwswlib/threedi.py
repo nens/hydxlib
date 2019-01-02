@@ -79,13 +79,13 @@ class Threedi:
 
                 if len(linkedstructures) > 1:
                     logging.error(
-                        "Only first structure is created for structures with double values %r",
+                        "Only first structure is used to create a structure for connection %r",
                         connection.identificatieknooppuntofverbinding,
                     )
 
                 if len(linkedstructures) == 0:
                     logging.error(
-                        "Structure does not exist for connection with record %r",
+                        "Structure does not exist for connection %r",
                         connection.identificatieknooppuntofverbinding,
                     )
                 else:
@@ -198,7 +198,7 @@ class Threedi:
         manh_list = [manhole["code"] for manhole in self.manholes]
         if code1 not in manh_list:
             logging.error(
-                "Connection node %r could not be found for record %r",
+                "Start connection node %r could not be found for record %r",
                 code1,
                 connection_code,
             )
@@ -206,7 +206,7 @@ class Threedi:
                 code1 = default_code
         if code2 not in manh_list:
             logging.error(
-                "Connection node %r could not be found for record %r",
+                "End connection node %r could not be found for record %r",
                 code2,
                 connection_code,
             )

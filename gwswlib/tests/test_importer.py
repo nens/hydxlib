@@ -12,4 +12,4 @@ def test_import_connection_node_csv_into_hydx_class():
 def test_import_connection_csv_into_hydx_class():
     hydx_path = "gwswlib/tests/example_files_structures_hydx/"
     hydx = import_hydx(hydx_path)
-    assert hydx.connections[7].identificatieknooppuntofverbinding == "ovs2"
+    assert hydx.connections[6].identificatieknooppuntofverbinding == "ovs2"

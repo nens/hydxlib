@@ -199,7 +199,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     # session.commit()
     # del pipe_list
 
-    obj_list = []
+    pump_list = []
     for pump in threedi.pumpstations:
         if pump["start_node.code"] in con_dict:
             pump["connection_node_start_id"] = con_dict[pump["start_node.code"]]
@@ -220,12 +220,12 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         del pump["start_node.code"]
         del pump["end_node.code"]
 
-        obj_list.append(Pumpstation(**pump))
+        pump_list.append(Pumpstation(**pump))
 
-    commit_counts["pumpstations"] = len(obj_list)
-    session.bulk_save_objects(obj_list)
+    commit_counts["pumpstations"] = len(pump_list)
+    session.bulk_save_objects(pump_list)
     session.commit()
-    del obj_list
+    del pump_list
 
     # for weir in threedi.weirs:
     #     try:
