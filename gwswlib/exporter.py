@@ -20,10 +20,6 @@ from gwswlib.sql_models.model_schematisation import (
 logger = logging.getLogger(__name__)
 
 
-def export_hydx(hydxdict, csvfile):
-    pass
-
-
 def export_threedi(hydx, threedi_db_settings):
     threedi = Threedi()
     threedi.import_hydx(hydx)

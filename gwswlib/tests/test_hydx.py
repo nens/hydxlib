@@ -4,13 +4,18 @@ from collections import OrderedDict
 from unittest import TestCase
 import pytest
 
-from gwswlib.hydx import ConnectionNode, Connection, Structure
+from gwswlib.hydx import Hydx, ConnectionNode, Connection, Structure
 from gwswlib.importer import import_hydx
 
 
-def test_touch_csvheaders():
+def test_touch_csvheaders_hydxelement():
     csvheaders = ConnectionNode.csvheaders()
     assert "INI_NIV" in csvheaders
+
+
+def test_touch_csvheaders_hydx_unknown_file(caplog):
+    Hydx.csvheaders("XXX.csv")
+    assert "Headers of the following file could not be checked" in caplog.text
 
 
 def test_check_init_connectionnode():

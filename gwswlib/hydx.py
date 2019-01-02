@@ -36,7 +36,7 @@ class Hydx:
             hydxelement = Structure()
         else:
             logger.warning(
-                "Headers of the follwoing file could not be checked: %s", csvfilename
+                "Headers of the following file could not be checked: %s", csvfilename
             )
             return
 
