@@ -2,9 +2,10 @@
 """Tests for threedi.py"""
 from unittest import TestCase
 import pytest
+import mock
 
 from gwswlib.importer import import_hydx
-from gwswlib.threedi import Threedi
+from gwswlib.threedi import Threedi, check_if_element_is_created_with_same_code
 from gwswlib.sql_models.constants import Constants
 
 
@@ -34,6 +35,61 @@ def test_get_mapping_value_right(caplog):
         MANHOLE_SHAPE_MAPPING, shape_code, record_code, name_for_logging="manhole shape"
     )
     assert shape == "rnd"
+
+
+def test_check_if_element_created_is_with_same_code(caplog):
+    checked_element = "knp6"
+    created_elements = [
+        {
+            "code": "knp1",
+            "initial_waterlevel": None,
+            "geom": (241330.836, 483540.234, 28992),
+        },
+        {
+            "code": "knp6",
+            "initial_waterlevel": None,
+            "geom": (241463.858, 483356.833, 28992),
+        },
+    ]
+    element_type = "Connection node"
+    check_if_element_is_created_with_same_code(
+        checked_element, created_elements, element_type
+    )
+    assert "Multiple elements 'Connection node' are created" in caplog.text
+
+
+def test_import_hydx_unknown_connection_types(caplog):
+    hydx = mock.Mock()
+    hydx.connection_nodes = []
+    hydx.connections = [
+        mock.Mock(identificatieknooppuntofverbinding="ovs1", typeverbinding="XXX")
+    ]
+    threedi = Threedi()
+    threedi.import_hydx(hydx)
+    assert '"typeverbinding" is not recognized' in caplog.text
+
+
+def test_import_hydx_known_pipe_connection(caplog):
+    hydx = mock.Mock()
+    hydx.connection_nodes = []
+    hydx.connections = [
+        mock.Mock(identificatieknooppuntofverbinding="ovs1", typeverbinding="GSL")
+    ]
+    threedi = Threedi()
+    threedi.import_hydx(hydx)
+    assert '"typeverbinding" is not implemented' in caplog.text
+
+
+def test_structure_does_not_exist_error(caplog):
+    hydx = mock.Mock()
+    hydx.structures = []
+    hydx.connection_nodes = []
+    hydx.connections = [
+        mock.Mock(identificatieknooppuntofverbinding="pmp1", typeverbinding="PMP")
+    ]
+    threedi = Threedi()
+    threedi.import_hydx(hydx)
+    assert "Structure does not exist for connection" in caplog.text
 
 
 class TestThreedi(TestCase):
@@ -79,3 +135,39 @@ class TestThreedi(TestCase):
         connection_node = self.hydx.connection_nodes[0]
         self.threedi.add_connection_node(connection_node)
         assert self.threedi.manholes[0] == manhole_0
+
+    def test_add_pumpstation(self):
+        pumpstation_0 = {
+            "code": "pmp1",
+            "display_name": "13_990430-13_990420-1",
+            "start_node.code": "knp3",
+            "end_node.code": "knp4",
+            "type_": 1,
+            "start_level": 7.47,
+            "lower_stop_level": 7.32,
+            "upper_stop_level": None,
+            "capacity": 10.0,
+            "sewerage": True,
+        }
+        self.threedi.import_hydx(self.hydx)
+        # select first manhole from dataset for check
+        connection = self.hydx.connections[0]
+        structure = self.hydx.structures[0]
+        self.threedi.add_structure(connection, structure)
+        assert self.threedi.pumpstations[0] == pumpstation_0
+
+    def test_add_first_pump_with_same_code(self):
+        self.threedi.import_hydx(self.hydx)
+        # select first manhole from dataset for check
+        connection = self.hydx.connections[0]
+        structure = self.hydx.structures[0]
+        self.threedi.add_structure(connection, structure)
+        assert "Only first structure is created" in self._caplog.text
+
+    def test_add_pump_type_2(self):
+        self.threedi.import_hydx(self.hydx)
+        # select first manhole from dataset for check
+        connection = self.hydx.connections[0]
+        structure = self.hydx.structures[0]
+        self.threedi.add_structure(connection, structure)
+        assert self.threedi.pumpstations[3]["type_"] == 2

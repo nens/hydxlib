@@ -20,10 +20,6 @@ from gwswlib.sql_models.model_schematisation import (
 logger = logging.getLogger(__name__)
 
 
-def export_hydx(hydxdict, csvfile):
-    pass
-
-
 def export_threedi(hydx, threedi_db_settings):
     threedi = Threedi()
     threedi.import_hydx(hydx)
@@ -203,38 +199,33 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     # session.commit()
     # del pipe_list
 
-    # obj_list = []
-    # for pump in threedi.pumpstations:
-    #     try:
-    #         pump['connection_node_start_id'] = con_dict[
-    #             pump['start_node.code']]
-    #     except KeyError:
-    #         self.log.add(
-    #             logging.ERROR,
-    #             'Start node of pump not found in nodes',
-    #             {},
-    #             'Start node {start_node} of pump with code {code} not '
-    #             'found',
-    #             {'start_node': pump['start_node.code'],
-    #                 'code': pump['code']}
-    #         )
+    obj_list = []
+    for pump in threedi.pumpstations:
+        if pump["start_node.code"] in con_dict:
+            pump["connection_node_start_id"] = con_dict[pump["start_node.code"]]
+        else:
+            pump["connection_node_start_id"] = None
+            logging.error(
+                "Start node of pump %r not found in connection nodes", pump["code"]
+            )
 
-    #     try:
-    #         pump['connection_node_end_id'] = con_dict[
-    #             pump['end_node.code']]
-    #     except KeyError:
-    #         self.log.add(
-    #             logging.ERROR,
-    #             'End node of pump not found in nodes',
-    #             {},
-    #             'End node {end_node} of pump with code {code} not found',
-    #             {'end_node': pump['end_node.code'], 'code': pump['code']}
-    #         )
+        if pump["end_node.code"] in con_dict:
+            pump["connection_node_end_id"] = con_dict[pump["end_node.code"]]
+        else:
+            pump["connection_node_end_id"] = None
+            logging.error(
+                "End node of pump %r not found in connection nodes", pump["code"]
+            )
 
-    #     del pump['start_node.code']
-    #     del pump['end_node.code']
+        del pump["start_node.code"]
+        del pump["end_node.code"]
 
-    #     obj_list.append(Pumpstation(**pump))
+        obj_list.append(Pumpstation(**pump))
+
+    commit_counts["pumpstations"] = len(obj_list)
+    session.bulk_save_objects(obj_list)
+    session.commit()
+    del obj_list
 
     # for weir in threedi.weirs:
     #     try:

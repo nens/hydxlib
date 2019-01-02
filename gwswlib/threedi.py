@@ -44,9 +44,57 @@ class Threedi:
     def import_hydx(self, hydx):
         self.connection_nodes = []
         self.manholes = []
+        self.connections = []
+        self.pumpstations = []
+        self.weirs = []
+        self.orifices = []
 
         for connection_node in hydx.connection_nodes:
+            check_if_element_is_created_with_same_code(
+                connection_node.identificatieknooppuntofverbinding,
+                self.connection_nodes,
+                "Connection node",
+            )
             self.add_connection_node(connection_node)
+
+        for connection in hydx.connections:
+            check_if_element_is_created_with_same_code(
+                connection.identificatieknooppuntofverbinding,
+                self.connections,
+                "Connection",
+            )
+
+            if connection.typeverbinding in ["GSL", "OPL", "ITR"]:
+                logger.warning(
+                    'The following "typeverbinding" is not implemented in this importer: %s',
+                    connection.typeverbinding,
+                )
+            elif connection.typeverbinding in ["PMP", "OVS", "DRL"]:
+                linkedstructures = [
+                    structure
+                    for structure in hydx.structures
+                    if structure.identificatieknooppuntofverbinding
+                    == connection.identificatieknooppuntofverbinding
+                ]
+
+                if len(linkedstructures) > 1:
+                    logging.error(
+                        "Only first structure is created for structures with double values %r",
+                        connection.identificatieknooppuntofverbinding,
+                    )
+
+                if len(linkedstructures) == 0:
+                    logging.error(
+                        "Structure does not exist for connection with record %r",
+                        connection.identificatieknooppuntofverbinding,
+                    )
+                else:
+                    self.add_structure(connection, linkedstructures[0])
+            else:
+                logger.warning(
+                    'The following "typeverbinding" is not recognized by 3Di exporter: %s',
+                    connection.typeverbinding,
+                )
 
     def add_connection_node(self, hydx_connection_node):
         """Add hydx.connection_node into threedi.connection_node and threedi.manhole"""
@@ -94,6 +142,36 @@ class Threedi:
 
         self.manholes.append(manhole)
 
+    def add_structure(self, hydx_connection, hydx_structure):
+        """Add hydx.structure and hydx.connection into threedi.pumpstation"""
+
+        element_codes, element_display_names = self.get_code(hydx_connection)
+
+        if hydx_structure.typekunstwerk == "PMP":
+            if hydx_structure.aanslagniveaubovenstrooms is not None:
+                pumpstation_type = 2
+                pumpstation_start_level = hydx_structure.aanslagniveaubovenstrooms
+                pumpstation_stop_level = hydx_structure.afslagniveaubovenstrooms
+            else:
+                pumpstation_type = 1
+                pumpstation_start_level = hydx_structure.aanslagniveaubenedenstrooms
+                pumpstation_stop_level = hydx_structure.afslagniveaubenedenstrooms
+
+            pumpstation = {
+                "code": hydx_connection.identificatieknooppuntofverbinding,
+                "display_name": element_display_names,
+                "start_node.code": hydx_connection.identificatieknooppunt1,
+                "end_node.code": hydx_connection.identificatieknooppunt2,
+                "type_": pumpstation_type,
+                "start_level": pumpstation_start_level,
+                "lower_stop_level": pumpstation_stop_level,
+                # upper_stop_level is not supported by hydx
+                "upper_stop_level": None,
+                "capacity": round(float(hydx_structure.pompcapaciteit) / 3.6, 5),
+                "sewerage": True,
+            }
+            self.pumpstations.append(pumpstation)
+
     def get_mapping_value(self, mapping, hydx_value, record_code, name_for_logging):
         if hydx_value in mapping:
             return mapping[hydx_value]
@@ -103,7 +181,79 @@ class Threedi:
             )
             return None
 
+    def get_code(self, connection, default_code=""):
+        """
+        Args:
+            code1(string): object code
+            code2(string): object code 2
+            default_code: returned value when code is None or ''
+
+        Returns:
+            (string): combined area code
+        """
+        connection_code = connection.identificatieknooppuntofverbinding
+        code1 = connection.identificatieknooppunt1
+        code2 = connection.identificatieknooppunt2
+
+        manh_list = [manhole["code"] for manhole in self.manholes]
+        if code1 not in manh_list:
+            logging.error(
+                "Connection node %r could not be found for record %r",
+                code1,
+                connection_code,
+            )
+            if code1 is None or code1 == "":
+                code1 = default_code
+        if code2 not in manh_list:
+            logging.error(
+                "Connection node %r could not be found for record %r",
+                code2,
+                connection_code,
+            )
+            if code2 is None or code2 == "":
+                code2 = default_code
+        element_codes = code1 + "-" + code2
+
+        manh_dict = {
+            manhole["code"]: manhole["display_name"] for manhole in self.manholes
+        }
+        if code1 in manh_dict:
+            display_name1 = manh_dict[code1]
+        else:
+            display_name1 = default_code
+
+        if code2 in manh_dict:
+            display_name2 = manh_dict[code2]
+        else:
+            display_name2 = default_code
+        element_display_names = display_name1 + "-" + display_name2
+
+        all_connections = self.pumpstations + self.weirs + self.orifices
+        nr_connections = [
+            element
+            for element in all_connections
+            if element["code"].rpartition("-")[0] == element_codes
+        ]
+        connection_number = len(nr_connections) + 1
+
+        element_codes += "-" + str(connection_number)
+        element_display_names += "-" + str(connection_number)
+
+        return element_codes, element_display_names
+
 
 def point(x, y, srid_input=28992):
 
     return x, y, srid_input
+
+
+def check_if_element_is_created_with_same_code(
+    checked_element, created_elements, element_type
+):
+    added_elements = [element["code"] for element in created_elements]
+    if checked_element in added_elements:
+        logger.error(
+            "Multiple elements %r are created with the same code %r",
+            element_type,
+            checked_element,
+        )

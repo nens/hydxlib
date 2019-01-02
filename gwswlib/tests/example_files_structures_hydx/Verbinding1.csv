@@ -1,5 +1,9 @@
 UNI_IDE;KN1_IDE;KN2_IDE;VRB_TYP;LEI_IDE;BOB_KN1;BOB_KN2;STR_RCH;VRB_LEN;INZ_TYP;INV_KN1;UTV_KN1;INV_KN2;UTV_KN2;ITO_IDE;PRO_IDE;STA_OBJ;AAN_BB1;AAN_BB2;INI_NIV;ALG_TOE
 ovs1;knp1;knp2;OVS;;;;OPN;;;;;;;;;;;;;
+ovs1;knp1;knp2;OVS;;;;OPN;;;;;;;;;;;;;
 pmp1;knp3;knp4;PMP;;;;1_2;;;;;;;;;;;;;
 pmp2;knp3;knp4;PMP;;;;1_2;;;;;;;;;;;;;
+pmp2;knp31;knp4;PMP;;;;1_2;;;;;;;;;;;;;
+pmp3;knp5;knp6;PMP;;;;1_2;;;;;;;;;;;;;
+pmp4;;;PMP;;;;1_2;;;;;;;;;;;;;
 ovs2;knp5;knp6;OVS;;;;OPN;;;;;;;;;;;;;

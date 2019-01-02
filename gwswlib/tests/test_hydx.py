@@ -4,11 +4,27 @@ from collections import OrderedDict
 from unittest import TestCase
 import pytest
 
-from gwswlib.hydx import ConnectionNode
+from gwswlib.hydx import check_headers, ConnectionNode, Connection, Structure
 from gwswlib.importer import import_hydx
 
 
-def test_touch_csvheaders():
+def test_check_headers(caplog):
+    a = [1, 2, 3]
+    b = [2, 3, 4]
+    check_headers(a, b)
+    assert "missing columns" in caplog.text
+    assert "extra columns" in caplog.text
+
+
+def test_check_headers_2(caplog):
+    a = [1, 2, 3]
+    b = [1, 2, 3]
+    check_headers(a, b)
+    assert "missing columns" not in caplog.text
+    assert "extra columns" not in caplog.text
+
+
+def test_touch_csvheaders_hydxelement():
     csvheaders = ConnectionNode.csvheaders()
     assert "INI_NIV" in csvheaders
 
@@ -60,14 +76,71 @@ def test_check_init_connectionnode():
         "identificatiedefinitieit_object": None,
         "toelichtingregel": None,
     }
-    connection_node = ConnectionNode()
-    connection_node.import_csvline(csvline=line_in)
+    connection_node = ConnectionNode.import_csvline(csvline=line_in)
     assert connection_node.__dict__ == line_out
 
 
-def test_repr_connection_nodes():
+def test_repr_uninitialized_connection_nodes():
     connection_node = ConnectionNode()
     assert repr(connection_node)
+
+
+def test_check_init_connection():
+    line_in = OrderedDict(
+        [
+            ("UNI_IDE", "ovs1"),
+            ("KN1_IDE", "knp1"),
+            ("KN2_IDE", "knp2"),
+            ("VRB_TYP", "OVS"),
+            ("LEI_IDE", ""),
+            ("BOB_KN1", ""),
+            ("BOB_KN2", ""),
+            ("STR_RCH", "OPN"),
+            ("VRB_LEN", ""),
+            ("INZ_TYP", ""),
+            ("INV_KN1", ""),
+            ("UTV_KN1", ""),
+            ("INV_KN2", ""),
+            ("UTV_KN2", ""),
+            ("ITO_IDE", ""),
+            ("PRO_IDE", ""),
+            ("STA_OBJ", ""),
+            ("AAN_BB1", ""),
+            ("AAN_BB2", ""),
+            ("INI_NIV", ""),
+            ("ALG_TOE", ""),
+        ]
+    )
+    line_out = {
+        "identificatieknooppuntofverbinding": "ovs1",
+        "identificatieknooppunt1": "knp1",
+        "identificatieknooppunt2": "knp2",
+        "typeverbinding": "OVS",
+        "identificatieleiding": None,
+        "bobknooppunt1": None,
+        "bobknooppunt2": None,
+        "stromingsrichting": "OPN",
+        "lengteverbinding": None,
+        "typeinzameling": None,
+        "instroomverliescoefficientknooppunt1": None,
+        "uitstroomverliescoefficientknooppunt1": None,
+        "instroomverliescoefficientknooppunt2": None,
+        "uitstroomverliescoefficientknooppunt2": None,
+        "identificatiedefinitieit_object": None,
+        "identificatieprofieldefinitie": None,
+        "statusobject": None,
+        "aannamebobknooppunt1": None,
+        "aannamebobknooppunt2": None,
+        "initielewaterstand": None,
+        "toelichtingregel": None,
+    }
+    connection = Connection.import_csvline(csvline=line_in)
+    assert connection.__dict__ == line_out
+
+
+def test_repr_uninitialized_connection():
+    connection = Connection()
+    assert repr(connection)
 
 
 class TestHydx(TestCase):
@@ -84,3 +157,65 @@ class TestHydx(TestCase):
             self.hydx.connection_nodes, "identificatieknooppuntofverbinding"
         )
         assert "double" in self._caplog.text
+
+
+def test_check_init_structure():
+    line_in = OrderedDict(
+        [
+            ("UNI_IDE", "ovs1"),
+            ("KWK_TYP", "OVS"),
+            ("BWS_NIV", ""),
+            ("PRO_BOK", ""),
+            ("DRL_COE", ""),
+            ("DRL_CAP", ""),
+            ("OVS_BRE", "1.5"),
+            ("OVS_NIV", "9.5"),
+            ("OVS_VOH", ""),
+            ("OVS_COE", "0.8"),
+            ("PMP_CAP", ""),
+            ("PMP_AN1", ""),
+            ("PMP_AF1", ""),
+            ("PMP_AN2", ""),
+            ("PMP_AF2", ""),
+            ("QDH_NIV", ""),
+            ("QDH_DEB", ""),
+            ("AAN_OVN", ""),
+            ("AAN_OVB", ""),
+            ("AAN_CAP", ""),
+            ("AAN_ANS", ""),
+            ("AAN_AFS", ""),
+            ("ALG_TOE", ""),
+        ]
+    )
+    line_out = {
+        "identificatieknooppuntofverbinding": "ovs1",
+        "typekunstwerk": "OVS",
+        "buitenwaterstand": None,
+        "niveaubinnenonderkantprofiel": None,
+        "contractiecoefficientdoorlaatprofiel": None,
+        "maximalecapaciteitdoorlaat": None,
+        "breedteoverstortdrempel": 1.5,
+        "niveauoverstortdrempel": 9.5,
+        "vrijeoverstorthoogte": None,
+        "afvoercoefficientoverstortdrempel": 0.8,
+        "pompcapaciteit": None,
+        "aanslagniveaubenedenstrooms": None,
+        "afslagniveaubenedenstrooms": None,
+        "aanslagniveaubovenstrooms": None,
+        "afslagniveaubovenstrooms": None,
+        "niveauverschildebiet_verhangrelatie": None,
+        "debietverschildebiet_verhangrelatie": None,
+        "aannameniveauoverstortdrempel": None,
+        "aannamebreedteoverstortdrempel": None,
+        "aannamepompcapaciteitpomp": None,
+        "aannameaanslagniveaupomp": None,
+        "aannameafslagniveaupomp": None,
+        "toelichtingregel": None,
+    }
+    structure = Structure.import_csvline(csvline=line_in)
+    assert structure.__dict__ == line_out
+
+
+def test_repr_uninitialized_structure():
+    structure = Structure()
+    assert repr(structure)
