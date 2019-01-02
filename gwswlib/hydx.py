@@ -5,67 +5,9 @@ from collections import Counter
 logger = logging.getLogger(__name__)
 
 
-class Hydx:
-    def __init__(self):
-        self.connection_nodes = []
-        self.connections = []
-        self.structures = []
-
-    def import_csvfile(self, csvreader, csvfilename):
-
-        if csvfilename == "Knooppunt1.csv":
-            for line in csvreader:
-                hydxelement = ConnectionNode()
-                hydxelement.import_csvline(csvline=line)
-                self.connection_nodes.append(hydxelement)
-        elif csvfilename == "Verbinding1.csv":
-            for line in csvreader:
-                hydxelement = Connection()
-                hydxelement.import_csvline(csvline=line)
-                self.connections.append(hydxelement)
-        elif csvfilename == "Kunstwerk1.csv":
-            for line in csvreader:
-                hydxelement = Structure()
-                hydxelement.import_csvline(csvline=line)
-                self.structures.append(hydxelement)
-
-    def csvheaders(csvfilename):
-        if csvfilename == "Knooppunt1.csv":
-            hydxelement = ConnectionNode()
-        elif csvfilename == "Verbinding1.csv":
-            hydxelement = Connection()
-        elif csvfilename == "Kunstwerk1.csv":
-            hydxelement = Structure()
-        else:
-            logger.warning(
-                "Headers of the following file could not be checked: %s", csvfilename
-            )
-            return
-
-        return hydxelement.csvheaders()
-
-    def check_import_data(self):
-        self._check_on_unique(
-            self.connection_nodes, "identificatieknooppuntofverbinding"
-        )
-        self._check_on_unique(self.connections, "identificatieknooppuntofverbinding")
-        self._check_on_unique(self.structures, "identificatieknooppuntofverbinding")
-
-    def _check_on_unique(self, records, unique_field, remove_double=False):
-        values = [m.__dict__[unique_field] for m in records]
-        counter = Counter(values)
-        doubles = [key for key, count in counter.items() if count > 1]
-
-        for double in doubles:
-            logging.error(
-                "double values in %s for records with %s %r",
-                records[0].__class__.__name__,
-                unique_field,
-                double,
-            )
-
-
 class Generic:
+    FIELDS = []
+
     @classmethod
     def csvheaders(cls):
         return [field["csvheader"] for field in cls.FIELDS]
@@ -507,3 +449,63 @@ class Structure(Generic):
 
 class Meta:
     pass
+
+
+class Hydx:
+    CSVFILES = {
+        "Knooppunt1.csv": {
+            "hydx_class": ConnectionNode,
+            "collection_name": "connection_nodes",
+        },
+        "Kunstwerk1.csv": {"hydx_class": Structure, "collection_name": "structures"},
+        "Verbinding1.csv": {"hydx_class": Connection, "collection_name": "connections"},
+    }
+
+    def __init__(self):
+        self.connection_nodes = []
+        self.connections = []
+        self.structures = []
+
+    def import_csvfile(self, csvreader, csvfilename):
+
+        csvfile_information = self.CSVFILES[csvfilename]
+        check_headers(
+            csvreader.fieldnames, csvfile_information["hydx_class"].csvheaders()
+        )
+
+        for line in csvreader:
+            hydxelement = csvfile_information["hydx_class"]()
+            hydxelement.import_csvline(csvline=line)
+            collection = getattr(self, csvfile_information["collection_name"])
+            collection.append(hydxelement)
+
+    def check_import_data(self):
+        self._check_on_unique(
+            self.connection_nodes, "identificatieknooppuntofverbinding"
+        )
+        self._check_on_unique(self.connections, "identificatieknooppuntofverbinding")
+        self._check_on_unique(self.structures, "identificatieknooppuntofverbinding")
+
+    def _check_on_unique(self, records, unique_field, remove_double=False):
+        values = [m.__dict__[unique_field] for m in records]
+        counter = Counter(values)
+        doubles = [key for key, count in counter.items() if count > 1]
+
+        for double in doubles:
+            logging.error(
+                "double values in %s for records with %s %r",
+                records[0].__class__.__name__,
+                unique_field,
+                double,
+            )
+
+
+def check_headers(found, expected):
+    """Compares two header columns on extra or missing ones"""
+    extra_columns = set(found) - set(expected)
+    missing_columns = set(expected) - set(found)
+    if extra_columns:
+        logger.warning("extra columns found: %s", extra_columns)
+
+    if missing_columns:
+        logger.error("missing columns found: %s", missing_columns)

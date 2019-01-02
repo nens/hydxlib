@@ -76,12 +76,20 @@ class Threedi:
                     if structure.identificatieknooppuntofverbinding
                     == connection.identificatieknooppuntofverbinding
                 ]
-                if len(linkedstructures) != 1:
+                print(linkedstructures)
+                if len(linkedstructures) > 1:
                     logging.error(
                         "Only first structure is created for structures with double values %r",
                         connection.identificatieknooppuntofverbinding,
                     )
-                self.add_structure(connection, linkedstructures[0])
+
+                if len(linkedstructures) == 0:
+                    logging.error(
+                        "Structure does not exist for connection with record %r",
+                        connection.identificatieknooppuntofverbinding,
+                    )
+                else:
+                    self.add_structure(connection, linkedstructures[0])
             else:
                 logger.warning(
                     'The following "typeverbinding" is not recognized: %s',

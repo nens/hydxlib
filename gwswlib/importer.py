@@ -60,20 +60,8 @@ def import_hydx(hydx_path):
         csvpath = os.path.join(hydx_path, f)
         with open(csvpath) as csvfile:
             csvreader = csv.DictReader(csvfile, delimiter=";")
-            check_headers(csvreader.fieldnames, Hydx.csvheaders(f))
             hydx.import_csvfile(csvreader, f)
 
     hydx.check_import_data()
 
     return hydx
-
-
-def check_headers(found, expected):
-    """Compares two header columns on extra or missing ones"""
-    extra_columns = set(found) - set(expected)
-    missing_columns = set(expected) - set(found)
-    if extra_columns:
-        logger.warning("extra columns found: %s", extra_columns)
-
-    if missing_columns:
-        logger.error("missing columns found: %s", missing_columns)
