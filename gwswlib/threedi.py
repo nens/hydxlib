@@ -45,17 +45,23 @@ class Threedi:
         self.connection_nodes = []
         self.manholes = []
         self.connections = []
-        self.structures = []
+        self.pumpstations = []
+        self.weirs = []
+        self.orifices = []
 
         for connection_node in hydx.connection_nodes:
             check_if_element_is_created_twice(
-                connection_node.identificatieknooppuntofverbinding, self.connection_nodes, "Connection node"
+                connection_node.identificatieknooppuntofverbinding,
+                self.connection_nodes,
+                "Connection node",
             )
             self.add_connection_node(connection_node)
 
         for connection in hydx.connections:
             check_if_element_is_created_twice(
-                connection.identificatieknooppuntofverbinding, self.connections, "Connection"
+                connection.identificatieknooppuntofverbinding,
+                self.connections,
+                "Connection",
             )
 
             if connection.typeverbinding in ["GSL", "OPL", "ITR"]:
@@ -130,8 +136,36 @@ class Threedi:
 
     def add_structure(self, hydx_connection, hydx_structure):
         """Add hydx.structure and hydx.connection into threedi.pumpstation"""
-        print(hydx_connection, hydx_structure)
-        pass
+
+        element_codes, element_display_names = self.get_code(
+            hydx_connection.identificatieknooppunt1,
+            hydx_connection.identificatieknooppunt2,
+        )
+
+        if hydx_structure.typekunstwerk == "PMP":
+            if hydx_structure.aanslagniveaubovenstrooms is not None:
+                pumpstation_type = 2
+                pumpstation_start_level = hydx_structure.aanslagniveaubovenstrooms
+                pumpstation_stop_level = hydx_structure.afslagniveaubovenstrooms
+            else:
+                pumpstation_type = 1
+                pumpstation_start_level = hydx_structure.aanslagniveaubenedenstrooms
+                pumpstation_stop_level = hydx_structure.afslagniveaubenedenstrooms
+
+            pumpstation = {
+                "code": element_codes,
+                "display_name": element_display_names,
+                "start_node.code": hydx_connection.identificatieknooppunt1,
+                "end_node.code": hydx_connection.identificatieknooppunt2,
+                "type": pumpstation_type,
+                "start_level": pumpstation_start_level,
+                "lower_stop_level": pumpstation_stop_level,
+                # upper_stop_level is not supported by hydx
+                "upper_stop_level": None,
+                "capacity": round(float(hydx_structure.pompcapaciteit) / 3.6, 5),
+                "sewerage": True,
+            }
+            self.pumpstations.append(pumpstation)
 
     def get_mapping_value(self, mapping, hydx_value, record_code, name_for_logging):
         if hydx_value in mapping:
@@ -141,6 +175,52 @@ class Threedi:
                 "Unknown %s: %s (code %r)", name_for_logging, hydx_value, record_code
             )
             return None
+
+    def get_code(self, code1, code2=None, default_code=""):
+        """
+        Args:
+            code1(string): object code
+            code2(string): object code 2
+            default_code: returned value when code is None or ''
+
+        Returns:
+            (string): combined area code
+        """
+        if code1 is None or code1 == "":
+            code1 = default_code
+        if code2 is None or code2 == "":
+            code2 = default_code
+        element_codes = code1 + "-" + code2
+
+        display_name1 = [
+            element["display_name"]
+            for element in self.manholes
+            if element["code"] == code1
+        ][0]
+        display_name2 = [
+            element["display_name"]
+            for element in self.manholes
+            if element["code"] == code2
+        ][0]
+
+        if display_name1 is None or display_name1 == "":
+            display_name1 = default_code
+        if display_name2 is None or display_name2 == "":
+            display_name2 = default_code
+        element_display_names = display_name1 + "-" + display_name2
+
+        all_connections = self.pumpstations + self.weirs + self.orifices
+        nr_connections = [
+            element
+            for element in all_connections
+            if element["code"].rpartition("-")[0] == element_codes
+        ]
+        connection_number = len(nr_connections) + 1
+
+        element_codes += "-" + str(connection_number)
+        element_display_names += "-" + str(connection_number)
+
+        return element_codes, element_display_names
 
 
 def point(x, y, srid_input=28992):
