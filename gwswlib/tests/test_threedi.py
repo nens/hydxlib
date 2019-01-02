@@ -2,9 +2,10 @@
 """Tests for threedi.py"""
 from unittest import TestCase
 import pytest
+import mock
 
 from gwswlib.importer import import_hydx
-from gwswlib.threedi import Threedi, check_if_element_is_created_twice
+from gwswlib.threedi import Threedi, check_if_element_is_created_with_same_code
 from gwswlib.sql_models.constants import Constants
 
 
@@ -36,7 +37,7 @@ def test_get_mapping_value_right(caplog):
     assert shape == "rnd"
 
 
-def test_check_if_element_is_created_twice(caplog):
+def test_check_if_element_created_is_with_same_code(caplog):
     checked_element = "knp6"
     created_elements = [
         {
@@ -51,8 +52,32 @@ def test_check_if_element_is_created_twice(caplog):
         },
     ]
     element_type = "Connection node"
-    check_if_element_is_created_twice(checked_element, created_elements, element_type)
-    assert "Connection node is created twice" in caplog.text
+    check_if_element_is_created_with_same_code(
+        checked_element, created_elements, element_type
+    )
+    assert "Multiple elements 'Connection node' are created" in caplog.text
+
+
+def test_import_hydx_unknown_connection_types(caplog):
+    hydx = mock.Mock()
+    hydx.connection_nodes = []
+    hydx.connections = [
+        mock.Mock(identificatieknooppuntofverbinding="ovs1", typeverbinding="XXX")
+    ]
+    threedi = Threedi()
+    threedi.import_hydx(hydx)
+    assert '"typeverbinding" is not recognized' in caplog.text
+
+
+def test_import_hydx_known_pipe_connection(caplog):
+    hydx = mock.Mock()
+    hydx.connection_nodes = []
+    hydx.connections = [
+        mock.Mock(identificatieknooppuntofverbinding="ovs1", typeverbinding="GSL")
+    ]
+    threedi = Threedi()
+    threedi.import_hydx(hydx)
+    assert '"typeverbinding" is not implemented' in caplog.text
 
 
 class TestThreedi(TestCase):

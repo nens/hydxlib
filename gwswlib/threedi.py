@@ -50,7 +50,7 @@ class Threedi:
         self.orifices = []
 
         for connection_node in hydx.connection_nodes:
-            check_if_element_is_created_twice(
+            check_if_element_is_created_with_same_code(
                 connection_node.identificatieknooppuntofverbinding,
                 self.connection_nodes,
                 "Connection node",
@@ -58,7 +58,7 @@ class Threedi:
             self.add_connection_node(connection_node)
 
         for connection in hydx.connections:
-            check_if_element_is_created_twice(
+            check_if_element_is_created_with_same_code(
                 connection.identificatieknooppuntofverbinding,
                 self.connections,
                 "Connection",
@@ -66,7 +66,7 @@ class Threedi:
 
             if connection.typeverbinding in ["GSL", "OPL", "ITR"]:
                 logger.warning(
-                    'The following "typeverbinding" is not connected in this importer: %s',
+                    'The following "typeverbinding" is not implemented in this importer: %s',
                     connection.typeverbinding,
                 )
             elif connection.typeverbinding in ["PMP", "OVS", "DRL"]:
@@ -92,7 +92,7 @@ class Threedi:
                     self.add_structure(connection, linkedstructures[0])
             else:
                 logger.warning(
-                    'The following "typeverbinding" is not recognized: %s',
+                    'The following "typeverbinding" is not recognized by 3Di exporter: %s',
                     connection.typeverbinding,
                 )
 
@@ -236,7 +236,13 @@ def point(x, y, srid_input=28992):
     return x, y, srid_input
 
 
-def check_if_element_is_created_twice(checked_element, created_elements, element_type):
+def check_if_element_is_created_with_same_code(
+    checked_element, created_elements, element_type
+):
     added_elements = [element["code"] for element in created_elements]
     if checked_element in added_elements:
-        logger.error("%s is created twice with code %r", element_type, checked_element)
+        logger.error(
+            "Multiple elements %r are created with the same code %r",
+            element_type,
+            checked_element,
+        )

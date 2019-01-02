@@ -12,9 +12,12 @@ class Generic:
     def csvheaders(cls):
         return [field["csvheader"] for field in cls.FIELDS]
 
-    def import_csvline(self, csvline):
+    @classmethod
+    def import_csvline(cls, csvline):
         # AV - function looks like hydroObjectListFromSUFHYD in turtleurbanclasses.py
-        for field in self.FIELDS:
+        instance = cls()
+
+        for field in cls.FIELDS:
             fieldname = field["fieldname"].lower()
             value = csvline[field["csvheader"]]
             datatype = field["type"]
@@ -24,9 +27,10 @@ class Generic:
 
             # set fields to defined data type and load into object
             if value is not None:
-                setattr(self, fieldname, datatype(value))
+                setattr(instance, fieldname, datatype(value))
             else:
-                setattr(self, fieldname, None)
+                setattr(instance, fieldname, None)
+        return instance
 
 
 class ConnectionNode(Generic):
@@ -474,8 +478,8 @@ class Hydx:
         )
 
         for line in csvreader:
-            hydxelement = csvfile_information["hydx_class"]()
-            hydxelement.import_csvline(csvline=line)
+            hydx_class = csvfile_information["hydx_class"]
+            hydxelement = hydx_class.import_csvline(csvline=line)
             collection = getattr(self, csvfile_information["collection_name"])
             collection.append(hydxelement)
 

@@ -26,7 +26,7 @@ def import_hydx(hydx_path):
         "Verbinding1.csv",
         "Verloop1.csv",
     ]
-    connectedcsvfiles = [
+    implementedcsvfiles = [
         # "BOP1.csv",
         # "Debiet1.csv",
         # "GroeneDaken1.csv",
@@ -45,10 +45,13 @@ def import_hydx(hydx_path):
     for f in hydxcsvfiles:
         csvpath = os.path.join(hydx_path, f)
         if not os.path.isfile(csvpath):
-            logger.warning("The following hydx file could not be found: %s", csvpath)
-        elif f not in connectedcsvfiles:
             logger.warning(
-                "The following hydx file is currently not connected in this importer: %s",
+                "The following hydx file could not be found: %s",
+                os.path.abspath(csvpath),
+            )
+        elif f not in implementedcsvfiles:
+            logger.warning(
+                "The following hydx file is currently not implemented in this importer: %s",
                 csvpath,
             )
         else:

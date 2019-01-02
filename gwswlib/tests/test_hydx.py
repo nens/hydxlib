@@ -76,12 +76,11 @@ def test_check_init_connectionnode():
         "identificatiedefinitieit_object": None,
         "toelichtingregel": None,
     }
-    connection_node = ConnectionNode()
-    connection_node.import_csvline(csvline=line_in)
+    connection_node = ConnectionNode.import_csvline(csvline=line_in)
     assert connection_node.__dict__ == line_out
 
 
-def test_repr_connection_nodes():
+def test_repr_uninitialized_connection_nodes():
     connection_node = ConnectionNode()
     assert repr(connection_node)
 
@@ -135,12 +134,11 @@ def test_check_init_connection():
         "initielewaterstand": None,
         "toelichtingregel": None,
     }
-    connection = Connection()
-    connection.import_csvline(csvline=line_in)
+    connection = Connection.import_csvline(csvline=line_in)
     assert connection.__dict__ == line_out
 
 
-def test_repr_connection():
+def test_repr_uninitialized_connection():
     connection = Connection()
     assert repr(connection)
 
@@ -214,11 +212,10 @@ def test_check_init_structure():
         "aannameafslagniveaupomp": None,
         "toelichtingregel": None,
     }
-    structure = Structure()
-    structure.import_csvline(csvline=line_in)
+    structure = Structure.import_csvline(csvline=line_in)
     assert structure.__dict__ == line_out
 
 
-def test_repr_structure():
+def test_repr_uninitialized_structure():
     structure = Structure()
     assert repr(structure)
