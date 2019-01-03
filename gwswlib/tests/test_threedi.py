@@ -190,7 +190,7 @@ class TestThreedi(TestCase):
             "discharge_coefficient_negative": 0.8,
             "sewerage": True,
             "boundary_details": {"timeseries": "0,9.5\n9999,9.5 ", "boundary_type": 1},
-            "crs_code": "rectangle_w1.5_open",
+            "cross_section_code": "rectangle_w1.5_open",
         }
         self.threedi.import_hydx(self.hydx)
         # select first manhole from dataset for check

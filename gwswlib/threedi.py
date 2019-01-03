@@ -48,7 +48,7 @@ class Threedi:
         self.pumpstations = []
         self.weirs = []
         self.orifices = []
-        self.profiles = []
+        self.cross_sections = []
 
         for connection_node in hydx.connection_nodes:
             check_if_element_is_created_with_same_code(
@@ -97,7 +97,7 @@ class Threedi:
                     connection.typeverbinding,
                 )
 
-        self.generate_profiles()
+        self.generate_cross_sections()
 
     def add_connection_node(self, hydx_connection_node):
         """Add hydx.connection_node into threedi.connection_node and threedi.manhole"""
@@ -240,38 +240,38 @@ class Threedi:
 
         self.weirs.append(weir)
 
-    def generate_profiles(self):
-        profiles = dict()
-        profiles["default"] = {
+    def generate_cross_sections(self):
+        cross_sections = dict()
+        cross_sections["default"] = {
             "width": 1,
             "height": 1,
             "shape": Constants.SHAPE_ROUND,
             "code": "default",
         }
 
-        connections_with_profiles = self.weirs + self.orifices
-        for connection in connections_with_profiles:
-            crs = connection["cross_section_details"]
-            if crs["shape"] == Constants.SHAPE_ROUND:
-                code = "round_{width}".format(**crs)
-            elif crs["shape"] == Constants.SHAPE_EGG:
-                code = "egg_w{width}_h{height}".format(**crs)
-            elif crs["shape"] == Constants.SHAPE_RECTANGLE:
-                if crs["height"] is None:
-                    code = "rectangle_w{width}_open".format(**crs)
+        connections_with_cross_sections = self.weirs + self.orifices
+        for connection in connections_with_cross_sections:
+            cross_section = connection["cross_section_details"]
+            if cross_section["shape"] == Constants.SHAPE_ROUND:
+                code = "round_{width}".format(**cross_section)
+            elif cross_section["shape"] == Constants.SHAPE_EGG:
+                code = "egg_w{width}_h{height}".format(**cross_section)
+            elif cross_section["shape"] == Constants.SHAPE_RECTANGLE:
+                if cross_section["height"] is None:
+                    code = "rectangle_w{width}_open".format(**cross_section)
                 else:
-                    code = "rectangle_w{width}_h{height}".format(**crs)
+                    code = "rectangle_w{width}_h{height}".format(**cross_section)
             else:
                 code = "default"
 
-            # add unique profiles to profile definition
-            if code not in profiles:
-                profiles[code] = crs
-                profiles[code]["code"] = code
+            # add unique cross_sections to cross_section definition
+            if code not in cross_sections:
+                cross_sections[code] = cross_section
+                cross_sections[code]["code"] = code
 
-            connection["crs_code"] = code
+            connection["cross_section_code"] = code
 
-        self.profiles = profiles
+        self.cross_sections = cross_sections
 
     def get_mapping_value(self, mapping, hydx_value, record_code, name_for_logging):
         if hydx_value in mapping:

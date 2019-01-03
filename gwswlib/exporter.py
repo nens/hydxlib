@@ -77,22 +77,21 @@ def write_threedi_to_db(threedi, threedi_db_settings):
 
         session.commit()
 
-    crs_list = []
-    for crs in threedi.profiles.values():
-        crs_list.append(CrossSectionDefinition(**crs))
+    cross_section_list = []
+    for cross_section in threedi.cross_sections.values():
+        cross_section_list.append(CrossSectionDefinition(**cross_section))
 
-    commit_counts["profiles"] = len(crs_list)
-    session.bulk_save_objects(crs_list)
+    commit_counts["cross_sections"] = len(cross_section_list)
+    session.bulk_save_objects(cross_section_list)
     session.commit()
 
-    crs_list = (
+    cross_section_list = (
         session.query(CrossSectionDefinition)
         .options(load_only("id", "code"))
         .order_by(CrossSectionDefinition.id)
         .all()
     )
-    crs_dict = {m.code: m.id for m in crs_list}
-    del crs_list
+    cross_section_dict = {m.code: m.id for m in cross_section_list}
 
     con_list = []
     srid = 28992
@@ -118,7 +117,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         .all()
     )
     con_dict = {m.code: m.id for m in con_list}
-    del con_list
 
     # # add extra references for link nodes (one node, multiple linked codes
     # for link in threedi.links:
@@ -160,7 +158,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     commit_counts["manholes"] = len(man_list)
     session.bulk_save_objects(man_list)
     session.commit()
-    del man_list
 
     # pipe_list = []
     # for pipe in threedi.pipes:
@@ -202,7 +199,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     # commit_counts['pipes'] = len(pipe_list)
     # session.bulk_save_objects(pipe_list)
     # session.commit()
-    # del pipe_list
 
     pump_list = []
     for pump in threedi.pumpstations:
@@ -230,7 +226,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     commit_counts["pumpstations"] = len(pump_list)
     session.bulk_save_objects(pump_list)
     session.commit()
-    del pump_list
 
     weir_list = []
     for weir in threedi.weirs:
@@ -250,11 +245,13 @@ def write_threedi_to_db(threedi, threedi_db_settings):
                 "End node of weir %r not found in connection nodes", weir["code"]
             )
 
-        weir["cross_section_definition_id"] = crs_dict[weir["crs_code"]]
+        weir["cross_section_definition_id"] = cross_section_dict[
+            weir["cross_section_code"]
+        ]
 
         del weir["start_node.code"]
         del weir["end_node.code"]
-        del weir["crs_code"]
+        del weir["cross_section_code"]
         del weir["cross_section_details"]
         del weir["boundary_details"]
 
@@ -263,7 +260,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     commit_counts["weirs"] = len(weir_list)
     session.bulk_save_objects(weir_list)
     session.commit()
-    del weir_list
 
     # for orif in threedi.orifices:
     #     try:
@@ -305,7 +301,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     # commit_counts['structures'] = len(obj_list)
     # session.bulk_save_objects(obj_list)
     # session.commit()
-    # del obj_list
 
     # # Outlets (must be saved after weirs, orifice, pumpstation, etc.
     # # because of constraints)
@@ -328,7 +323,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     # commit_counts['outlets'] = len(outlet_list)
     # session.bulk_save_objects(outlet_list)
     # session.commit()
-    # del outlet_list
 
     # # Impervious surfaces
     # imp_list = []
@@ -342,7 +336,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     # imp_list = session.query(ImperviousSurface).options(
     #     load_only("id", "code")).order_by(ImperviousSurface.id).all()
     # imp_dict = {m.code: m.id for m in imp_list}
-    # del imp_list
 
     # map_list = []
     # for imp_map in threedi.impervious_surface_maps:
