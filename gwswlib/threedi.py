@@ -149,16 +149,20 @@ class Threedi:
         """Add hydx.structure and hydx.connection into threedi.pumpstation"""
 
         self.check_if_nodes_of_connection_exists(hydx_connection)
-        element_display_names = self.get_connection_display_name_from_manholes(
+        combined_display_name_string = self.get_connection_display_name_from_manholes(
             hydx_connection
         )
 
         if hydx_structure.typekunstwerk == "PMP":
-            self.add_pumpstation(hydx_connection, hydx_structure, element_display_names)
+            self.add_pumpstation(
+                hydx_connection, hydx_structure, combined_display_name_string
+            )
         elif hydx_structure.typekunstwerk == "OVS":
-            self.add_weir(hydx_connection, hydx_structure, element_display_names)
+            self.add_weir(hydx_connection, hydx_structure, combined_display_name_string)
 
-    def add_pumpstation(self, hydx_connection, hydx_structure, element_display_names):
+    def add_pumpstation(
+        self, hydx_connection, hydx_structure, combined_display_name_string
+    ):
         if hydx_structure.aanslagniveaubovenstrooms is not None:
             pumpstation_type = 2
             pumpstation_start_level = hydx_structure.aanslagniveaubovenstrooms
@@ -170,7 +174,7 @@ class Threedi:
 
         pumpstation = {
             "code": hydx_connection.identificatieknooppuntofverbinding,
-            "display_name": element_display_names,
+            "display_name": combined_display_name_string,
             "start_node.code": hydx_connection.identificatieknooppunt1,
             "end_node.code": hydx_connection.identificatieknooppunt2,
             "type_": pumpstation_type,
@@ -183,7 +187,7 @@ class Threedi:
         }
         self.pumpstations.append(pumpstation)
 
-    def add_weir(self, hydx_connection, hydx_structure, element_display_names):
+    def add_weir(self, hydx_connection, hydx_structure, combined_display_name_string):
 
         waterlevel_boundary = getattr(hydx_structure, "buitenwaterstand", None)
 
@@ -219,7 +223,7 @@ class Threedi:
             )
         weir = {
             "code": hydx_connection.identificatieknooppuntofverbinding,
-            "display_name": element_display_names,
+            "display_name": combined_display_name_string,
             "start_node.code": hydx_connection.identificatieknooppunt1,
             "end_node.code": hydx_connection.identificatieknooppunt2,
             "cross_section_details": {
@@ -311,19 +315,19 @@ class Threedi:
         }
         display_name1 = manhole_dict.get(code1, default_code)
         display_name2 = manhole_dict.get(code2, default_code)
-        element_display_names = display_name1 + "-" + display_name2
+        combined_display_name_string = display_name1 + "-" + display_name2
 
         all_connections = self.pumpstations + self.weirs + self.orifices
         nr_connections = [
             element["display_name"]
             for element in all_connections
-            if element["display_name"].startswith(element_display_names)
+            if element["display_name"].startswith(combined_display_name_string)
         ]
         connection_number = len(nr_connections) + 1
 
-        element_display_names += "-" + str(connection_number)
+        combined_display_name_string += "-" + str(connection_number)
 
-        return element_display_names
+        return combined_display_name_string
 
 
 def point(x, y, srid_input=28992):
