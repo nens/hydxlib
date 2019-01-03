@@ -147,9 +147,8 @@ class Threedi:
 
     def add_structure(self, hydx_connection, hydx_structure):
         """Add hydx.structure and hydx.connection into threedi.pumpstation"""
-
-        self.check_if_nodes_of_connection_exist(hydx_connection)
-        combined_display_name_string = self.get_connection_display_name_from_manholes(
+        self.check_if_nodes_of_connection_exists(hydx_connection)
+        combined_display_name_string = self.get_connection_display_names_from_manholes(
             hydx_connection
         )
 
@@ -188,9 +187,7 @@ class Threedi:
         self.pumpstations.append(pumpstation)
 
     def add_weir(self, hydx_connection, hydx_structure, combined_display_name_string):
-
         waterlevel_boundary = getattr(hydx_structure, "buitenwaterstand", None)
-
         if waterlevel_boundary is not None:
             timeseries = "0,{0}\n9999,{0} ".format(waterlevel_boundary)
         else:
@@ -241,11 +238,10 @@ class Threedi:
                 "boundary_type": Constants.BOUNDARY_TYPE_WATERLEVEL,
             },
         }
-
         self.weirs.append(weir)
 
     def generate_cross_sections(self):
-        cross_sections = dict()
+        cross_sections = {}
         cross_sections["default"] = {
             "width": 1,
             "height": 1,
@@ -305,7 +301,7 @@ class Threedi:
                 connection_code,
             )
 
-    def get_connection_display_name_from_manholes(self, connection):
+    def get_connection_display_names_from_manholes(self, connection):
         code1 = connection.identificatieknooppunt1
         code2 = connection.identificatieknooppunt2
         default_code = ""
