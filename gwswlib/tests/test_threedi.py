@@ -137,16 +137,17 @@ class TestThreedi(TestCase):
         assert self.threedi.manholes[0] == manhole_0
 
     def test_add_pumpstation(self):
-        pumpstation_0 = {
-            "code": "pmp1",
-            "display_name": "13_990430-13_990420-1",
+        pumpstation_1 = {
+            "code": "pmp2",
+            # check if connection number 2 is created for second structure with these nodes
+            "display_name": "13_990430-13_990420-2",
             "start_node.code": "knp3",
             "end_node.code": "knp4",
             "type_": 1,
-            "start_level": 7.47,
-            "lower_stop_level": 7.32,
+            "start_level": 7.57,
+            "lower_stop_level": 7.33,
             "upper_stop_level": None,
-            "capacity": 10.0,
+            "capacity": 18.05556,
             "sewerage": True,
         }
         self.threedi.import_hydx(self.hydx)
@@ -154,7 +155,7 @@ class TestThreedi(TestCase):
         connection = self.hydx.connections[0]
         structure = self.hydx.structures[0]
         self.threedi.add_structure(connection, structure)
-        assert self.threedi.pumpstations[0] == pumpstation_0
+        assert self.threedi.pumpstations[1] == pumpstation_1
 
     def test_add_first_pump_with_same_code(self):
         self.threedi.import_hydx(self.hydx)

@@ -282,7 +282,7 @@ class Threedi:
             )
             return None
 
-    def check_if_nodes_of_connection_exists(self, connection, default_code=""):
+    def check_if_nodes_of_connection_exists(self, connection):
         connection_code = connection.identificatieknooppuntofverbinding
         code1 = connection.identificatieknooppunt1
         code2 = connection.identificatieknooppunt2
@@ -301,35 +301,23 @@ class Threedi:
                 connection_code,
             )
 
-    def get_connection_display_name_from_manholes(self, connection, default_code=""):
+    def get_connection_display_name_from_manholes(self, connection):
         code1 = connection.identificatieknooppunt1
         code2 = connection.identificatieknooppunt2
+        default_code = ""
 
-        if code1 is None or code1 == "":
-            code1 = default_code
-        if code2 is None or code2 == "":
-            code2 = default_code
-
-        manh_dict = {
+        manhole_dict = {
             manhole["code"]: manhole["display_name"] for manhole in self.manholes
         }
-        if code1 in manh_dict:
-            display_name1 = manh_dict[code1]
-        else:
-            display_name1 = default_code
-
-        if code2 in manh_dict:
-            display_name2 = manh_dict[code2]
-        else:
-            display_name2 = default_code
+        display_name1 = manhole_dict.get(code1, default_code)
+        display_name2 = manhole_dict.get(code2, default_code)
         element_display_names = display_name1 + "-" + display_name2
-        element_codes = code1 + "-" + code2
 
         all_connections = self.pumpstations + self.weirs + self.orifices
         nr_connections = [
-            element
+            element["display_name"]
             for element in all_connections
-            if element["code"].rpartition("-")[0] == element_codes
+            if element["display_name"].startswith(element_display_names)
         ]
         connection_number = len(nr_connections) + 1
 
