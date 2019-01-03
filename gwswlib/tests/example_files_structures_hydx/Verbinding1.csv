@@ -5,4 +5,5 @@ pmp2;knp3;knp4;PMP;;;;1_2;;;;;;;;;;;;;
 pmp2;knp31;knp4;PMP;;;;1_2;;;;;;;;;;;;;
 pmp3;knp5;knp6;PMP;;;;1_2;;;;;;;;;;;;;
 pmp4;;;PMP;;;;1_2;;;;;;;;;;;;;
-ovs2;knp5;knp6;OVS;;;;OPN;;;;;;;;;;;;;
+ovs2;knp5;knp6;OVS;;;;GSL;;;;;;;;;;;;;
+ovs2;knp5;knp6;OVS;;;;;;;;;;;;;;;;;

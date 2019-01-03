@@ -95,7 +95,6 @@ class Threedi:
                     'The following "typeverbinding" is not recognized by 3Di exporter: %s',
                     connection.typeverbinding,
                 )
-        print(self.weirs)
 
     def add_connection_node(self, hydx_connection_node):
         """Add hydx.connection_node into threedi.connection_node and threedi.manhole"""
@@ -186,30 +185,35 @@ class Threedi:
         waterlevel_boundary = getattr(hydx_structure, "buitenwaterstand", None)
 
         if waterlevel_boundary is not None:
-            timeseries = "0,{0}\n9999,{0} ".format(value)
+            timeseries = "0,{0}\n9999,{0} ".format(waterlevel_boundary)
         else:
             timeseries = None
 
+        if hydx_connection.stromingsrichting not in ["GSL", "1_2", "2_1", "OPN"]:
+            logger.warning(
+                'Flow direction is not recognized for %r with record %r, "OPN" is assumed',
+                hydx_connection.typeverbinding,
+                hydx_connection.identificatieknooppuntofverbinding,
+            )
+
         if (
-            hydx_connection.stromingsrichting == "OPN"
-            or hydx_connection.stromingsrichting == "1_2"
+            hydx_connection.stromingsrichting == "GSL"
+            or hydx_connection.stromingsrichting == "2_1"
         ):
+            discharge_coefficient_positive = 0
+        else:
             discharge_coefficient_positive = (
                 hydx_structure.afvoercoefficientoverstortdrempel
             )
-        else:
-            discharge_coefficient_positive = 0
-
         if (
-            hydx_connection.stromingsrichting == "OPN"
-            or hydx_connection.stromingsrichting == "2_1"
+            hydx_connection.stromingsrichting == "GSL"
+            or hydx_connection.stromingsrichting == "1_2"
         ):
+            discharge_coefficient_negative = 0
+        else:
             discharge_coefficient_negative = (
                 hydx_structure.afvoercoefficientoverstortdrempel
             )
-        else:
-            discharge_coefficient_negative = 0
-
         weir = {
             "code": hydx_connection.identificatieknooppuntofverbinding,
             "display_name": element_display_names,
