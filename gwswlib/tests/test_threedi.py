@@ -72,6 +72,7 @@ def test_import_hydx_unknown_connection_types(caplog):
 def test_import_hydx_known_pipe_connection(caplog):
     hydx = mock.Mock()
     hydx.connection_nodes = []
+    hydx.profiles = []
     hydx.connections = [
         mock.Mock(identificatieknooppuntofverbinding="ovs1", typeverbinding="GSL")
     ]
@@ -173,6 +174,33 @@ class TestThreedi(TestCase):
         assert self.threedi.pumpstations[3]["type_"] == 2
 
     def test_add_weir(self):
+        weir_0 = {
+            "code": "ovs1",
+            "display_name": "13_990100-13_990105-1",
+            "start_node.code": "knp1",
+            "end_node.code": "knp2",
+            "cross_section_details": {
+                "code": "rectangle_w1.5_open",
+                "shape": 1,
+                "width": 1.5,
+                "height": None,
+            },
+            "crest_type": 4,
+            "crest_level": 9.5,
+            "discharge_coefficient_positive": 0.8,
+            "discharge_coefficient_negative": 0.8,
+            "sewerage": True,
+            "boundary_details": {"timeseries": "0,9.5\n9999,9.5 ", "boundary_type": 1},
+            "crs_code": "rectangle_w1.5_open",
+        }
+        self.threedi.import_hydx(self.hydx)
+        # select first manhole from dataset for check
+        connection = self.hydx.connections[0]
+        structure = self.hydx.structures[0]
+        self.threedi.add_structure(connection, structure)
+        assert self.threedi.weirs[0] == weir_0
+
+    def test_add_orifice(self):
         weir_0 = {
             "code": "ovs1",
             "display_name": "13_990100-13_990105-1",

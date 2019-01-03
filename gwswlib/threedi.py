@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import logging
+from collections import OrderedDict
 
 from gwswlib.sql_models.constants import Constants
+from gwswlib.hydx import Profile
 
 
 logger = logging.getLogger(__name__)
-
-MAPPING = {"MANHOLE_SHAPE_MAPPING": "Putvorm"}
 
 MANHOLE_SHAPE_MAPPING = {
     "RND": Constants.MANHOLE_SHAPE_ROUND,
@@ -34,6 +34,14 @@ MATERIAL_MAPPING = {
 MANHOLE_INDICATOR_MAPPING = {
     "INS": Constants.MANHOLE_INDICATOR_MANHOLE,
     "UIT": Constants.MANHOLE_INDICATOR_OUTLET,
+}
+
+# for now skipping "MVR", "HEU"
+SHAPE_MAPPING = {
+    "RND": Constants.SHAPE_ROUND,
+    "EIV": Constants.SHAPE_EGG,
+    "RHK": Constants.SHAPE_TABULATED_RECTANGLE,
+    "TPZ": Constants.SHAPE_TABULATED_TRAPEZIUM,
 }
 
 
@@ -65,6 +73,31 @@ class Threedi:
                 "Connection",
             )
 
+            linkedprofile = None
+            if connection.typeverbinding in ["GSL", "OPL", "ITR", "DRL"]:
+                linkedprofiles = [
+                    profile
+                    for profile in hydx.profiles
+                    if profile.identificatieprofieldefinitie
+                    == connection.identificatieprofieldefinitie
+                ]
+
+                if len(linkedprofiles) > 1:
+                    logging.error(
+                        "Only first profile is used to create a profile %r for connection %r",
+                        connection.identificatieprofieldefinitie,
+                        connection.identificatieknooppuntofverbinding,
+                    )
+
+                if len(linkedprofiles) == 0:
+                    logging.error(
+                        "Profile %r does not exist for connection %r",
+                        connection.identificatieprofieldefinitie,
+                        connection.identificatieknooppuntofverbinding,
+                    )
+                else:
+                    linkedprofile = linkedprofiles[0]
+
             if connection.typeverbinding in ["GSL", "OPL", "ITR"]:
                 logger.warning(
                     'The following "typeverbinding" is not implemented in this importer: %s',
@@ -90,7 +123,7 @@ class Threedi:
                         connection.identificatieknooppuntofverbinding,
                     )
                 else:
-                    self.add_structure(connection, linkedstructures[0])
+                    self.add_structure(connection, linkedstructures[0], linkedprofile)
             else:
                 logger.warning(
                     'The following "typeverbinding" is not recognized by 3Di exporter: %s',
@@ -145,7 +178,7 @@ class Threedi:
 
         self.manholes.append(manhole)
 
-    def add_structure(self, hydx_connection, hydx_structure):
+    def add_structure(self, hydx_connection, hydx_structure, hydx_profile=None):
         """Add hydx.structure and hydx.connection into threedi.pumpstation"""
 
         self.check_if_nodes_of_connection_exists(hydx_connection)
@@ -157,6 +190,12 @@ class Threedi:
             self.add_pumpstation(hydx_connection, hydx_structure, element_display_names)
         elif hydx_structure.typekunstwerk == "OVS":
             self.add_weir(hydx_connection, hydx_structure, element_display_names)
+        elif hydx_structure.typekunstwerk == "DRL":
+            if hydx_profile is None:
+                hydx_profile = get_hydx_default_profile()
+            self.add_orifice(
+                hydx_connection, hydx_structure, hydx_profile, element_display_names
+            )
 
     def add_pumpstation(self, hydx_connection, hydx_structure, element_display_names):
         if hydx_structure.aanslagniveaubovenstrooms is not None:
@@ -192,31 +231,10 @@ class Threedi:
         else:
             timeseries = None
 
-        if hydx_connection.stromingsrichting not in ["GSL", "1_2", "2_1", "OPN"]:
-            logger.warning(
-                'Flow direction is not recognized for %r with record %r, "OPN" is assumed',
-                hydx_connection.typeverbinding,
-                hydx_connection.identificatieknooppuntofverbinding,
-            )
+        hydx_connection = self.get_discharge_coefficients(
+            hydx_connection, hydx_structure
+        )
 
-        if (
-            hydx_connection.stromingsrichting == "GSL"
-            or hydx_connection.stromingsrichting == "2_1"
-        ):
-            discharge_coefficient_positive = 0
-        else:
-            discharge_coefficient_positive = (
-                hydx_structure.afvoercoefficientoverstortdrempel
-            )
-        if (
-            hydx_connection.stromingsrichting == "GSL"
-            or hydx_connection.stromingsrichting == "1_2"
-        ):
-            discharge_coefficient_negative = 0
-        else:
-            discharge_coefficient_negative = (
-                hydx_structure.afvoercoefficientoverstortdrempel
-            )
         weir = {
             "code": hydx_connection.identificatieknooppuntofverbinding,
             "display_name": element_display_names,
@@ -229,8 +247,8 @@ class Threedi:
             },
             "crest_type": Constants.CREST_TYPE_SHARP_CRESTED,
             "crest_level": hydx_structure.niveauoverstortdrempel,
-            "discharge_coefficient_positive": discharge_coefficient_positive,
-            "discharge_coefficient_negative": discharge_coefficient_negative,
+            "discharge_coefficient_positive": hydx_connection.discharge_coefficient_positive,
+            "discharge_coefficient_negative": hydx_connection.discharge_coefficient_negative,
             "sewerage": True,
             "boundary_details": {
                 "timeseries": timeseries,
@@ -240,6 +258,39 @@ class Threedi:
 
         self.weirs.append(weir)
 
+    def add_orifice(
+        self, hydx_connection, hydx_structure, hydx_profile, element_display_names
+    ):
+
+        hydx_connection = self.get_discharge_coefficients(
+            hydx_connection, hydx_structure
+        )
+
+        orifice = {
+            "code": hydx_connection.identificatieknooppuntofverbinding,
+            "display_name": element_display_names,
+            "start_node.code": hydx_connection.identificatieknooppunt1,
+            "end_node.code": hydx_connection.identificatieknooppunt2,
+            "cross_section_details": {
+                "shape": self.get_mapping_value(
+                    SHAPE_MAPPING,
+                    hydx_profile.vormprofiel,
+                    hydx_connection.identificatieknooppuntofverbinding,
+                    name_for_logging="shape of orifice",
+                ),
+                "width": hydx_profile.breedte_diameterprofiel,
+                "height": hydx_profile.hoogteprofiel,
+            },
+            "discharge_coefficient_positive": hydx_connection.discharge_coefficient_positive,
+            "discharge_coefficient_negative": hydx_connection.discharge_coefficient_negative,
+            "sewerage": True,
+            "max_capacity": hydx_structure.maximalecapaciteitdoorlaat,
+            "crest_type": Constants.CREST_TYPE_SHARP_CRESTED,
+            "crest_level": hydx_structure.niveaubinnenonderkantprofiel,
+        }
+
+        self.orifices.append(orifice)
+
     def generate_profiles(self):
         profiles = dict()
         profiles["default"] = {
@@ -248,7 +299,7 @@ class Threedi:
             "shape": Constants.SHAPE_ROUND,
             "code": "default",
         }
-
+        
         connections_with_profiles = self.weirs + self.orifices
         for connection in connections_with_profiles:
             crs = connection["cross_section_details"]
@@ -257,10 +308,9 @@ class Threedi:
             elif crs["shape"] == Constants.SHAPE_EGG:
                 code = "egg_w{width}_h{height}".format(**crs)
             elif crs["shape"] == Constants.SHAPE_RECTANGLE:
-                if crs["height"] is None:
-                    code = "rectangle_w{width}_open".format(**crs)
-                else:
-                    code = "rectangle_w{width}_h{height}".format(**crs)
+                code = "rectangle_w{width}_open".format(**crs)
+            elif crs["shape"] == Constants.SHAPE_TABULATED_RECTANGLE:
+                code = "rectangle_w{width}_h{height}".format(**crs)
             else:
                 code = "default"
 
@@ -336,6 +386,55 @@ class Threedi:
         element_display_names += "-" + str(connection_number)
 
         return element_display_names
+
+    def get_discharge_coefficients(self, hydx_connection, hydx_structure):
+        if hydx_connection.stromingsrichting not in ["GSL", "1_2", "2_1", "OPN"]:
+            logger.warning(
+                'Flow direction is not recognized for %r with record %r, "OPN" is assumed',
+                hydx_connection.typeverbinding,
+                hydx_connection.identificatieknooppuntofverbinding,
+            )
+
+        if (
+            hydx_connection.stromingsrichting == "GSL"
+            or hydx_connection.stromingsrichting == "2_1"
+        ):
+            hydx_connection.discharge_coefficient_positive = 0
+        else:
+            hydx_connection.discharge_coefficient_positive = (
+                hydx_structure.afvoercoefficientoverstortdrempel
+            )
+        if (
+            hydx_connection.stromingsrichting == "GSL"
+            or hydx_connection.stromingsrichting == "1_2"
+        ):
+            hydx_connection.discharge_coefficient_negative = 0
+        else:
+            hydx_connection.discharge_coefficient_negative = (
+                hydx_structure.afvoercoefficientoverstortdrempel
+            )
+        return hydx_connection
+
+
+def get_hydx_default_profile():
+    default_profile = OrderedDict(
+        [
+            ("PRO_IDE", "DEFAULT"),
+            ("PRO_MAT", "PVC"),
+            ("PRO_VRM", "RND"),
+            ("PRO_BRE", "1000"),
+            ("PRO_HGT", "1000"),
+            ("OPL_HL1", ""),
+            ("OPL_HL2", ""),
+            ("PRO_NIV", ""),
+            ("PRO_NOP", ""),
+            ("PRO_NOM", ""),
+            ("PRO_BRN", ""),
+            ("AAN_PBR", ""),
+            ("ALG_TOE", "default"),
+        ]
+    )
+    return Profile.import_csvline(csvline=default_profile)
 
 
 def point(x, y, srid_input=28992):
