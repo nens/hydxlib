@@ -5,7 +5,11 @@ import pytest
 import mock
 
 from gwswlib.importer import import_hydx
-from gwswlib.threedi import Threedi, check_if_element_is_created_with_same_code
+from gwswlib.threedi import (
+    Threedi,
+    check_if_element_is_created_with_same_code,
+    get_hydx_default_profile,
+)
 from gwswlib.sql_models.constants import Constants
 
 
@@ -93,6 +97,11 @@ def test_structure_does_not_exist_error(caplog):
     assert "Structure does not exist for connection" in caplog.text
 
 
+def test_get_hydx_default_profile():
+    profile = get_hydx_default_profile()
+    assert profile.breedte_diameterprofiel == "1000"
+
+
 class TestThreedi(TestCase):
     def setUp(self):
         self.threedi = Threedi()
@@ -163,7 +172,7 @@ class TestThreedi(TestCase):
         self.threedi.add_structure(connection, structure)
         assert self.threedi.pumpstations[3]["type_"] == 2
 
-    def test_add_weir(self):
+    def test_add_weir_with_boundary_and_open_rectangle_profile(self):
         weir_0 = {
             "code": "ovs1",
             "display_name": "13_990100-13_990105-1",
@@ -186,7 +195,7 @@ class TestThreedi(TestCase):
         self.threedi.import_hydx(self.hydx)
         assert self.threedi.weirs[0] == weir_0
 
-    def test_add_orifice(self):
+    def test_add_orifice_with_rectangular_closed_profile(self):
         orifice_3 = {
             "code": "drl4",
             "display_name": "13_990560-13_990821-1",
