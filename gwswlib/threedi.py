@@ -80,7 +80,7 @@ class Threedi:
 
                 if len(linkedstructures) > 1:
                     logging.error(
-                        "Only first structure is used to create a structure for connection %r",
+                        "Only first structure information is used to create a structure for connection %r",
                         connection.identificatieknooppuntofverbinding,
                     )
 

@@ -163,7 +163,7 @@ class TestThreedi(TestCase):
         connection = self.hydx.connections[0]
         structure = self.hydx.structures[0]
         self.threedi.add_structure(connection, structure)
-        assert "Only first structure is used" in self._caplog.text
+        assert "Only first structure" in self._caplog.text
 
     def test_add_pump_type_2(self):
         self.threedi.import_hydx(self.hydx)
