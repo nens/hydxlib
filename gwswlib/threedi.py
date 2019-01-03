@@ -299,7 +299,7 @@ class Threedi:
             "shape": Constants.SHAPE_ROUND,
             "code": "default",
         }
-        
+
         connections_with_profiles = self.weirs + self.orifices
         for connection in connections_with_profiles:
             crs = connection["cross_section_details"]
@@ -311,6 +311,8 @@ class Threedi:
                 code = "rectangle_w{width}_open".format(**crs)
             elif crs["shape"] == Constants.SHAPE_TABULATED_RECTANGLE:
                 code = "rectangle_w{width}_h{height}".format(**crs)
+                crs["width"] = "{0} {0} 0".format(float(crs["width"]) / 1000)
+                crs["height"] = "0 {0} {0}".format(float(crs["height"]) / 1000)
             else:
                 code = "default"
 
