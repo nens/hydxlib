@@ -148,7 +148,7 @@ class Threedi:
     def add_structure(self, hydx_connection, hydx_structure):
         """Add hydx.structure and hydx.connection into threedi.pumpstation"""
 
-        self.check_if_nodes_of_connection_exists(hydx_connection)
+        self.check_if_nodes_of_connection_exist(hydx_connection)
         combined_display_name_string = self.get_connection_display_name_from_manholes(
             hydx_connection
         )
