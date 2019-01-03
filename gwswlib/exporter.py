@@ -93,12 +93,12 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     )
     cross_section_dict = {m.code: m.id for m in cross_section_list}
 
-    con_list = []
+    connection_node_list = []
     srid = 28992
 
     for connection_node in threedi.connection_nodes:
         wkt = "POINT({0} {1})".format(*connection_node["geom"])
-        con_list.append(
+        connection_node_list.append(
             ConnectionNode(
                 code=connection_node["code"],
                 storage_area=None,
@@ -106,27 +106,27 @@ def write_threedi_to_db(threedi, threedi_db_settings):
             )
         )
 
-    commit_counts["connection_nodes"] = len(con_list)
-    session.bulk_save_objects(con_list)
+    commit_counts["connection_nodes"] = len(connection_node_list)
+    session.bulk_save_objects(connection_node_list)
     session.commit()
 
-    con_list = (
+    connection_node_list = (
         session.query(ConnectionNode)
         .options(load_only("id", "code"))
         .order_by(ConnectionNode.id)
         .all()
     )
-    con_dict = {m.code: m.id for m in con_list}
+    connection_node_dict = {m.code: m.id for m in connection_node_list}
 
     # # add extra references for link nodes (one node, multiple linked codes
     # for link in threedi.links:
     #     try:
-    #         if link['end_node.code'] in con_dict:
-    #             con_dict[link['end_node.code']
-    #                      ] = con_dict[link['start_node.code']]
+    #         if link['end_node.code'] in connection_node_dict:
+    #             connection_node_dict[link['end_node.code']
+    #                      ] = connection_node_dict[link['start_node.code']]
     #         else:
-    #             con_dict[link['end_node.code']
-    #                      ] = con_dict[link['start_node.code']]
+    #             connection_node_dict[link['end_node.code']
+    #                      ] = connection_node_dict[link['start_node.code']]
     #     except KeyError:
     #         self.log.add(
     #             logging.ERROR,
@@ -138,14 +138,14 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     #              'end_node': link['end_node.code']}
     #         )
 
-    # con_dict[None] = None
-    # con_dict[''] = None
+    # connection_node_dict[None] = None
+    # connection_node_dict[''] = None
 
     man_list = []
     threedi.manholes.reverse()
     for manhole in threedi.manholes:
         unique_values = [m.__dict__["connection_node_id"] for m in man_list]
-        manhole["connection_node_id"] = con_dict[manhole["code"]]
+        manhole["connection_node_id"] = connection_node_dict[manhole["code"]]
 
         if manhole["connection_node_id"] not in unique_values:
             man_list.append(Manhole(**manhole))
@@ -162,7 +162,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     # pipe_list = []
     # for pipe in threedi.pipes:
     #     try:
-    #         pipe['connection_node_start_id'] = con_dict[
+    #         pipe['connection_node_start_id'] = connection_node_dict[
     #             pipe['start_node.code']]
     #     except KeyError:
     #         self.log.add(
@@ -176,7 +176,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     #         )
 
     #     try:
-    #         pipe['connection_node_end_id'] = con_dict[
+    #         pipe['connection_node_end_id'] = connection_node_dict[
     #             pipe['end_node.code']]
     #     except KeyError:
     #         self.log.add(
@@ -202,16 +202,18 @@ def write_threedi_to_db(threedi, threedi_db_settings):
 
     pump_list = []
     for pump in threedi.pumpstations:
-        if pump["start_node.code"] in con_dict:
-            pump["connection_node_start_id"] = con_dict[pump["start_node.code"]]
+        if pump["start_node.code"] in connection_node_dict:
+            pump["connection_node_start_id"] = connection_node_dict[
+                pump["start_node.code"]
+            ]
         else:
             pump["connection_node_start_id"] = None
             logging.error(
                 "Start node of pump %r not found in connection nodes", pump["code"]
             )
 
-        if pump["end_node.code"] in con_dict:
-            pump["connection_node_end_id"] = con_dict[pump["end_node.code"]]
+        if pump["end_node.code"] in connection_node_dict:
+            pump["connection_node_end_id"] = connection_node_dict[pump["end_node.code"]]
         else:
             pump["connection_node_end_id"] = None
             logging.error(
@@ -229,16 +231,18 @@ def write_threedi_to_db(threedi, threedi_db_settings):
 
     weir_list = []
     for weir in threedi.weirs:
-        if weir["start_node.code"] in con_dict:
-            weir["connection_node_start_id"] = con_dict[weir["start_node.code"]]
+        if weir["start_node.code"] in connection_node_dict:
+            weir["connection_node_start_id"] = connection_node_dict[
+                weir["start_node.code"]
+            ]
         else:
             weir["connection_node_start_id"] = None
             logging.error(
                 "Start node of weir %r not found in connection nodes", weir["code"]
             )
 
-        if weir["end_node.code"] in con_dict:
-            weir["connection_node_end_id"] = con_dict[weir["end_node.code"]]
+        if weir["end_node.code"] in connection_node_dict:
+            weir["connection_node_end_id"] = connection_node_dict[weir["end_node.code"]]
         else:
             weir["connection_node_end_id"] = None
             logging.error(
@@ -263,7 +267,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
 
     # for orif in threedi.orifices:
     #     try:
-    #         orif['connection_node_start_id'] = con_dict[
+    #         orif['connection_node_start_id'] = connection_node_dict[
     #             orif['start_node.code']]
     #     except KeyError:
     #         self.log.add(
@@ -277,7 +281,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     #         )
 
     #     try:
-    #         orif['connection_node_end_id'] = con_dict[
+    #         orif['connection_node_end_id'] = connection_node_dict[
     #             orif['end_node.code']]
     #     except KeyError:
     #         self.log.add(
@@ -307,7 +311,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     # outlet_list = []
     # for outlet in threedi.outlets:
     #     try:
-    #         outlet['connection_node_id'] = con_dict[outlet['node.code']]
+    #         outlet['connection_node_id'] = connection_node_dict[outlet['node.code']]
 
     #         del outlet['node.code']
     #         outlet_list.append(BoundaryCondition1D(**outlet))
@@ -340,7 +344,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     # map_list = []
     # for imp_map in threedi.impervious_surface_maps:
     #     try:
-    #         imp_map['connection_node_id'] = con_dict[imp_map['node.code']]
+    #         imp_map['connection_node_id'] = connection_node_dict[imp_map['node.code']]
     #     except KeyError:
     #         self.log.add(
     #             logging.ERROR,
