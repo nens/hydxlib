@@ -76,18 +76,23 @@ def write_threedi_to_db(threedi, threedi_db_settings):
             )
 
         session.commit()
-    # crs_list = []
-    # for crs in threedi.profiles.values():
-    #     crs_list.append(CrossSectionDefinition(**crs))
 
-    # commit_counts['profiles'] = len(crs_list)
-    # session.bulk_save_objects(crs_list)
-    # session.commit()
+    crs_list = []
+    for crs in threedi.profiles.values():
+        crs_list.append(CrossSectionDefinition(**crs))
 
-    # crs_list = session.query(CrossSectionDefinition).options(
-    #     load_only("id", "code")).order_by(CrossSectionDefinition.id).all()
-    # crs_dict = {m.code: m.id for m in crs_list}
-    # del crs_list
+    commit_counts["profiles"] = len(crs_list)
+    session.bulk_save_objects(crs_list)
+    session.commit()
+
+    crs_list = (
+        session.query(CrossSectionDefinition)
+        .options(load_only("id", "code"))
+        .order_by(CrossSectionDefinition.id)
+        .all()
+    )
+    crs_dict = {m.code: m.id for m in crs_list}
+    del crs_list
 
     con_list = []
     srid = 28992
@@ -227,42 +232,38 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     session.commit()
     del pump_list
 
-    # for weir in threedi.weirs:
-    #     try:
-    #         weir['connection_node_start_id'] = con_dict[
-    #             weir['start_node.code']]
-    #     except KeyError:
-    #         self.log.add(
-    #             logging.ERROR,
-    #             'Start node of weir not found in nodes',
-    #             {},
-    #             'Start node {start_node} of weir with code {code} not '
-    #             'found',
-    #             {'start_node': weir['start_node.code'],
-    #                 'code': weir['code']}
-    #         )
+    weir_list = []
+    for weir in threedi.weirs:
+        if weir["start_node.code"] in con_dict:
+            weir["connection_node_start_id"] = con_dict[weir["start_node.code"]]
+        else:
+            weir["connection_node_start_id"] = None
+            logging.error(
+                "Start node of weir %r not found in connection nodes", weir["code"]
+            )
 
-    #     try:
-    #         weir['connection_node_end_id'] = con_dict[
-    #             weir['end_node.code']]
-    #     except KeyError:
-    #         self.log.add(
-    #             logging.ERROR,
-    #             'End node of weir not found in nodes',
-    #             {},
-    #             'End node {end_node} of weir with code {code} not found',
-    #             {'end_node': weir['end_node.code'], 'code': weir['code']}
-    #         )
+        if weir["end_node.code"] in con_dict:
+            weir["connection_node_end_id"] = con_dict[weir["end_node.code"]]
+        else:
+            weir["connection_node_end_id"] = None
+            logging.error(
+                "End node of weir %r not found in connection nodes", weir["code"]
+            )
 
-    #     weir['cross_section_definition_id'] = crs_dict[weir['crs_code']]
+        weir["cross_section_definition_id"] = crs_dict[weir["crs_code"]]
 
-    #     del weir['start_node.code']
-    #     del weir['end_node.code']
-    #     del weir['crs_code']
-    #     del weir['cross_section_details']
-    #     del weir['boundary_details']
+        del weir["start_node.code"]
+        del weir["end_node.code"]
+        del weir["crs_code"]
+        del weir["cross_section_details"]
+        del weir["boundary_details"]
 
-    #     obj_list.append(Weir(**weir))
+        weir_list.append(Weir(**weir))
+
+    commit_counts["weirs"] = len(weir_list)
+    session.bulk_save_objects(weir_list)
+    session.commit()
+    del weir_list
 
     # for orif in threedi.orifices:
     #     try:

@@ -48,6 +48,7 @@ class Threedi:
         self.pumpstations = []
         self.weirs = []
         self.orifices = []
+        self.profiles = []
 
         for connection_node in hydx.connection_nodes:
             check_if_element_is_created_with_same_code(
@@ -95,6 +96,8 @@ class Threedi:
                     'The following "typeverbinding" is not recognized by 3Di exporter: %s',
                     connection.typeverbinding,
                 )
+
+        self.generate_profiles()
 
     def add_connection_node(self, hydx_connection_node):
         """Add hydx.connection_node into threedi.connection_node and threedi.manhole"""
@@ -236,6 +239,39 @@ class Threedi:
         }
 
         self.weirs.append(weir)
+
+    def generate_profiles(self):
+        profiles = dict()
+        profiles["default"] = {
+            "width": 1,
+            "height": 1,
+            "shape": Constants.SHAPE_ROUND,
+            "code": "default",
+        }
+
+        connections_with_profiles = self.weirs + self.orifices
+        for connection in connections_with_profiles:
+            crs = connection["cross_section_details"]
+            if crs["shape"] == Constants.SHAPE_ROUND:
+                code = "round_{width}".format(**crs)
+            elif crs["shape"] == Constants.SHAPE_EGG:
+                code = "egg_w{width}_h{height}".format(**crs)
+            elif crs["shape"] == Constants.SHAPE_RECTANGLE:
+                if crs["height"] is None:
+                    code = "rectangle_w{width}_open".format(**crs)
+                else:
+                    code = "rectangle_w{width}_h{height}".format(**crs)
+            else:
+                code = "default"
+
+            # add unique profiles to profile definition
+            if code not in profiles:
+                profiles[code] = crs
+                profiles[code]["code"] = code
+
+            connection["crs_code"] = code
+
+        self.profiles = profiles
 
     def get_mapping_value(self, mapping, hydx_value, record_code, name_for_logging):
         if hydx_value in mapping:
