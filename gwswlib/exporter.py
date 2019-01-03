@@ -237,7 +237,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
             ]
         else:
             weir["connection_node_start_id"] = None
-            logging.error(
+            logger.error(
                 "Start node of weir %r not found in connection nodes", weir["code"]
             )
 
