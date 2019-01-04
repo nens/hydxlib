@@ -206,7 +206,7 @@ class TestThreedi(TestCase):
                 "shape": 5,
                 "width": "1.2 1.2 0",
                 "height": "0 0.6 0.6",
-                "code": "rectangle_w1200_h600",
+                "code": "rectangle_w1.2_h0.6",
             },
             "discharge_coefficient_positive": None,
             "discharge_coefficient_negative": None,
@@ -214,7 +214,7 @@ class TestThreedi(TestCase):
             "max_capacity": 2.0,
             "crest_type": 4,
             "crest_level": -2.0,
-            "cross_section_code": "rectangle_w1200_h600",
+            "cross_section_code": "rectangle_w1.2_h0.6",
         }
         self.threedi.import_hydx(self.hydx)
         assert self.threedi.orifices[3] == orifice_3

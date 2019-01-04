@@ -273,6 +273,11 @@ class Threedi:
             hydx_connection, hydx_structure
         )
 
+        hydx_profile.breedte_diameterprofiel = transform_unit_mm_to_m(
+            hydx_profile.breedte_diameterprofiel
+        )
+        hydx_profile.hoogteprofiel = transform_unit_mm_to_m(hydx_profile.hoogteprofiel)
+
         orifice = {
             "code": hydx_connection.identificatieknooppuntofverbinding,
             "display_name": combined_display_name_string,
@@ -318,15 +323,10 @@ class Threedi:
                 code = "rectangle_w{width}_open".format(**cross_section)
             elif cross_section["shape"] == Constants.SHAPE_TABULATED_RECTANGLE:
                 code = "rectangle_w{width}_h{height}".format(**cross_section)
-                cross_section["width"] = "{0} {0} 0".format(
-                    float(cross_section["width"]) / 1000
-                )
-                cross_section["height"] = "0 {0} {0}".format(
-                    float(cross_section["height"]) / 1000
-                )
+                cross_section["width"] = "{0} {0} 0".format(cross_section["width"])
+                cross_section["height"] = "0 {0} {0}".format(cross_section["height"])
             else:
                 code = "default"
-
             # add unique cross_sections to cross_section definition
             if code not in cross_sections:
                 cross_sections[code] = cross_section
@@ -390,6 +390,7 @@ class Threedi:
 
     def get_discharge_coefficients(self, hydx_connection, hydx_structure):
         if hydx_connection.stromingsrichting not in ["GSL", "1_2", "2_1", "OPN"]:
+            hydx_connection.stromingsrichting = "OPN"
             logger.warning(
                 'Flow direction is not recognized for %r with record %r, "OPN" is assumed',
                 hydx_connection.typeverbinding,
@@ -401,16 +402,23 @@ class Threedi:
             or hydx_connection.stromingsrichting == "2_1"
         ):
             hydx_connection.discharge_coefficient_positive = 0
-        else:
+        elif (
+            hydx_connection.stromingsrichting == "OPN"
+            or hydx_connection.stromingsrichting == "1_2"
+        ):
             hydx_connection.discharge_coefficient_positive = (
                 hydx_structure.afvoercoefficientoverstortdrempel
             )
+
         if (
             hydx_connection.stromingsrichting == "GSL"
             or hydx_connection.stromingsrichting == "1_2"
         ):
             hydx_connection.discharge_coefficient_negative = 0
-        else:
+        elif (
+            hydx_connection.stromingsrichting == "OPN"
+            or hydx_connection.stromingsrichting == "2_1"
+        ):
             hydx_connection.discharge_coefficient_negative = (
                 hydx_structure.afvoercoefficientoverstortdrempel
             )
@@ -453,3 +461,10 @@ def check_if_element_is_created_with_same_code(
             element_type,
             checked_element,
         )
+
+
+def transform_unit_mm_to_m(value_mm):
+    if value_mm is not None:
+        return float(value_mm) / 1000.0
+    else:
+        return None

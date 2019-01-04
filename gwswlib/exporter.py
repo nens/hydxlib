@@ -24,8 +24,7 @@ def export_threedi(hydx, threedi_db_settings):
     threedi = Threedi()
     threedi.import_hydx(hydx)
     commit_counts = write_threedi_to_db(threedi, threedi_db_settings)
-    print(commit_counts)
-
+    logger.info("Following elements are created %r", commit_counts)
     return threedi
 
 
@@ -333,7 +332,6 @@ def get_start_and_end_connection_node(connection, connection_node_dict):
 
 
 def get_cross_section_definition_id(connection, cross_section_dict):
-    print(connection, cross_section_dict)
     if connection["cross_section_code"] in cross_section_dict:
         connection["cross_section_definition_id"] = cross_section_dict[
             connection["cross_section_code"]
@@ -344,5 +342,4 @@ def get_cross_section_definition_id(connection, cross_section_dict):
             "Cross section definition of connection %r is not found in cross section definitions",
             connection["code"],
         )
-    print(connection)
     return connection

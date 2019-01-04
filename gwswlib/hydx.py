@@ -22,14 +22,16 @@ class Generic:
             value = csvline[field["csvheader"]]
             datatype = field["type"]
 
-            if value == "":
-                value = None
-
             # set fields to defined data type and load into object
-            if value is not None:
-                setattr(instance, fieldname, datatype(value))
-            else:
+            if value is None or value == "":
                 setattr(instance, fieldname, None)
+            elif datatype == float and not isfloat(value):
+                setattr(instance, fieldname, None)
+                logger.error(
+                    "%s in %s does not contain a float: %r", fieldname, instance, value
+                )
+            else:
+                setattr(instance, fieldname, datatype(value))
         return instance
 
 
@@ -157,6 +159,9 @@ class ConnectionNode(Generic):
 
     def __repr__(self):
         return "<ConnectionNode %s>" % getattr(self, "identificatierioolput", None)
+
+    def __str__(self):
+        return "ConnectionNode %s" % getattr(self, "identificatierioolput", None)
 
 
 class Connection(Generic):
@@ -294,6 +299,12 @@ class Connection(Generic):
 
     def __repr__(self):
         return "<Connection %s: %s>" % (
+            getattr(self, "typeverbinding", None),
+            getattr(self, "identificatieknooppuntofverbinding", None),
+        )
+
+    def __str__(self):
+        return "Connection %s (%s)" % (
             getattr(self, "typeverbinding", None),
             getattr(self, "identificatieknooppuntofverbinding", None),
         )
@@ -450,6 +461,12 @@ class Structure(Generic):
             getattr(self, "identificatieknooppuntofverbinding", None),
         )
 
+    def __str__(self):
+        return "Structure %s (%s)" % (
+            getattr(self, "typekunstwerk", None),
+            getattr(self, "identificatieknooppuntofverbinding", None),
+        )
+
 
 class Profile(Generic):
     FIELDS = [
@@ -539,6 +556,9 @@ class Profile(Generic):
     def __repr__(self):
         return "<Profile %s>" % (getattr(self, "identificatieprofieldefinitie", None),)
 
+    def __str__(self):
+        return "Profile %s" % (getattr(self, "identificatieprofieldefinitie", None),)
+
 
 class Meta:
     pass
@@ -605,3 +625,11 @@ def check_headers(found, expected):
 
     if missing_columns:
         logger.error("missing columns found: %s", missing_columns)
+
+
+def isfloat(value):
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False

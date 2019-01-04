@@ -85,6 +85,11 @@ def test_repr_uninitialized_connection_nodes():
     assert repr(connection_node)
 
 
+def test_str_uninitialized_connection_nodes():
+    connection_node = ConnectionNode()
+    assert str(connection_node)
+
+
 def test_check_init_connection():
     line_in = OrderedDict(
         [
@@ -141,6 +146,11 @@ def test_check_init_connection():
 def test_repr_uninitialized_connection():
     connection = Connection()
     assert repr(connection)
+
+
+def test_str_uninitialized_connection():
+    connection = Connection()
+    assert str(connection)
 
 
 class TestHydx(TestCase):
@@ -221,6 +231,11 @@ def test_repr_uninitialized_structure():
     assert repr(structure)
 
 
+def test_str_uninitialized_structure():
+    structure = Structure()
+    assert structure
+
+
 def test_check_init_profile():
     line_in = OrderedDict(
         [
@@ -261,3 +276,8 @@ def test_check_init_profile():
 def test_repr_uninitialized_profile():
     profile = Profile()
     assert repr(profile)
+
+
+def test_str_uninitialized_profile():
+    profile = Profile()
+    assert str(profile)

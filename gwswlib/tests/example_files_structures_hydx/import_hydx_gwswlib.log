@@ -1,0 +1,408 @@
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\BOP1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Debiet1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\GroeneDaken1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\ItObject1.csv
+WARNING: The following hydx file is currently not implemented in this importer: gwswlib/tests/example_files_structures_hydx/Meta1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Nwrw.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Oppervlak1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Verloop1.csv
+ERROR: niveaumaaiveld in ConnectionNode 13_990821 does not contain a float: 'xx'
+ERROR: breedteoverstortdrempel in Structure OVS (ovs1) does not contain a float: 'xx'
+ERROR: afslagniveaubovenstrooms in Structure PMP (pmp3) does not contain a float: 'xx'
+ERROR: double values in ConnectionNode for records with identificatieknooppuntofverbinding 'knp6'
+ERROR: double values in Connection for records with identificatieknooppuntofverbinding 'pmp2'
+ERROR: double values in Connection for records with identificatieknooppuntofverbinding 'ovs2'
+ERROR: double values in Structure for records with identificatieknooppuntofverbinding 'ovs1'
+ERROR: double values in Profile for records with identificatieprofieldefinitie 'PVC250'
+WARNING: Unknown manhole shape: None (code '13_990100')
+WARNING: Unknown manhole surface schematization: None (code '13_990100')
+WARNING: Unknown manhole shape: None (code '13_990105')
+WARNING: Unknown manhole surface schematization: None (code '13_990105')
+WARNING: Unknown manhole shape: None (code '13_990430')
+WARNING: Unknown manhole surface schematization: None (code '13_990430')
+WARNING: Unknown manhole shape: None (code '13_990420')
+WARNING: Unknown manhole surface schematization: None (code '13_990420')
+WARNING: Unknown manhole shape: None (code '13_990560')
+WARNING: Unknown manhole surface schematization: None (code '13_990560')
+WARNING: Unknown manhole shape: None (code '13_990820')
+WARNING: Unknown manhole surface schematization: None (code '13_990820')
+ERROR: Multiple elements 'Connection node' are created with the same code 'knp6'
+WARNING: Unknown manhole shape: None (code '13_990821')
+WARNING: Unknown manhole surface schematization: None (code '13_990821')
+ERROR: Only first structure information is used to create a structure for connection 'ovs1'
+ERROR: Start connection node 'knp31' could not be found for record 'pmp2'
+ERROR: Start connection node None could not be found for record 'pmp4'
+ERROR: End connection node None could not be found for record 'pmp4'
+ERROR: Start connection node None could not be found for record 'ovs2'
+ERROR: End connection node None could not be found for record 'ovs2'
+WARNING: Flow direction is not recognized for 'OVS' with record 'ovs2', "OPN" is assumed
+ERROR: Only first profile is used to create a profile 'PVC250' for connection 'drl1'
+WARNING: Unknown shape of orifice: HEU (code 'drl3')
+ERROR: Profile None does not exist for connection 'drl5'
+ERROR: Manhole with 'knp6' could not be created in 3di due to double values in ConnectionNode
+ERROR: Start node of connection 'pmp2' not found in connection nodes
+ERROR: Start node of connection 'pmp4' not found in connection nodes
+ERROR: End node of connection 'pmp4' not found in connection nodes
+ERROR: Start node of connection 'ovs2' not found in connection nodes
+ERROR: End node of connection 'ovs2' not found in connection nodes
+WARNING: Unknown manhole shape: SQR (code '01_TEST')
+ERROR: Multiple elements 'Connection node' are created with the same code 'knp6'
+WARNING: The following "typeverbinding" is not recognized by 3Di exporter: XXX
+ERROR: Profile <Mock name='mock.identificatieprofieldefinitie' id='80993488'> does not exist for connection 'ovs1'
+WARNING: The following "typeverbinding" is not implemented in this importer: GSL
+ERROR: Structure does not exist for connection 'pmp1'
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\BOP1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Debiet1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\GroeneDaken1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\ItObject1.csv
+WARNING: The following hydx file is currently not implemented in this importer: gwswlib/tests/example_files_structures_hydx/Meta1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Nwrw.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Oppervlak1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Verloop1.csv
+ERROR: niveaumaaiveld in ConnectionNode 13_990821 does not contain a float: 'xx'
+ERROR: breedteoverstortdrempel in Structure OVS (ovs1) does not contain a float: 'xx'
+ERROR: afslagniveaubovenstrooms in Structure PMP (pmp3) does not contain a float: 'xx'
+ERROR: double values in ConnectionNode for records with identificatieknooppuntofverbinding 'knp6'
+ERROR: double values in Connection for records with identificatieknooppuntofverbinding 'pmp2'
+ERROR: double values in Connection for records with identificatieknooppuntofverbinding 'ovs2'
+ERROR: double values in Structure for records with identificatieknooppuntofverbinding 'ovs1'
+ERROR: double values in Profile for records with identificatieprofieldefinitie 'PVC250'
+WARNING: Unknown manhole shape: None (code '13_990100')
+WARNING: Unknown manhole surface schematization: None (code '13_990100')
+WARNING: Unknown manhole shape: None (code '13_990105')
+WARNING: Unknown manhole surface schematization: None (code '13_990105')
+WARNING: Unknown manhole shape: None (code '13_990430')
+WARNING: Unknown manhole surface schematization: None (code '13_990430')
+WARNING: Unknown manhole shape: None (code '13_990420')
+WARNING: Unknown manhole surface schematization: None (code '13_990420')
+WARNING: Unknown manhole shape: None (code '13_990560')
+WARNING: Unknown manhole surface schematization: None (code '13_990560')
+WARNING: Unknown manhole shape: None (code '13_990820')
+WARNING: Unknown manhole surface schematization: None (code '13_990820')
+ERROR: Multiple elements 'Connection node' are created with the same code 'knp6'
+WARNING: Unknown manhole shape: None (code '13_990821')
+WARNING: Unknown manhole surface schematization: None (code '13_990821')
+ERROR: Only first structure information is used to create a structure for connection 'ovs1'
+ERROR: Start connection node 'knp31' could not be found for record 'pmp2'
+ERROR: Start connection node None could not be found for record 'pmp4'
+ERROR: End connection node None could not be found for record 'pmp4'
+ERROR: Start connection node None could not be found for record 'ovs2'
+ERROR: End connection node None could not be found for record 'ovs2'
+WARNING: Flow direction is not recognized for 'OVS' with record 'ovs2', "OPN" is assumed
+ERROR: Only first profile is used to create a profile 'PVC250' for connection 'drl1'
+WARNING: Unknown shape of orifice: HEU (code 'drl3')
+ERROR: Profile None does not exist for connection 'drl5'
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\BOP1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Debiet1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\GroeneDaken1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\ItObject1.csv
+WARNING: The following hydx file is currently not implemented in this importer: gwswlib/tests/example_files_structures_hydx/Meta1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Nwrw.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Oppervlak1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Verloop1.csv
+ERROR: niveaumaaiveld in ConnectionNode 13_990821 does not contain a float: 'xx'
+ERROR: breedteoverstortdrempel in Structure OVS (ovs1) does not contain a float: 'xx'
+ERROR: afslagniveaubovenstrooms in Structure PMP (pmp3) does not contain a float: 'xx'
+ERROR: double values in ConnectionNode for records with identificatieknooppuntofverbinding 'knp6'
+ERROR: double values in Connection for records with identificatieknooppuntofverbinding 'pmp2'
+ERROR: double values in Connection for records with identificatieknooppuntofverbinding 'ovs2'
+ERROR: double values in Structure for records with identificatieknooppuntofverbinding 'ovs1'
+ERROR: double values in Profile for records with identificatieprofieldefinitie 'PVC250'
+WARNING: Unknown manhole shape: None (code '13_990100')
+WARNING: Unknown manhole surface schematization: None (code '13_990100')
+WARNING: Unknown manhole shape: None (code '13_990105')
+WARNING: Unknown manhole surface schematization: None (code '13_990105')
+WARNING: Unknown manhole shape: None (code '13_990430')
+WARNING: Unknown manhole surface schematization: None (code '13_990430')
+WARNING: Unknown manhole shape: None (code '13_990420')
+WARNING: Unknown manhole surface schematization: None (code '13_990420')
+WARNING: Unknown manhole shape: None (code '13_990560')
+WARNING: Unknown manhole surface schematization: None (code '13_990560')
+WARNING: Unknown manhole shape: None (code '13_990820')
+WARNING: Unknown manhole surface schematization: None (code '13_990820')
+ERROR: Multiple elements 'Connection node' are created with the same code 'knp6'
+WARNING: Unknown manhole shape: None (code '13_990821')
+WARNING: Unknown manhole surface schematization: None (code '13_990821')
+ERROR: Only first structure information is used to create a structure for connection 'ovs1'
+ERROR: Start connection node 'knp31' could not be found for record 'pmp2'
+ERROR: Start connection node None could not be found for record 'pmp4'
+ERROR: End connection node None could not be found for record 'pmp4'
+ERROR: Start connection node None could not be found for record 'ovs2'
+ERROR: End connection node None could not be found for record 'ovs2'
+WARNING: Flow direction is not recognized for 'OVS' with record 'ovs2', "OPN" is assumed
+ERROR: Only first profile is used to create a profile 'PVC250' for connection 'drl1'
+WARNING: Unknown shape of orifice: HEU (code 'drl3')
+ERROR: Profile None does not exist for connection 'drl5'
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\BOP1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Debiet1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\GroeneDaken1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\ItObject1.csv
+WARNING: The following hydx file is currently not implemented in this importer: gwswlib/tests/example_files_structures_hydx/Meta1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Nwrw.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Oppervlak1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Verloop1.csv
+ERROR: niveaumaaiveld in ConnectionNode 13_990821 does not contain a float: 'xx'
+ERROR: breedteoverstortdrempel in Structure OVS (ovs1) does not contain a float: 'xx'
+ERROR: afslagniveaubovenstrooms in Structure PMP (pmp3) does not contain a float: 'xx'
+ERROR: double values in ConnectionNode for records with identificatieknooppuntofverbinding 'knp6'
+ERROR: double values in Connection for records with identificatieknooppuntofverbinding 'pmp2'
+ERROR: double values in Connection for records with identificatieknooppuntofverbinding 'ovs2'
+ERROR: double values in Structure for records with identificatieknooppuntofverbinding 'ovs1'
+ERROR: double values in Profile for records with identificatieprofieldefinitie 'PVC250'
+WARNING: Unknown manhole shape: None (code '13_990100')
+WARNING: Unknown manhole surface schematization: None (code '13_990100')
+WARNING: Unknown manhole shape: None (code '13_990105')
+WARNING: Unknown manhole surface schematization: None (code '13_990105')
+WARNING: Unknown manhole shape: None (code '13_990430')
+WARNING: Unknown manhole surface schematization: None (code '13_990430')
+WARNING: Unknown manhole shape: None (code '13_990420')
+WARNING: Unknown manhole surface schematization: None (code '13_990420')
+WARNING: Unknown manhole shape: None (code '13_990560')
+WARNING: Unknown manhole surface schematization: None (code '13_990560')
+WARNING: Unknown manhole shape: None (code '13_990820')
+WARNING: Unknown manhole surface schematization: None (code '13_990820')
+ERROR: Multiple elements 'Connection node' are created with the same code 'knp6'
+WARNING: Unknown manhole shape: None (code '13_990821')
+WARNING: Unknown manhole surface schematization: None (code '13_990821')
+ERROR: Only first structure information is used to create a structure for connection 'ovs1'
+ERROR: Start connection node 'knp31' could not be found for record 'pmp2'
+ERROR: Start connection node None could not be found for record 'pmp4'
+ERROR: End connection node None could not be found for record 'pmp4'
+ERROR: Start connection node None could not be found for record 'ovs2'
+ERROR: End connection node None could not be found for record 'ovs2'
+WARNING: Flow direction is not recognized for 'OVS' with record 'ovs2', "OPN" is assumed
+ERROR: Only first profile is used to create a profile 'PVC250' for connection 'drl1'
+WARNING: Unknown shape of orifice: HEU (code 'drl3')
+ERROR: Profile None does not exist for connection 'drl5'
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\BOP1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Debiet1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\GroeneDaken1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\ItObject1.csv
+WARNING: The following hydx file is currently not implemented in this importer: gwswlib/tests/example_files_structures_hydx/Meta1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Nwrw.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Oppervlak1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Verloop1.csv
+ERROR: niveaumaaiveld in ConnectionNode 13_990821 does not contain a float: 'xx'
+ERROR: breedteoverstortdrempel in Structure OVS (ovs1) does not contain a float: 'xx'
+ERROR: afslagniveaubovenstrooms in Structure PMP (pmp3) does not contain a float: 'xx'
+ERROR: double values in ConnectionNode for records with identificatieknooppuntofverbinding 'knp6'
+ERROR: double values in Connection for records with identificatieknooppuntofverbinding 'pmp2'
+ERROR: double values in Connection for records with identificatieknooppuntofverbinding 'ovs2'
+ERROR: double values in Structure for records with identificatieknooppuntofverbinding 'ovs1'
+ERROR: double values in Profile for records with identificatieprofieldefinitie 'PVC250'
+WARNING: Unknown manhole shape: None (code '13_990100')
+WARNING: Unknown manhole surface schematization: None (code '13_990100')
+WARNING: Unknown manhole shape: None (code '13_990105')
+WARNING: Unknown manhole surface schematization: None (code '13_990105')
+WARNING: Unknown manhole shape: None (code '13_990430')
+WARNING: Unknown manhole surface schematization: None (code '13_990430')
+WARNING: Unknown manhole shape: None (code '13_990420')
+WARNING: Unknown manhole surface schematization: None (code '13_990420')
+WARNING: Unknown manhole shape: None (code '13_990560')
+WARNING: Unknown manhole surface schematization: None (code '13_990560')
+WARNING: Unknown manhole shape: None (code '13_990820')
+WARNING: Unknown manhole surface schematization: None (code '13_990820')
+ERROR: Multiple elements 'Connection node' are created with the same code 'knp6'
+WARNING: Unknown manhole shape: None (code '13_990821')
+WARNING: Unknown manhole surface schematization: None (code '13_990821')
+ERROR: Only first structure information is used to create a structure for connection 'ovs1'
+ERROR: Start connection node 'knp31' could not be found for record 'pmp2'
+ERROR: Start connection node None could not be found for record 'pmp4'
+ERROR: End connection node None could not be found for record 'pmp4'
+ERROR: Start connection node None could not be found for record 'ovs2'
+ERROR: End connection node None could not be found for record 'ovs2'
+WARNING: Flow direction is not recognized for 'OVS' with record 'ovs2', "OPN" is assumed
+ERROR: Only first profile is used to create a profile 'PVC250' for connection 'drl1'
+WARNING: Unknown shape of orifice: HEU (code 'drl3')
+ERROR: Profile None does not exist for connection 'drl5'
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\BOP1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Debiet1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\GroeneDaken1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\ItObject1.csv
+WARNING: The following hydx file is currently not implemented in this importer: gwswlib/tests/example_files_structures_hydx/Meta1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Nwrw.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Oppervlak1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Verloop1.csv
+ERROR: niveaumaaiveld in ConnectionNode 13_990821 does not contain a float: 'xx'
+ERROR: breedteoverstortdrempel in Structure OVS (ovs1) does not contain a float: 'xx'
+ERROR: afslagniveaubovenstrooms in Structure PMP (pmp3) does not contain a float: 'xx'
+ERROR: double values in ConnectionNode for records with identificatieknooppuntofverbinding 'knp6'
+ERROR: double values in Connection for records with identificatieknooppuntofverbinding 'pmp2'
+ERROR: double values in Connection for records with identificatieknooppuntofverbinding 'ovs2'
+ERROR: double values in Structure for records with identificatieknooppuntofverbinding 'ovs1'
+ERROR: double values in Profile for records with identificatieprofieldefinitie 'PVC250'
+WARNING: Unknown manhole shape: None (code '13_990100')
+WARNING: Unknown manhole surface schematization: None (code '13_990100')
+WARNING: Unknown manhole shape: None (code '13_990105')
+WARNING: Unknown manhole surface schematization: None (code '13_990105')
+WARNING: Unknown manhole shape: None (code '13_990430')
+WARNING: Unknown manhole surface schematization: None (code '13_990430')
+WARNING: Unknown manhole shape: None (code '13_990420')
+WARNING: Unknown manhole surface schematization: None (code '13_990420')
+WARNING: Unknown manhole shape: None (code '13_990560')
+WARNING: Unknown manhole surface schematization: None (code '13_990560')
+WARNING: Unknown manhole shape: None (code '13_990820')
+WARNING: Unknown manhole surface schematization: None (code '13_990820')
+ERROR: Multiple elements 'Connection node' are created with the same code 'knp6'
+WARNING: Unknown manhole shape: None (code '13_990821')
+WARNING: Unknown manhole surface schematization: None (code '13_990821')
+ERROR: Only first structure information is used to create a structure for connection 'ovs1'
+ERROR: Start connection node 'knp31' could not be found for record 'pmp2'
+ERROR: Start connection node None could not be found for record 'pmp4'
+ERROR: End connection node None could not be found for record 'pmp4'
+ERROR: Start connection node None could not be found for record 'ovs2'
+ERROR: End connection node None could not be found for record 'ovs2'
+WARNING: Flow direction is not recognized for 'OVS' with record 'ovs2', "OPN" is assumed
+ERROR: Only first profile is used to create a profile 'PVC250' for connection 'drl1'
+WARNING: Unknown shape of orifice: HEU (code 'drl3')
+ERROR: Profile None does not exist for connection 'drl5'
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\BOP1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Debiet1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\GroeneDaken1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\ItObject1.csv
+WARNING: The following hydx file is currently not implemented in this importer: gwswlib/tests/example_files_structures_hydx/Meta1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Nwrw.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Oppervlak1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Verloop1.csv
+ERROR: niveaumaaiveld in ConnectionNode 13_990821 does not contain a float: 'xx'
+ERROR: breedteoverstortdrempel in Structure OVS (ovs1) does not contain a float: 'xx'
+ERROR: afslagniveaubovenstrooms in Structure PMP (pmp3) does not contain a float: 'xx'
+ERROR: double values in ConnectionNode for records with identificatieknooppuntofverbinding 'knp6'
+ERROR: double values in Connection for records with identificatieknooppuntofverbinding 'pmp2'
+ERROR: double values in Connection for records with identificatieknooppuntofverbinding 'ovs2'
+ERROR: double values in Structure for records with identificatieknooppuntofverbinding 'ovs1'
+ERROR: double values in Profile for records with identificatieprofieldefinitie 'PVC250'
+WARNING: Unknown manhole shape: None (code '13_990100')
+WARNING: Unknown manhole surface schematization: None (code '13_990100')
+WARNING: Unknown manhole shape: None (code '13_990105')
+WARNING: Unknown manhole surface schematization: None (code '13_990105')
+WARNING: Unknown manhole shape: None (code '13_990430')
+WARNING: Unknown manhole surface schematization: None (code '13_990430')
+WARNING: Unknown manhole shape: None (code '13_990420')
+WARNING: Unknown manhole surface schematization: None (code '13_990420')
+WARNING: Unknown manhole shape: None (code '13_990560')
+WARNING: Unknown manhole surface schematization: None (code '13_990560')
+WARNING: Unknown manhole shape: None (code '13_990820')
+WARNING: Unknown manhole surface schematization: None (code '13_990820')
+ERROR: Multiple elements 'Connection node' are created with the same code 'knp6'
+WARNING: Unknown manhole shape: None (code '13_990821')
+WARNING: Unknown manhole surface schematization: None (code '13_990821')
+ERROR: Only first structure information is used to create a structure for connection 'ovs1'
+ERROR: Start connection node 'knp31' could not be found for record 'pmp2'
+ERROR: Start connection node None could not be found for record 'pmp4'
+ERROR: End connection node None could not be found for record 'pmp4'
+ERROR: Start connection node None could not be found for record 'ovs2'
+ERROR: End connection node None could not be found for record 'ovs2'
+WARNING: Flow direction is not recognized for 'OVS' with record 'ovs2', "OPN" is assumed
+ERROR: Only first profile is used to create a profile 'PVC250' for connection 'drl1'
+WARNING: Unknown shape of orifice: HEU (code 'drl3')
+ERROR: Profile None does not exist for connection 'drl5'
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\BOP1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Debiet1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\GroeneDaken1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\ItObject1.csv
+WARNING: The following hydx file is currently not implemented in this importer: gwswlib/tests/example_files_structures_hydx/Meta1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Nwrw.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Oppervlak1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Verloop1.csv
+ERROR: niveaumaaiveld in ConnectionNode 13_990821 does not contain a float: 'xx'
+ERROR: breedteoverstortdrempel in Structure OVS (ovs1) does not contain a float: 'xx'
+ERROR: afslagniveaubovenstrooms in Structure PMP (pmp3) does not contain a float: 'xx'
+ERROR: double values in ConnectionNode for records with identificatieknooppuntofverbinding 'knp6'
+ERROR: double values in Connection for records with identificatieknooppuntofverbinding 'pmp2'
+ERROR: double values in Connection for records with identificatieknooppuntofverbinding 'ovs2'
+ERROR: double values in Structure for records with identificatieknooppuntofverbinding 'ovs1'
+ERROR: double values in Profile for records with identificatieprofieldefinitie 'PVC250'
+WARNING: Unknown manhole shape: None (code '13_990100')
+WARNING: Unknown manhole surface schematization: None (code '13_990100')
+WARNING: Unknown manhole shape: None (code '13_990105')
+WARNING: Unknown manhole surface schematization: None (code '13_990105')
+WARNING: Unknown manhole shape: None (code '13_990430')
+WARNING: Unknown manhole surface schematization: None (code '13_990430')
+WARNING: Unknown manhole shape: None (code '13_990420')
+WARNING: Unknown manhole surface schematization: None (code '13_990420')
+WARNING: Unknown manhole shape: None (code '13_990560')
+WARNING: Unknown manhole surface schematization: None (code '13_990560')
+WARNING: Unknown manhole shape: None (code '13_990820')
+WARNING: Unknown manhole surface schematization: None (code '13_990820')
+ERROR: Multiple elements 'Connection node' are created with the same code 'knp6'
+WARNING: Unknown manhole shape: None (code '13_990821')
+WARNING: Unknown manhole surface schematization: None (code '13_990821')
+ERROR: Only first structure information is used to create a structure for connection 'ovs1'
+ERROR: Start connection node 'knp31' could not be found for record 'pmp2'
+ERROR: Start connection node None could not be found for record 'pmp4'
+ERROR: End connection node None could not be found for record 'pmp4'
+ERROR: Start connection node None could not be found for record 'ovs2'
+ERROR: End connection node None could not be found for record 'ovs2'
+WARNING: Flow direction is not recognized for 'OVS' with record 'ovs2', "OPN" is assumed
+ERROR: Only first profile is used to create a profile 'PVC250' for connection 'drl1'
+WARNING: Unknown shape of orifice: HEU (code 'drl3')
+ERROR: Profile None does not exist for connection 'drl5'
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\BOP1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Debiet1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\GroeneDaken1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\ItObject1.csv
+WARNING: The following hydx file is currently not implemented in this importer: gwswlib/tests/example_files_structures_hydx/Meta1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Nwrw.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Oppervlak1.csv
+WARNING: The following hydx file could not be found: D:\Documents\GitHub\gwswlib\gwswlib\tests\example_files_structures_hydx\Verloop1.csv
+ERROR: niveaumaaiveld in ConnectionNode 13_990821 does not contain a float: 'xx'
+ERROR: breedteoverstortdrempel in Structure OVS (ovs1) does not contain a float: 'xx'
+ERROR: afslagniveaubovenstrooms in Structure PMP (pmp3) does not contain a float: 'xx'
+ERROR: double values in ConnectionNode for records with identificatieknooppuntofverbinding 'knp6'
+ERROR: double values in Connection for records with identificatieknooppuntofverbinding 'pmp2'
+ERROR: double values in Connection for records with identificatieknooppuntofverbinding 'ovs2'
+ERROR: double values in Structure for records with identificatieknooppuntofverbinding 'ovs1'
+ERROR: double values in Profile for records with identificatieprofieldefinitie 'PVC250'
+WARNING: Unknown manhole shape: None (code '13_990100')
+WARNING: Unknown manhole surface schematization: None (code '13_990100')
+WARNING: Unknown manhole shape: None (code '13_990105')
+WARNING: Unknown manhole surface schematization: None (code '13_990105')
+WARNING: Unknown manhole shape: None (code '13_990430')
+WARNING: Unknown manhole surface schematization: None (code '13_990430')
+WARNING: Unknown manhole shape: None (code '13_990420')
+WARNING: Unknown manhole surface schematization: None (code '13_990420')
+WARNING: Unknown manhole shape: None (code '13_990560')
+WARNING: Unknown manhole surface schematization: None (code '13_990560')
+WARNING: Unknown manhole shape: None (code '13_990820')
+WARNING: Unknown manhole surface schematization: None (code '13_990820')
+ERROR: Multiple elements 'Connection node' are created with the same code 'knp6'
+WARNING: Unknown manhole shape: None (code '13_990821')
+WARNING: Unknown manhole surface schematization: None (code '13_990821')
+ERROR: Only first structure information is used to create a structure for connection 'ovs1'
+ERROR: Start connection node 'knp31' could not be found for record 'pmp2'
+ERROR: Start connection node None could not be found for record 'pmp4'
+ERROR: End connection node None could not be found for record 'pmp4'
+ERROR: Start connection node None could not be found for record 'ovs2'
+ERROR: End connection node None could not be found for record 'ovs2'
+WARNING: Flow direction is not recognized for 'OVS' with record 'ovs2', "OPN" is assumed
+ERROR: Only first profile is used to create a profile 'PVC250' for connection 'drl1'
+WARNING: Unknown shape of orifice: HEU (code 'drl3')
+ERROR: Profile None does not exist for connection 'drl5'
+ovs1'
+ERROR: double values in Profile for records with identificatieprofieldefinitie 'PVC250'
+WARNING: Unknown manhole shape: None (code '13_990100')
+WARNING: Unknown manhole surface schematization: None (code '13_990100')
+WARNING: Unknown manhole shape: None (code '13_990105')
+WARNING: Unknown manhole surface schematization: None (code '13_990105')
+WARNING: Unknown manhole shape: None (code '13_990430')
+WARNING: Unknown manhole surface schematization: None (code '13_990430')
+WARNING: Unknown manhole shape: None (code '13_990420')
+WARNING: Unknown manhole surface schematization: None (code '13_990420')
+WARNING: Unknown manhole shape: None (code '13_990560')
+WARNING: Unknown manhole surface schematization: None (code '13_990560')
+WARNING: Unknown manhole shape: None (code '13_990820')
+WARNING: Unknown manhole surface schematization: None (code '13_990820')
+ERROR: Multiple elements 'Connection node' are created with the same code 'knp6'
+WARNING: Unknown manhole shape: None (code '13_990821')
+WARNING: Unknown manhole surface schematization: None (code '13_990821')
+ERROR: Only first structure information is used to create a structure for connection 'ovs1'
+ERROR: Start connection node 'knp31' could not be found for record 'pmp2'
+ERROR: Start connection node None could not be found for record 'pmp4'
+ERROR: End connection node None could not be found for record 'pmp4'
+ERROR: Start connection node None could not be found for record 'ovs2'
+ERROR: End connection node None could not be found for record 'ovs2'
+WARNING: Flow direction is not recognized for 'OVS' with record 'ovs2', "OPN" is assumed
+ERROR: Only first profile is used to create a profile 'PVC250' for connection 'drl1'
+WARNING: Unknown shape of orifice: HEU (code 'drl3')
+ERROR: Profile None does not exist for connection 'drl5'
