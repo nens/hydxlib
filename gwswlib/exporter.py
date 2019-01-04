@@ -73,13 +73,11 @@ def write_threedi_to_db(threedi, threedi_db_settings):
                 "SELECT setval('{table}_id_seq', max(id)) "
                 "FROM {table}".format(table=table.__tablename__)
             )
-
         session.commit()
 
     cross_section_list = []
     for cross_section in threedi.cross_sections.values():
         cross_section_list.append(CrossSectionDefinition(**cross_section))
-
     commit_counts["cross_sections"] = len(cross_section_list)
     session.bulk_save_objects(cross_section_list)
     session.commit()
@@ -94,7 +92,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
 
     connection_node_list = []
     srid = 28992
-
     for connection_node in threedi.connection_nodes:
         wkt = "POINT({0} {1})".format(*connection_node["geom"])
         connection_node_list.append(
@@ -104,7 +101,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
                 the_geom="srid={0};{1}".format(srid, wkt),
             )
         )
-
     commit_counts["connection_nodes"] = len(connection_node_list)
     session.bulk_save_objects(connection_node_list)
     session.commit()
@@ -153,7 +149,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
                 "Manhole with %r could not be created in 3di due to double values in ConnectionNode",
                 manhole["code"],
             )
-
     commit_counts["manholes"] = len(man_list)
     session.bulk_save_objects(man_list)
     session.commit()
@@ -205,7 +200,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         del pump["start_node.code"]
         del pump["end_node.code"]
         pump_list.append(Pumpstation(**pump))
-
     commit_counts["pumpstations"] = len(pump_list)
     session.bulk_save_objects(pump_list)
     session.commit()
@@ -221,7 +215,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         del weir["cross_section_details"]
         del weir["boundary_details"]
         weir_list.append(Weir(**weir))
-
     commit_counts["weirs"] = len(weir_list)
     session.bulk_save_objects(weir_list)
     session.commit()
@@ -235,9 +228,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         del orifice["end_node.code"]
         del orifice["cross_section_code"]
         del orifice["cross_section_details"]
-
         orifice_list.append(Orifice(**orifice))
-
     commit_counts["orifices"] = len(orifice_list)
     session.bulk_save_objects(orifice_list)
     session.commit()
