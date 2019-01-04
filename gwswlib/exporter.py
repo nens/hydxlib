@@ -76,25 +76,29 @@ def write_threedi_to_db(threedi, threedi_db_settings):
             )
 
         session.commit()
-    # crs_list = []
-    # for crs in threedi.profiles.values():
-    #     crs_list.append(CrossSectionDefinition(**crs))
 
-    # commit_counts['profiles'] = len(crs_list)
-    # session.bulk_save_objects(crs_list)
-    # session.commit()
+    cross_section_list = []
+    for cross_section in threedi.cross_sections.values():
+        cross_section_list.append(CrossSectionDefinition(**cross_section))
 
-    # crs_list = session.query(CrossSectionDefinition).options(
-    #     load_only("id", "code")).order_by(CrossSectionDefinition.id).all()
-    # crs_dict = {m.code: m.id for m in crs_list}
-    # del crs_list
+    commit_counts["cross_sections"] = len(cross_section_list)
+    session.bulk_save_objects(cross_section_list)
+    session.commit()
 
-    con_list = []
+    cross_section_list = (
+        session.query(CrossSectionDefinition)
+        .options(load_only("id", "code"))
+        .order_by(CrossSectionDefinition.id)
+        .all()
+    )
+    cross_section_dict = {m.code: m.id for m in cross_section_list}
+
+    connection_node_list = []
     srid = 28992
 
     for connection_node in threedi.connection_nodes:
         wkt = "POINT({0} {1})".format(*connection_node["geom"])
-        con_list.append(
+        connection_node_list.append(
             ConnectionNode(
                 code=connection_node["code"],
                 storage_area=None,
@@ -102,28 +106,27 @@ def write_threedi_to_db(threedi, threedi_db_settings):
             )
         )
 
-    commit_counts["connection_nodes"] = len(con_list)
-    session.bulk_save_objects(con_list)
+    commit_counts["connection_nodes"] = len(connection_node_list)
+    session.bulk_save_objects(connection_node_list)
     session.commit()
 
-    con_list = (
+    connection_node_list = (
         session.query(ConnectionNode)
         .options(load_only("id", "code"))
         .order_by(ConnectionNode.id)
         .all()
     )
-    con_dict = {m.code: m.id for m in con_list}
-    del con_list
+    connection_node_dict = {m.code: m.id for m in connection_node_list}
 
     # # add extra references for link nodes (one node, multiple linked codes
     # for link in threedi.links:
     #     try:
-    #         if link['end_node.code'] in con_dict:
-    #             con_dict[link['end_node.code']
-    #                      ] = con_dict[link['start_node.code']]
+    #         if link['end_node.code'] in connection_node_dict:
+    #             connection_node_dict[link['end_node.code']
+    #                      ] = connection_node_dict[link['start_node.code']]
     #         else:
-    #             con_dict[link['end_node.code']
-    #                      ] = con_dict[link['start_node.code']]
+    #             connection_node_dict[link['end_node.code']
+    #                      ] = connection_node_dict[link['start_node.code']]
     #     except KeyError:
     #         self.log.add(
     #             logging.ERROR,
@@ -135,14 +138,14 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     #              'end_node': link['end_node.code']}
     #         )
 
-    # con_dict[None] = None
-    # con_dict[''] = None
+    # connection_node_dict[None] = None
+    # connection_node_dict[''] = None
 
     man_list = []
     threedi.manholes.reverse()
     for manhole in threedi.manholes:
         unique_values = [m.__dict__["connection_node_id"] for m in man_list]
-        manhole["connection_node_id"] = con_dict[manhole["code"]]
+        manhole["connection_node_id"] = connection_node_dict[manhole["code"]]
 
         if manhole["connection_node_id"] not in unique_values:
             man_list.append(Manhole(**manhole))
@@ -155,12 +158,11 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     commit_counts["manholes"] = len(man_list)
     session.bulk_save_objects(man_list)
     session.commit()
-    del man_list
 
     # pipe_list = []
     # for pipe in threedi.pipes:
     #     try:
-    #         pipe['connection_node_start_id'] = con_dict[
+    #         pipe['connection_node_start_id'] = connection_node_dict[
     #             pipe['start_node.code']]
     #     except KeyError:
     #         self.log.add(
@@ -174,7 +176,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     #         )
 
     #     try:
-    #         pipe['connection_node_end_id'] = con_dict[
+    #         pipe['connection_node_end_id'] = connection_node_dict[
     #             pipe['end_node.code']]
     #     except KeyError:
     #         self.log.add(
@@ -197,20 +199,21 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     # commit_counts['pipes'] = len(pipe_list)
     # session.bulk_save_objects(pipe_list)
     # session.commit()
-    # del pipe_list
 
-    obj_list = []
+    pump_list = []
     for pump in threedi.pumpstations:
-        if pump["start_node.code"] in con_dict:
-            pump["connection_node_start_id"] = con_dict[pump["start_node.code"]]
+        if pump["start_node.code"] in connection_node_dict:
+            pump["connection_node_start_id"] = connection_node_dict[
+                pump["start_node.code"]
+            ]
         else:
             pump["connection_node_start_id"] = None
             logging.error(
                 "Start node of pump %r not found in connection nodes", pump["code"]
             )
 
-        if pump["end_node.code"] in con_dict:
-            pump["connection_node_end_id"] = con_dict[pump["end_node.code"]]
+        if pump["end_node.code"] in connection_node_dict:
+            pump["connection_node_end_id"] = connection_node_dict[pump["end_node.code"]]
         else:
             pump["connection_node_end_id"] = None
             logging.error(
@@ -220,53 +223,51 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         del pump["start_node.code"]
         del pump["end_node.code"]
 
-        obj_list.append(Pumpstation(**pump))
+        pump_list.append(Pumpstation(**pump))
 
-    commit_counts["pumpstations"] = len(obj_list)
-    session.bulk_save_objects(obj_list)
+    commit_counts["pumpstations"] = len(pump_list)
+    session.bulk_save_objects(pump_list)
     session.commit()
-    del obj_list
 
-    # for weir in threedi.weirs:
-    #     try:
-    #         weir['connection_node_start_id'] = con_dict[
-    #             weir['start_node.code']]
-    #     except KeyError:
-    #         self.log.add(
-    #             logging.ERROR,
-    #             'Start node of weir not found in nodes',
-    #             {},
-    #             'Start node {start_node} of weir with code {code} not '
-    #             'found',
-    #             {'start_node': weir['start_node.code'],
-    #                 'code': weir['code']}
-    #         )
+    weir_list = []
+    for weir in threedi.weirs:
+        if weir["start_node.code"] in connection_node_dict:
+            weir["connection_node_start_id"] = connection_node_dict[
+                weir["start_node.code"]
+            ]
+        else:
+            weir["connection_node_start_id"] = None
+            logger.error(
+                "Start node of weir %r not found in connection nodes", weir["code"]
+            )
 
-    #     try:
-    #         weir['connection_node_end_id'] = con_dict[
-    #             weir['end_node.code']]
-    #     except KeyError:
-    #         self.log.add(
-    #             logging.ERROR,
-    #             'End node of weir not found in nodes',
-    #             {},
-    #             'End node {end_node} of weir with code {code} not found',
-    #             {'end_node': weir['end_node.code'], 'code': weir['code']}
-    #         )
+        if weir["end_node.code"] in connection_node_dict:
+            weir["connection_node_end_id"] = connection_node_dict[weir["end_node.code"]]
+        else:
+            weir["connection_node_end_id"] = None
+            logging.error(
+                "End node of weir %r not found in connection nodes", weir["code"]
+            )
 
-    #     weir['cross_section_definition_id'] = crs_dict[weir['crs_code']]
+        weir["cross_section_definition_id"] = cross_section_dict[
+            weir["cross_section_code"]
+        ]
 
-    #     del weir['start_node.code']
-    #     del weir['end_node.code']
-    #     del weir['crs_code']
-    #     del weir['cross_section_details']
-    #     del weir['boundary_details']
+        del weir["start_node.code"]
+        del weir["end_node.code"]
+        del weir["cross_section_code"]
+        del weir["cross_section_details"]
+        del weir["boundary_details"]
 
-    #     obj_list.append(Weir(**weir))
+        weir_list.append(Weir(**weir))
+
+    commit_counts["weirs"] = len(weir_list)
+    session.bulk_save_objects(weir_list)
+    session.commit()
 
     # for orif in threedi.orifices:
     #     try:
-    #         orif['connection_node_start_id'] = con_dict[
+    #         orif['connection_node_start_id'] = connection_node_dict[
     #             orif['start_node.code']]
     #     except KeyError:
     #         self.log.add(
@@ -280,7 +281,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     #         )
 
     #     try:
-    #         orif['connection_node_end_id'] = con_dict[
+    #         orif['connection_node_end_id'] = connection_node_dict[
     #             orif['end_node.code']]
     #     except KeyError:
     #         self.log.add(
@@ -304,14 +305,13 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     # commit_counts['structures'] = len(obj_list)
     # session.bulk_save_objects(obj_list)
     # session.commit()
-    # del obj_list
 
     # # Outlets (must be saved after weirs, orifice, pumpstation, etc.
     # # because of constraints)
     # outlet_list = []
     # for outlet in threedi.outlets:
     #     try:
-    #         outlet['connection_node_id'] = con_dict[outlet['node.code']]
+    #         outlet['connection_node_id'] = connection_node_dict[outlet['node.code']]
 
     #         del outlet['node.code']
     #         outlet_list.append(BoundaryCondition1D(**outlet))
@@ -327,7 +327,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     # commit_counts['outlets'] = len(outlet_list)
     # session.bulk_save_objects(outlet_list)
     # session.commit()
-    # del outlet_list
 
     # # Impervious surfaces
     # imp_list = []
@@ -341,12 +340,11 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     # imp_list = session.query(ImperviousSurface).options(
     #     load_only("id", "code")).order_by(ImperviousSurface.id).all()
     # imp_dict = {m.code: m.id for m in imp_list}
-    # del imp_list
 
     # map_list = []
     # for imp_map in threedi.impervious_surface_maps:
     #     try:
-    #         imp_map['connection_node_id'] = con_dict[imp_map['node.code']]
+    #         imp_map['connection_node_id'] = connection_node_dict[imp_map['node.code']]
     #     except KeyError:
     #         self.log.add(
     #             logging.ERROR,

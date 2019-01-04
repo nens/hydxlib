@@ -53,6 +53,8 @@ class TestThreedi(TestCase):
             "connection_nodes": 7,
             "manholes": 6,
             "pumpstations": 5,
+            "weirs": 3,
+            "cross_sections": 3,
         }
         commit_counts = write_threedi_to_db(self.threedi, self.threedi_db_settings)
         assert commit_counts == commit_counts_expected

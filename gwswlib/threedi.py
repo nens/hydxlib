@@ -48,6 +48,7 @@ class Threedi:
         self.pumpstations = []
         self.weirs = []
         self.orifices = []
+        self.cross_sections = []
 
         for connection_node in hydx.connection_nodes:
             check_if_element_is_created_with_same_code(
@@ -79,13 +80,13 @@ class Threedi:
 
                 if len(linkedstructures) > 1:
                     logging.error(
-                        "Only first structure is created for structures with double values %r",
+                        "Only first structure information is used to create a structure for connection %r",
                         connection.identificatieknooppuntofverbinding,
                     )
 
                 if len(linkedstructures) == 0:
                     logging.error(
-                        "Structure does not exist for connection with record %r",
+                        "Structure does not exist for connection %r",
                         connection.identificatieknooppuntofverbinding,
                     )
                 else:
@@ -95,6 +96,8 @@ class Threedi:
                     'The following "typeverbinding" is not recognized by 3Di exporter: %s',
                     connection.typeverbinding,
                 )
+
+        self.generate_cross_sections()
 
     def add_connection_node(self, hydx_connection_node):
         """Add hydx.connection_node into threedi.connection_node and threedi.manhole"""
@@ -144,33 +147,131 @@ class Threedi:
 
     def add_structure(self, hydx_connection, hydx_structure):
         """Add hydx.structure and hydx.connection into threedi.pumpstation"""
-
-        element_codes, element_display_names = self.get_code(hydx_connection)
+        self.check_if_nodes_of_connection_exists(hydx_connection)
+        combined_display_name_string = self.get_connection_display_names_from_manholes(
+            hydx_connection
+        )
 
         if hydx_structure.typekunstwerk == "PMP":
-            if hydx_structure.aanslagniveaubovenstrooms is not None:
-                pumpstation_type = 2
-                pumpstation_start_level = hydx_structure.aanslagniveaubovenstrooms
-                pumpstation_stop_level = hydx_structure.afslagniveaubovenstrooms
-            else:
-                pumpstation_type = 1
-                pumpstation_start_level = hydx_structure.aanslagniveaubenedenstrooms
-                pumpstation_stop_level = hydx_structure.afslagniveaubenedenstrooms
+            self.add_pumpstation(
+                hydx_connection, hydx_structure, combined_display_name_string
+            )
+        elif hydx_structure.typekunstwerk == "OVS":
+            self.add_weir(hydx_connection, hydx_structure, combined_display_name_string)
 
-            pumpstation = {
-                "code": hydx_connection.identificatieknooppuntofverbinding,
-                "display_name": element_display_names,
-                "start_node.code": hydx_connection.identificatieknooppunt1,
-                "end_node.code": hydx_connection.identificatieknooppunt2,
-                "type_": pumpstation_type,
-                "start_level": pumpstation_start_level,
-                "lower_stop_level": pumpstation_stop_level,
-                # upper_stop_level is not supported by hydx
-                "upper_stop_level": None,
-                "capacity": round(float(hydx_structure.pompcapaciteit) / 3.6, 5),
-                "sewerage": True,
-            }
-            self.pumpstations.append(pumpstation)
+    def add_pumpstation(
+        self, hydx_connection, hydx_structure, combined_display_name_string
+    ):
+        if hydx_structure.aanslagniveaubovenstrooms is not None:
+            pumpstation_type = 2
+            pumpstation_start_level = hydx_structure.aanslagniveaubovenstrooms
+            pumpstation_stop_level = hydx_structure.afslagniveaubovenstrooms
+        else:
+            pumpstation_type = 1
+            pumpstation_start_level = hydx_structure.aanslagniveaubenedenstrooms
+            pumpstation_stop_level = hydx_structure.afslagniveaubenedenstrooms
+
+        pumpstation = {
+            "code": hydx_connection.identificatieknooppuntofverbinding,
+            "display_name": combined_display_name_string,
+            "start_node.code": hydx_connection.identificatieknooppunt1,
+            "end_node.code": hydx_connection.identificatieknooppunt2,
+            "type_": pumpstation_type,
+            "start_level": pumpstation_start_level,
+            "lower_stop_level": pumpstation_stop_level,
+            # upper_stop_level is not supported by hydx
+            "upper_stop_level": None,
+            "capacity": round(float(hydx_structure.pompcapaciteit) / 3.6, 5),
+            "sewerage": True,
+        }
+        self.pumpstations.append(pumpstation)
+
+    def add_weir(self, hydx_connection, hydx_structure, combined_display_name_string):
+        waterlevel_boundary = getattr(hydx_structure, "buitenwaterstand", None)
+        if waterlevel_boundary is not None:
+            timeseries = "0,{0}\n9999,{0} ".format(waterlevel_boundary)
+        else:
+            timeseries = None
+
+        if hydx_connection.stromingsrichting not in ["GSL", "1_2", "2_1", "OPN"]:
+            logger.warning(
+                'Flow direction is not recognized for %r with record %r, "OPN" is assumed',
+                hydx_connection.typeverbinding,
+                hydx_connection.identificatieknooppuntofverbinding,
+            )
+
+        if (
+            hydx_connection.stromingsrichting == "GSL"
+            or hydx_connection.stromingsrichting == "2_1"
+        ):
+            discharge_coefficient_positive = 0
+        else:
+            discharge_coefficient_positive = (
+                hydx_structure.afvoercoefficientoverstortdrempel
+            )
+        if (
+            hydx_connection.stromingsrichting == "GSL"
+            or hydx_connection.stromingsrichting == "1_2"
+        ):
+            discharge_coefficient_negative = 0
+        else:
+            discharge_coefficient_negative = (
+                hydx_structure.afvoercoefficientoverstortdrempel
+            )
+        weir = {
+            "code": hydx_connection.identificatieknooppuntofverbinding,
+            "display_name": combined_display_name_string,
+            "start_node.code": hydx_connection.identificatieknooppunt1,
+            "end_node.code": hydx_connection.identificatieknooppunt2,
+            "cross_section_details": {
+                "shape": Constants.SHAPE_RECTANGLE,
+                "width": hydx_structure.breedteoverstortdrempel,
+                "height": None,
+            },
+            "crest_type": Constants.CREST_TYPE_SHARP_CRESTED,
+            "crest_level": hydx_structure.niveauoverstortdrempel,
+            "discharge_coefficient_positive": discharge_coefficient_positive,
+            "discharge_coefficient_negative": discharge_coefficient_negative,
+            "sewerage": True,
+            "boundary_details": {
+                "timeseries": timeseries,
+                "boundary_type": Constants.BOUNDARY_TYPE_WATERLEVEL,
+            },
+        }
+        self.weirs.append(weir)
+
+    def generate_cross_sections(self):
+        cross_sections = {}
+        cross_sections["default"] = {
+            "width": 1,
+            "height": 1,
+            "shape": Constants.SHAPE_ROUND,
+            "code": "default",
+        }
+
+        connections_with_cross_sections = self.weirs + self.orifices
+        for connection in connections_with_cross_sections:
+            cross_section = connection["cross_section_details"]
+            if cross_section["shape"] == Constants.SHAPE_ROUND:
+                code = "round_{width}".format(**cross_section)
+            elif cross_section["shape"] == Constants.SHAPE_EGG:
+                code = "egg_w{width}_h{height}".format(**cross_section)
+            elif cross_section["shape"] == Constants.SHAPE_RECTANGLE:
+                if cross_section["height"] is None:
+                    code = "rectangle_w{width}_open".format(**cross_section)
+                else:
+                    code = "rectangle_w{width}_h{height}".format(**cross_section)
+            else:
+                code = "default"
+
+            # add unique cross_sections to cross_section definition
+            if code not in cross_sections:
+                cross_sections[code] = cross_section
+                cross_sections[code]["code"] = code
+
+            connection["cross_section_code"] = code
+
+        self.cross_sections = cross_sections
 
     def get_mapping_value(self, mapping, hydx_value, record_code, name_for_logging):
         if hydx_value in mapping:
@@ -181,16 +282,7 @@ class Threedi:
             )
             return None
 
-    def get_code(self, connection, default_code=""):
-        """
-        Args:
-            code1(string): object code
-            code2(string): object code 2
-            default_code: returned value when code is None or ''
-
-        Returns:
-            (string): combined area code
-        """
+    def check_if_nodes_of_connection_exists(self, connection):
         connection_code = connection.identificatieknooppuntofverbinding
         code1 = connection.identificatieknooppunt1
         code2 = connection.identificatieknooppunt2
@@ -198,48 +290,40 @@ class Threedi:
         manh_list = [manhole["code"] for manhole in self.manholes]
         if code1 not in manh_list:
             logging.error(
-                "Connection node %r could not be found for record %r",
+                "Start connection node %r could not be found for record %r",
                 code1,
                 connection_code,
             )
-            if code1 is None or code1 == "":
-                code1 = default_code
         if code2 not in manh_list:
             logging.error(
-                "Connection node %r could not be found for record %r",
+                "End connection node %r could not be found for record %r",
                 code2,
                 connection_code,
             )
-            if code2 is None or code2 == "":
-                code2 = default_code
-        element_codes = code1 + "-" + code2
 
-        manh_dict = {
+    def get_connection_display_names_from_manholes(self, connection):
+        code1 = connection.identificatieknooppunt1
+        code2 = connection.identificatieknooppunt2
+        default_code = ""
+
+        manhole_dict = {
             manhole["code"]: manhole["display_name"] for manhole in self.manholes
         }
-        if code1 in manh_dict:
-            display_name1 = manh_dict[code1]
-        else:
-            display_name1 = default_code
-
-        if code2 in manh_dict:
-            display_name2 = manh_dict[code2]
-        else:
-            display_name2 = default_code
-        element_display_names = display_name1 + "-" + display_name2
+        display_name1 = manhole_dict.get(code1, default_code)
+        display_name2 = manhole_dict.get(code2, default_code)
+        combined_display_name_string = display_name1 + "-" + display_name2
 
         all_connections = self.pumpstations + self.weirs + self.orifices
         nr_connections = [
-            element
+            element["display_name"]
             for element in all_connections
-            if element["code"].rpartition("-")[0] == element_codes
+            if element["display_name"].startswith(combined_display_name_string)
         ]
         connection_number = len(nr_connections) + 1
 
-        element_codes += "-" + str(connection_number)
-        element_display_names += "-" + str(connection_number)
+        combined_display_name_string += "-" + str(connection_number)
 
-        return element_codes, element_display_names
+        return combined_display_name_string
 
 
 def point(x, y, srid_input=28992):

@@ -137,16 +137,17 @@ class TestThreedi(TestCase):
         assert self.threedi.manholes[0] == manhole_0
 
     def test_add_pumpstation(self):
-        pumpstation_0 = {
-            "code": "pmp1",
-            "display_name": "13_990430-13_990420-1",
+        pumpstation_1 = {
+            "code": "pmp2",
+            # check if connection number 2 is created for second structure with these nodes
+            "display_name": "13_990430-13_990420-2",
             "start_node.code": "knp3",
             "end_node.code": "knp4",
             "type_": 1,
-            "start_level": 7.47,
-            "lower_stop_level": 7.32,
+            "start_level": 7.57,
+            "lower_stop_level": 7.33,
             "upper_stop_level": None,
-            "capacity": 10.0,
+            "capacity": 18.05556,
             "sewerage": True,
         }
         self.threedi.import_hydx(self.hydx)
@@ -154,7 +155,7 @@ class TestThreedi(TestCase):
         connection = self.hydx.connections[0]
         structure = self.hydx.structures[0]
         self.threedi.add_structure(connection, structure)
-        assert self.threedi.pumpstations[0] == pumpstation_0
+        assert self.threedi.pumpstations[1] == pumpstation_1
 
     def test_add_first_pump_with_same_code(self):
         self.threedi.import_hydx(self.hydx)
@@ -162,7 +163,7 @@ class TestThreedi(TestCase):
         connection = self.hydx.connections[0]
         structure = self.hydx.structures[0]
         self.threedi.add_structure(connection, structure)
-        assert "Only first structure is created" in self._caplog.text
+        assert "Only first structure" in self._caplog.text
 
     def test_add_pump_type_2(self):
         self.threedi.import_hydx(self.hydx)
@@ -171,3 +172,30 @@ class TestThreedi(TestCase):
         structure = self.hydx.structures[0]
         self.threedi.add_structure(connection, structure)
         assert self.threedi.pumpstations[3]["type_"] == 2
+
+    def test_add_weir(self):
+        weir_0 = {
+            "code": "ovs1",
+            "display_name": "13_990100-13_990105-1",
+            "start_node.code": "knp1",
+            "end_node.code": "knp2",
+            "cross_section_details": {
+                "code": "rectangle_w1.5_open",
+                "shape": 1,
+                "width": 1.5,
+                "height": None,
+            },
+            "crest_type": 4,
+            "crest_level": 9.5,
+            "discharge_coefficient_positive": 0.8,
+            "discharge_coefficient_negative": 0.8,
+            "sewerage": True,
+            "boundary_details": {"timeseries": "0,9.5\n9999,9.5 ", "boundary_type": 1},
+            "cross_section_code": "rectangle_w1.5_open",
+        }
+        self.threedi.import_hydx(self.hydx)
+        # select first manhole from dataset for check
+        connection = self.hydx.connections[0]
+        structure = self.hydx.structures[0]
+        self.threedi.add_structure(connection, structure)
+        assert self.threedi.weirs[0] == weir_0
