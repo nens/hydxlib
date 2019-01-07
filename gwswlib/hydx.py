@@ -22,15 +22,20 @@ class Generic:
             value = csvline[field["csvheader"]]
             datatype = field["type"]
 
-            if value == "":
-                value = None
-
             # set fields to defined data type and load into object
-            if value is not None:
-                setattr(instance, fieldname, datatype(value))
-            else:
+            if value is None or value == "":
                 setattr(instance, fieldname, None)
+            elif datatype == float and not check_string_to_float(value):
+                setattr(instance, fieldname, None)
+                logger.error(
+                    "%s in %s does not contain a float: %r", fieldname, instance, value
+                )
+            else:
+                setattr(instance, fieldname, datatype(value))
         return instance
+
+    def __str__(self):
+        return self.__repr__().strip("<>")
 
 
 class ConnectionNode(Generic):
@@ -451,6 +456,95 @@ class Structure(Generic):
         )
 
 
+class Profile(Generic):
+    FIELDS = [
+        {
+            "csvheader": "PRO_IDE",
+            "fieldname": "IdentificatieProfieldefinitie",
+            "type": str,
+            "required": True,
+        },
+        {
+            "csvheader": "PRO_MAT",
+            "fieldname": "Materiaal",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "PRO_VRM",
+            "fieldname": "VormProfiel",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "PRO_BRE",
+            "fieldname": "Breedte_diameterProfiel",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "PRO_HGT",
+            "fieldname": "HoogteProfiel",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "OPL_HL1",
+            "fieldname": "Co_tangensHelling1",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "OPL_HL2",
+            "fieldname": "Co_tangensHelling2",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "PRO_NIV",
+            "fieldname": "NiveauBovenBob",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "PRO_NOP",
+            "fieldname": "NatOppervlakNiveau",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "PRO_NOM",
+            "fieldname": "NatteOmtrekNiveau",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "PRO_BRN",
+            "fieldname": "BreedteNiveau",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "AAN_PBR",
+            "fieldname": "AannameProfielbreedte",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "ALG_TOE",
+            "fieldname": "ToelichtingRegel",
+            "type": str,
+            "required": False,
+        },
+    ]
+
+    def __init__(self):
+        pass
+
+    def __repr__(self):
+        return "<Profile %s>" % (getattr(self, "identificatieprofieldefinitie", None),)
+
+
 class Meta:
     pass
 
@@ -463,12 +557,14 @@ class Hydx:
         },
         "Kunstwerk1.csv": {"hydx_class": Structure, "collection_name": "structures"},
         "Verbinding1.csv": {"hydx_class": Connection, "collection_name": "connections"},
+        "Profiel1.csv": {"hydx_class": Profile, "collection_name": "profiles"},
     }
 
     def __init__(self):
         self.connection_nodes = []
         self.connections = []
         self.structures = []
+        self.profiles = []
 
     def import_csvfile(self, csvreader, csvfilename):
 
@@ -489,6 +585,7 @@ class Hydx:
         )
         self._check_on_unique(self.connections, "identificatieknooppuntofverbinding")
         self._check_on_unique(self.structures, "identificatieknooppuntofverbinding")
+        self._check_on_unique(self.profiles, "identificatieprofieldefinitie")
 
     def _check_on_unique(self, records, unique_field, remove_double=False):
         values = [m.__dict__[unique_field] for m in records]
@@ -513,3 +610,11 @@ def check_headers(found, expected):
 
     if missing_columns:
         logger.error("missing columns found: %s", missing_columns)
+
+
+def check_string_to_float(value):
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False

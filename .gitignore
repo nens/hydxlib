@@ -37,3 +37,7 @@ docker-compose.override.yml
 
 # Visual Code
 .vscode
+
+# Script itself
+.log
+gwswlib/tests/example_files_structures_hydx/import_hydx_gwswlib.log

@@ -24,8 +24,7 @@ def export_threedi(hydx, threedi_db_settings):
     threedi = Threedi()
     threedi.import_hydx(hydx)
     commit_counts = write_threedi_to_db(threedi, threedi_db_settings)
-    print(commit_counts)
-
+    logger.info("GWSW-hydx exchange created elements: %r", commit_counts)
     return threedi
 
 
@@ -74,13 +73,11 @@ def write_threedi_to_db(threedi, threedi_db_settings):
                 "SELECT setval('{table}_id_seq', max(id)) "
                 "FROM {table}".format(table=table.__tablename__)
             )
-
         session.commit()
 
     cross_section_list = []
     for cross_section in threedi.cross_sections.values():
         cross_section_list.append(CrossSectionDefinition(**cross_section))
-
     commit_counts["cross_sections"] = len(cross_section_list)
     session.bulk_save_objects(cross_section_list)
     session.commit()
@@ -95,7 +92,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
 
     connection_node_list = []
     srid = 28992
-
     for connection_node in threedi.connection_nodes:
         wkt = "POINT({0} {1})".format(*connection_node["geom"])
         connection_node_list.append(
@@ -105,7 +101,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
                 the_geom="srid={0};{1}".format(srid, wkt),
             )
         )
-
     commit_counts["connection_nodes"] = len(connection_node_list)
     session.bulk_save_objects(connection_node_list)
     session.commit()
@@ -154,7 +149,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
                 "Manhole with %r could not be created in 3di due to double values in ConnectionNode",
                 manhole["code"],
             )
-
     commit_counts["manholes"] = len(man_list)
     session.bulk_save_objects(man_list)
     session.commit()
@@ -187,11 +181,11 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     #             {'end_node': pipe['end_node.code'], 'code': pipe['code']}
     #         )
 
-    #     pipe['cross_section_definition_id'] = crs_dict[pipe['crs_code']]
+    #     pipe['cross_section_definition_id'] = cross_section_dict[pipe['cross_section_code']]
 
     #     del pipe['start_node.code']
     #     del pipe['end_node.code']
-    #     del pipe['crs_code']
+    #     del pipe['cross_section_code']
     #     del pipe['cross_section_details']
 
     #     pipe_list.append(Pipe(**pipe))
@@ -202,109 +196,42 @@ def write_threedi_to_db(threedi, threedi_db_settings):
 
     pump_list = []
     for pump in threedi.pumpstations:
-        if pump["start_node.code"] in connection_node_dict:
-            pump["connection_node_start_id"] = connection_node_dict[
-                pump["start_node.code"]
-            ]
-        else:
-            pump["connection_node_start_id"] = None
-            logging.error(
-                "Start node of pump %r not found in connection nodes", pump["code"]
-            )
-
-        if pump["end_node.code"] in connection_node_dict:
-            pump["connection_node_end_id"] = connection_node_dict[pump["end_node.code"]]
-        else:
-            pump["connection_node_end_id"] = None
-            logging.error(
-                "End node of pump %r not found in connection nodes", pump["code"]
-            )
-
+        pump = get_start_and_end_connection_node(pump, connection_node_dict)
         del pump["start_node.code"]
         del pump["end_node.code"]
-
         pump_list.append(Pumpstation(**pump))
-
     commit_counts["pumpstations"] = len(pump_list)
     session.bulk_save_objects(pump_list)
     session.commit()
 
     weir_list = []
     for weir in threedi.weirs:
-        if weir["start_node.code"] in connection_node_dict:
-            weir["connection_node_start_id"] = connection_node_dict[
-                weir["start_node.code"]
-            ]
-        else:
-            weir["connection_node_start_id"] = None
-            logger.error(
-                "Start node of weir %r not found in connection nodes", weir["code"]
-            )
-
-        if weir["end_node.code"] in connection_node_dict:
-            weir["connection_node_end_id"] = connection_node_dict[weir["end_node.code"]]
-        else:
-            weir["connection_node_end_id"] = None
-            logging.error(
-                "End node of weir %r not found in connection nodes", weir["code"]
-            )
-
-        weir["cross_section_definition_id"] = cross_section_dict[
-            weir["cross_section_code"]
-        ]
+        weir = get_start_and_end_connection_node(weir, connection_node_dict)
+        weir = get_cross_section_definition_id(weir, cross_section_dict)
 
         del weir["start_node.code"]
         del weir["end_node.code"]
         del weir["cross_section_code"]
         del weir["cross_section_details"]
         del weir["boundary_details"]
-
         weir_list.append(Weir(**weir))
-
     commit_counts["weirs"] = len(weir_list)
     session.bulk_save_objects(weir_list)
     session.commit()
 
-    # for orif in threedi.orifices:
-    #     try:
-    #         orif['connection_node_start_id'] = connection_node_dict[
-    #             orif['start_node.code']]
-    #     except KeyError:
-    #         self.log.add(
-    #             logging.ERROR,
-    #             'Start node of orifice not found in nodes',
-    #             {},
-    #             'Start node {start_node} of orifice with code {code} not '
-    #             'found',
-    #             {'start_node': orif['start_node.code'],
-    #                 'code': orif['code']}
-    #         )
+    orifice_list = []
+    for orifice in threedi.orifices:
+        orifice = get_start_and_end_connection_node(orifice, connection_node_dict)
+        orifice = get_cross_section_definition_id(orifice, cross_section_dict)
 
-    #     try:
-    #         orif['connection_node_end_id'] = connection_node_dict[
-    #             orif['end_node.code']]
-    #     except KeyError:
-    #         self.log.add(
-    #             logging.ERROR,
-    #             'End node of orifice not found in nodes',
-    #             {},
-    #             'End node {end_node} of orifice with code {code} not '
-    #             'found',
-    #             {'end_node': orif['end_node.code'], 'code': orif['code']}
-    #         )
-
-    #     orif['cross_section_definition_id'] = crs_dict[orif['crs_code']]
-
-    #     del orif['start_node.code']
-    #     del orif['end_node.code']
-    #     del orif['crs_code']
-    #     del orif['cross_section_details']
-
-    #     obj_list.append(Orifice(**orif))
-
-    # commit_counts['structures'] = len(obj_list)
-    # session.bulk_save_objects(obj_list)
-    # session.commit()
+        del orifice["start_node.code"]
+        del orifice["end_node.code"]
+        del orifice["cross_section_code"]
+        del orifice["cross_section_details"]
+        orifice_list.append(Orifice(**orifice))
+    commit_counts["orifices"] = len(orifice_list)
+    session.bulk_save_objects(orifice_list)
+    session.commit()
 
     # # Outlets (must be saved after weirs, orifice, pumpstation, etc.
     # # because of constraints)
@@ -368,3 +295,42 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     # session.commit()
 
     return commit_counts
+
+
+def get_start_and_end_connection_node(connection, connection_node_dict):
+    if connection["start_node.code"] in connection_node_dict:
+        connection["connection_node_start_id"] = connection_node_dict[
+            connection["start_node.code"]
+        ]
+    else:
+        connection["connection_node_start_id"] = None
+        logger.error(
+            "Start node of connection %r not found in connection nodes",
+            connection["code"],
+        )
+
+    if connection["end_node.code"] in connection_node_dict:
+        connection["connection_node_end_id"] = connection_node_dict[
+            connection["end_node.code"]
+        ]
+    else:
+        connection["connection_node_end_id"] = None
+        logging.error(
+            "End node of connection %r not found in connection nodes",
+            connection["code"],
+        )
+    return connection
+
+
+def get_cross_section_definition_id(connection, cross_section_dict):
+    if connection["cross_section_code"] in cross_section_dict:
+        connection["cross_section_definition_id"] = cross_section_dict[
+            connection["cross_section_code"]
+        ]
+    else:
+        connection["cross_section_definition_id"] = None
+        logger.error(
+            "Cross section definition of connection %r is not found in cross section definitions",
+            connection["code"],
+        )
+    return connection

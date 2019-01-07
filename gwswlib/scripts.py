@@ -9,6 +9,7 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import logging
 import os
 import sys
+from datetime import datetime
 
 from gwswlib.importer import import_hydx
 from gwswlib.exporter import export_threedi
@@ -31,6 +32,10 @@ class OptionException(Exception):
 def run_import_export(
     import_type, export_type, hydx_path=None, threedi_db_settings=None
 ):
+    logger.info("Started exchange of GWSW-hydx at %s", datetime.now())
+    logger.info("import type %r ", import_type)
+    logger.info("export type %r ", export_type)
+
     if import_type == export_type:
         raise OptionException(
             "not allowed to use same import and export type %r" % import_type
@@ -45,6 +50,18 @@ def run_import_export(
         export_threedi(hydx, threedi_db_settings)
     else:
         raise OptionException("no available export type %r is selected" % export_type)
+
+    logger.info("Exchange of GWSW-hydx finished")
+
+    return "method is finished"  # Return value only for testing
+
+
+def write_logging_to_file(log_relpath):
+    fh = logging.FileHandler(log_relpath, mode="w")
+    fh.setLevel(logging.INFO)
+    formatter = logging.Formatter("%(levelname)s: %(message)s")
+    fh.setFormatter(formatter)
+    logging.getLogger("").addHandler(fh)
 
 
 def get_parser():
@@ -75,8 +92,8 @@ def get_parser():
         help="select your export operator",
     )
 
-    group_import_hydx = parser.add_argument_group("Import or export a hydx")
-    group_import_hydx.add_argument(
+    group_hydx = parser.add_argument_group("Import or export a hydx")
+    group_hydx.add_argument(
         "--hydx_path",
         default="gwswlib\\tests\\example_files_structures_hydx",
         metavar="HYDX_PATH",
@@ -135,6 +152,14 @@ def main():
     else:
         log_level = logging.INFO
     logging.basicConfig(level=log_level, format="%(levelname)s: %(message)s")
+
+    # add file handler to logging options
+    if options.import_type == "hydx":
+        log_relpath = os.path.join(
+            os.path.abspath(options.hydx_path), "import_hydx_gwswlib.log"
+        )
+        write_logging_to_file(log_relpath)
+        logger.info("Log file is created in hydx directory: %r", log_relpath)
 
     try:
         run_import_export(

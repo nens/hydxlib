@@ -36,7 +36,7 @@ def import_hydx(hydx_path):
         # "Meta1.csv",
         # "Nwrw.csv",
         # "Oppervlak1.csv",
-        # "Profiel1.csv",
+        "Profiel1.csv",
         "Verbinding1.csv",
         # "Verloop1.csv",
     ]

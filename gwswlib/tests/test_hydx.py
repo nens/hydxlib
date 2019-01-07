@@ -4,7 +4,7 @@ from collections import OrderedDict
 from unittest import TestCase
 import pytest
 
-from gwswlib.hydx import check_headers, ConnectionNode, Connection, Structure
+from gwswlib.hydx import check_headers, ConnectionNode, Connection, Structure, Profile
 from gwswlib.importer import import_hydx
 
 
@@ -85,6 +85,11 @@ def test_repr_uninitialized_connection_nodes():
     assert repr(connection_node)
 
 
+def test_str_uninitialized_connection_nodes():
+    connection_node = ConnectionNode()
+    assert str(connection_node)
+
+
 def test_check_init_connection():
     line_in = OrderedDict(
         [
@@ -141,6 +146,11 @@ def test_check_init_connection():
 def test_repr_uninitialized_connection():
     connection = Connection()
     assert repr(connection)
+
+
+def test_str_uninitialized_connection():
+    connection = Connection()
+    assert str(connection)
 
 
 class TestHydx(TestCase):
@@ -219,3 +229,55 @@ def test_check_init_structure():
 def test_repr_uninitialized_structure():
     structure = Structure()
     assert repr(structure)
+
+
+def test_str_uninitialized_structure():
+    structure = Structure()
+    assert structure
+
+
+def test_check_init_profile():
+    line_in = OrderedDict(
+        [
+            ("PRO_IDE", "PVC160"),
+            ("PRO_MAT", "PVC"),
+            ("PRO_VRM", "RND"),
+            ("PRO_BRE", "160"),
+            ("PRO_HGT", ""),
+            ("OPL_HL1", ""),
+            ("OPL_HL2", ""),
+            ("PRO_NIV", ""),
+            ("PRO_NOP", ""),
+            ("PRO_NOM", ""),
+            ("PRO_BRN", ""),
+            ("AAN_PBR", ""),
+            ("ALG_TOE", "Standaard maat"),
+        ]
+    )
+    line_out = {
+        "identificatieprofieldefinitie": "PVC160",
+        "materiaal": "PVC",
+        "vormprofiel": "RND",
+        "breedte_diameterprofiel": "160",
+        "hoogteprofiel": None,
+        "co_tangenshelling1": None,
+        "co_tangenshelling2": None,
+        "niveaubovenbob": None,
+        "natoppervlakniveau": None,
+        "natteomtrekniveau": None,
+        "breedteniveau": None,
+        "aannameprofielbreedte": None,
+        "toelichtingregel": "Standaard maat",
+    }
+    profile = Profile.import_csvline(csvline=line_in)
+    assert profile.__dict__ == line_out
+
+
+def test_repr_uninitialized_profile():
+    profile = Profile()
+    assert repr(profile)
+
+
+def test_str_uninitialized_profile():
+    profile = Profile()
+    assert str(profile)

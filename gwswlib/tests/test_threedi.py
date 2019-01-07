@@ -5,7 +5,11 @@ import pytest
 import mock
 
 from gwswlib.importer import import_hydx
-from gwswlib.threedi import Threedi, check_if_element_is_created_with_same_code
+from gwswlib.threedi import (
+    Threedi,
+    check_if_element_is_created_with_same_code,
+    get_hydx_default_profile,
+)
 from gwswlib.sql_models.constants import Constants
 
 
@@ -72,6 +76,7 @@ def test_import_hydx_unknown_connection_types(caplog):
 def test_import_hydx_known_pipe_connection(caplog):
     hydx = mock.Mock()
     hydx.connection_nodes = []
+    hydx.profiles = []
     hydx.connections = [
         mock.Mock(identificatieknooppuntofverbinding="ovs1", typeverbinding="GSL")
     ]
@@ -90,6 +95,11 @@ def test_structure_does_not_exist_error(caplog):
     threedi = Threedi()
     threedi.import_hydx(hydx)
     assert "Structure does not exist for connection" in caplog.text
+
+
+def test_get_hydx_default_profile():
+    profile = get_hydx_default_profile()
+    assert profile.breedte_diameterprofiel == "1000"
 
 
 class TestThreedi(TestCase):
@@ -113,9 +123,6 @@ class TestThreedi(TestCase):
             "geom": (241330.836, 483540.234, 28992),
         }
         self.threedi.import_hydx(self.hydx)
-        # select first manhole from dataset for check
-        connection_node = self.hydx.connection_nodes[0]
-        self.threedi.add_connection_node(connection_node)
         assert self.threedi.connection_nodes[0] == connection_node_0
 
     def test_add_connection_node_manhole(self):
@@ -131,9 +138,6 @@ class TestThreedi(TestCase):
             "manhole_indicator": 0,
         }
         self.threedi.import_hydx(self.hydx)
-        # select first manhole from dataset for check
-        connection_node = self.hydx.connection_nodes[0]
-        self.threedi.add_connection_node(connection_node)
         assert self.threedi.manholes[0] == manhole_0
 
     def test_add_pumpstation(self):
@@ -151,10 +155,6 @@ class TestThreedi(TestCase):
             "sewerage": True,
         }
         self.threedi.import_hydx(self.hydx)
-        # select first manhole from dataset for check
-        connection = self.hydx.connections[0]
-        structure = self.hydx.structures[0]
-        self.threedi.add_structure(connection, structure)
         assert self.threedi.pumpstations[1] == pumpstation_1
 
     def test_add_first_pump_with_same_code(self):
@@ -173,7 +173,7 @@ class TestThreedi(TestCase):
         self.threedi.add_structure(connection, structure)
         assert self.threedi.pumpstations[3]["type_"] == 2
 
-    def test_add_weir(self):
+    def test_add_weir_with_boundary_and_open_rectangle_profile(self):
         weir_0 = {
             "code": "ovs1",
             "display_name": "13_990100-13_990105-1",
@@ -194,8 +194,27 @@ class TestThreedi(TestCase):
             "cross_section_code": "rectangle_w1.5_open",
         }
         self.threedi.import_hydx(self.hydx)
-        # select first manhole from dataset for check
-        connection = self.hydx.connections[0]
-        structure = self.hydx.structures[0]
-        self.threedi.add_structure(connection, structure)
         assert self.threedi.weirs[0] == weir_0
+
+    def test_add_orifice_with_rectangular_closed_profile(self):
+        orifice_3 = {
+            "code": "drl4",
+            "display_name": "13_990560-13_990821-6",
+            "start_node.code": "knp5",
+            "end_node.code": "knp6",
+            "cross_section_details": {
+                "shape": 5,
+                "width": "1.2 1.2 0",
+                "height": "0 0.6 0.6",
+                "code": "rectangle_w1.2_h0.6",
+            },
+            "discharge_coefficient_positive": None,
+            "discharge_coefficient_negative": None,
+            "sewerage": True,
+            "max_capacity": 2.0,
+            "crest_type": 4,
+            "crest_level": -2.0,
+            "cross_section_code": "rectangle_w1.2_h0.6",
+        }
+        self.threedi.import_hydx(self.hydx)
+        assert self.threedi.orifices[3] == orifice_3
