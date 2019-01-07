@@ -24,7 +24,7 @@ def export_threedi(hydx, threedi_db_settings):
     threedi = Threedi()
     threedi.import_hydx(hydx)
     commit_counts = write_threedi_to_db(threedi, threedi_db_settings)
-    logger.info("Following elements are created %r", commit_counts)
+    logger.info("GWSW-hydx exchange created elements: %r", commit_counts)
     return threedi
 
 

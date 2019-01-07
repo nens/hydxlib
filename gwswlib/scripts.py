@@ -41,12 +41,7 @@ def run_import_export(
             "not allowed to use same import and export type %r" % import_type
         )
 
-    log_relpath = None
     if import_type == "hydx":
-        log_relpath = os.path.join(
-            os.path.abspath(hydx_path), "import_hydx_gwswlib.log"
-        )
-        write_logging_to_file(log_relpath)
         hydx = import_hydx(hydx_path)
     else:
         raise OptionException("no available import type %r is selected" % import_type)
@@ -56,12 +51,9 @@ def run_import_export(
     else:
         raise OptionException("no available export type %r is selected" % export_type)
 
-    if log_relpath is not None:
-        logger.info("Log file with warnings and errors is created %r", log_relpath)
-
     logger.info("Exchange of GWSW-hydx finished")
 
-    return "method is finished"
+    return "method is finished"  # Return value only for testing
 
 
 def write_logging_to_file(log_relpath):
@@ -160,6 +152,14 @@ def main():
     else:
         log_level = logging.INFO
     logging.basicConfig(level=log_level, format="%(levelname)s: %(message)s")
+
+    # add file handler to logging options
+    if options.import_type == "hydx":
+        log_relpath = os.path.join(
+            os.path.abspath(options.hydx_path), "import_hydx_gwswlib.log"
+        )
+        write_logging_to_file(log_relpath)
+        logger.info("Log file is created in hydx directory: %r", log_relpath)
 
     try:
         run_import_export(
