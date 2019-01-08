@@ -33,8 +33,8 @@ def run_import_export(
     import_type, export_type, hydx_path=None, threedi_db_settings=None
 ):
     logger.info("Started exchange of GWSW-hydx at %s", datetime.now())
-    logger.info("import type %r ", import_type)
-    logger.info("export type %r ", export_type)
+    logger.info("import type: %s ", import_type)
+    logger.info("export type: %s ", export_type)
 
     if import_type == export_type:
         raise OptionException(
@@ -140,9 +140,9 @@ def get_parser():
     return parser
 
 
-def main():
+def main(raw_args=None):
     """ Call command with args from parser. """
-    options = get_parser().parse_args()
+    options = get_parser().parse_args(raw_args)
     threedi_db_settings = {
         k: vars(options)[k] for k in vars(options) if k.startswith("threedi_")
     }
