@@ -1,19 +1,50 @@
 A library for the GWSW-hydx exchange format
 ===========================================
 
-In de toekomst gaat RioNED het GWSW gebruiken als standaard uitwisselingsformaat voor (hydraulische) rioleringsgegevens.
-Deze tool zorgt voor de uitwisseling tussen het GWSW-hyd en de 3Di database.
-Voor meer informatie over GWSW-hyd zie https://apps.gwsw.nl/item_definition
-Voor meer informatie over het databaseschema van 3Di zie https://docs.3di.lizard.net/en/stable/d_before_you_begin.html#database-overview
+RioNED is going to release a new format for exchanging sewerage data called GWSW-hydx.
+This tool could be used to exchange sewerage data from and to a hydx format (*.csv).  
+
+For more information about GWSW-hydx:  
+https://apps.gwsw.nl/item_definition  
+
+For more information about the database scheme of 3Di:  
+https://docs.3di.lizard.net/en/stable/d_before_you_begin.html#database-overview
 
 Purporse of this script is to exchange information between different formats.
 This means that this library doesn't improve lacking or incorrect data.
 For example, it doesn't remove double manholes on the same location.
 This libary does provide all kinds of checks with warning and error messages.
 
+This tool is currently in development.
+Therefore only nodes, weirs, orifices and pumpstations are currently supported.
+
 
 Installation
 ------------
+
+We're installed with::
+
+  $ pip install hydxlib
+
+
+Running script
+--------------
+
+It's possible to run this tool on command line or with python
+
+Commandline::
+
+  $ hydxlib --import_type hydx --export_type threedi etc.
+
+Python::
+
+  from hydxlib import run_import_export, write_logging_to_file
+  log_relpath = log_relpath = os.path.join(os.path.abspath(options.hydx_path), "import_hydx_hydxlib.log")
+  write_logging_to_file(hydx_path)
+  run_import_export(import_type, export_type, hydx_path, threedi_db_settings)
+
+Installation for development
+----------------------------
 
 We're installed with `pipenv <https://docs.pipenv.org/>`_, a handy wrapper
 around pip and virtualenv. Install that first with ``pip install
@@ -43,38 +74,3 @@ coverage. Pure luxury::
 The tests are also run automatically on "travis", you'll see it in the pull
 requests. There's also `coverage reporting
 <https://coveralls.io/github/nens/hydxlib>`_ on coveralls.io.
-
-
-Development version
--------------------
-
-The following objects will be supported
-
-* Structures
-
-  * Pumpstations
-
-  * Weirs
-
-  * Orifices
-
-
-Current assumptions or shortages
---------------------------------
-
-Ideas for structure code: https://github.com/nens/ribxlib
-
-Running script
---------------
-
-**Export**
-
-Input: 3Di database with sewerage system
-
-Output: GWSW-hyd in CSV-format
-
-**Import**
-
-Input: GWSW-hyd in CSV-format
-
-Output: 3Di database with sewerage system
