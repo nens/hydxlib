@@ -9,7 +9,7 @@ verify_ssl = true
 "coveralls" = "*"
 
 [packages]
-"gwswlib" = {path = ".", editable = true, extras=["test"]}
+"hydxlib" = {path = ".", editable = true, extras=["test"]}
 
 [requires]
 python_version = "3"

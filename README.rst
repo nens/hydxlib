@@ -24,16 +24,16 @@ pipenv``. Then run::
 
 There will be a script you can run like this::
 
-  $ pipenv run run-gwswlib
+  $ pipenv run run-hydxlib
 
-It runs the `main()` function in `gwswlib/scripts.py`,
+It runs the `main()` function in `hydxlib/scripts.py`,
 adjust that if necessary. The script is configured in `setup.py` (see
 `entry_points`).
 
 In order to get nicely formatted python files without having to spend manual
 work on it, run the following command periodically::
 
-  $ pipenv run black gwswlib
+  $ pipenv run black hydxlib
 
 Run the tests regularly. This also checks with pyflakes, black and it reports
 coverage. Pure luxury::
@@ -42,7 +42,7 @@ coverage. Pure luxury::
 
 The tests are also run automatically on "travis", you'll see it in the pull
 requests. There's also `coverage reporting
-<https://coveralls.io/github/nens/gwswlib>`_ on coveralls.io.
+<https://coveralls.io/github/nens/hydxlib>`_ on coveralls.io.
 
 
 Development version

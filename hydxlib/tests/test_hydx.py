@@ -4,8 +4,8 @@ from collections import OrderedDict
 from unittest import TestCase
 import pytest
 
-from gwswlib.hydx import check_headers, ConnectionNode, Connection, Structure, Profile
-from gwswlib.importer import import_hydx
+from hydxlib.hydx import check_headers, ConnectionNode, Connection, Structure, Profile
+from hydxlib.importer import import_hydx
 
 
 def test_check_headers(caplog):
@@ -155,7 +155,7 @@ def test_str_uninitialized_connection():
 
 class TestHydx(TestCase):
     def setUp(self):
-        hydx_path = "gwswlib/tests/example_files_structures_hydx/"
+        hydx_path = "hydxlib/tests/example_files_structures_hydx/"
         self.hydx = import_hydx(hydx_path)
 
     @pytest.fixture(autouse=True)

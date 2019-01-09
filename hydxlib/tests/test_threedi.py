@@ -4,13 +4,13 @@ from unittest import TestCase
 import pytest
 import mock
 
-from gwswlib.importer import import_hydx
-from gwswlib.threedi import (
+from hydxlib.importer import import_hydx
+from hydxlib.threedi import (
     Threedi,
     check_if_element_is_created_with_same_code,
     get_hydx_default_profile,
 )
-from gwswlib.sql_models.constants import Constants
+from hydxlib.sql_models.constants import Constants
 
 
 def test_get_mapping_value_wrong(caplog):
@@ -105,7 +105,7 @@ def test_get_hydx_default_profile():
 class TestThreedi(TestCase):
     def setUp(self):
         self.threedi = Threedi()
-        hydx_path = "gwswlib/tests/example_files_structures_hydx/"
+        hydx_path = "hydxlib/tests/example_files_structures_hydx/"
         self.hydx = import_hydx(hydx_path)
 
     @pytest.fixture(autouse=True)

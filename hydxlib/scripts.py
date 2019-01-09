@@ -11,8 +11,8 @@ import os
 import sys
 from datetime import datetime
 
-from gwswlib.importer import import_hydx
-from gwswlib.exporter import export_threedi
+from hydxlib.importer import import_hydx
+from hydxlib.exporter import export_threedi
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +95,7 @@ def get_parser():
     group_hydx = parser.add_argument_group("Import or export a hydx")
     group_hydx.add_argument(
         "--hydx_path",
-        default="gwswlib\\tests\\example_files_structures_hydx",
+        default="hydxlib\\tests\\example_files_structures_hydx",
         metavar="HYDX_PATH",
         dest="hydx_path",
         help="Folder with your hydx *.csv files",
@@ -156,7 +156,7 @@ def main():
     # add file handler to logging options
     if options.import_type == "hydx":
         log_relpath = os.path.join(
-            os.path.abspath(options.hydx_path), "import_hydx_gwswlib.log"
+            os.path.abspath(options.hydx_path), "import_hydx_hydxlib.log"
         )
         write_logging_to_file(log_relpath)
         logger.info("Log file is created in hydx directory: %r", log_relpath)

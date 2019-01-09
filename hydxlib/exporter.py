@@ -2,9 +2,9 @@
 import logging
 from sqlalchemy.orm import load_only
 
-from gwswlib.threedi import Threedi
-from gwswlib.sql_models.threedi_database import ThreediDatabase
-from gwswlib.sql_models.model_schematisation import (
+from hydxlib.threedi import Threedi
+from hydxlib.sql_models.threedi_database import ThreediDatabase
+from hydxlib.sql_models.model_schematisation import (
     ConnectionNode,
     Manhole,
     BoundaryCondition1D,

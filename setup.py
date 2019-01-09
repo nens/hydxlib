@@ -9,7 +9,7 @@ install_requires = ["sqlalchemy", "geoalchemy2", "psycopg2"]
 tests_require = ["pytest", "mock", "pytest-cov", "pytest-flakes", "pytest-black"]
 
 setup(
-    name="gwswlib",
+    name="hydxlib",
     version=version,
     description="Importer and Exporter for GWSW",
     long_description=long_description,
@@ -20,11 +20,11 @@ setup(
     author_email="arnold.vantveld@nelen-schuurmans.nl",
     url="",
     license="MIT",
-    packages=["gwswlib"],
+    packages=["hydxlib"],
     include_package_data=True,
     zip_safe=False,
     install_requires=install_requires,
     tests_require=tests_require,
     extras_require={"test": tests_require},
-    entry_points={"console_scripts": ["run-gwswlib = gwswlib.scripts:main"]},
+    entry_points={"console_scripts": ["run-hydxlib = hydxlib.scripts:main"]},
 )

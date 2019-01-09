@@ -4,7 +4,7 @@ import mock
 import pytest
 import os
 
-from gwswlib import scripts
+from hydxlib import scripts
 
 
 @mock.patch("sys.argv", ["program"])
@@ -31,7 +31,7 @@ def test_run_import_export_not_available_import(caplog):
 
 def test_run_import_export_not_available_export(caplog):
     import_type = "hydx"
-    hydx_path = "gwswlib/tests/example_files_structures_hydx/"
+    hydx_path = "hydxlib/tests/example_files_structures_hydx/"
     export_type = "this is wrong"
     with pytest.raises(scripts.OptionException):
         scripts.run_import_export(import_type, export_type, hydx_path)
@@ -39,7 +39,7 @@ def test_run_import_export_not_available_export(caplog):
 
 def test_run_import_export_log_file(caplog):
     import_type = "hydx"
-    hydx_path = "gwswlib/tests/example_files_structures_hydx/"
+    hydx_path = "hydxlib/tests/example_files_structures_hydx/"
     export_type = "threedi"
     if "TRAVIS" in os.environ:
         # TODO: temporary measure, Reinout will have to investigate proper db env

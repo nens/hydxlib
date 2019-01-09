@@ -2,7 +2,7 @@
 omit =
     */migrations/*
     *settings.py
-source = gwswlib
+source = hydxlib
 
 [report]
 show_missing = true

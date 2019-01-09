@@ -1,4 +1,4 @@
-Changelog of gwswlib
+Changelog of hydxlib
 ===================================================
 
 
@@ -8,4 +8,4 @@ Changelog of gwswlib
 - Initial project structure created with cookiecutter and
   https://github.com/nens/cookiecutter-python-template .
 
-- Set up automatic testing with travis: https://travis-ci.com/nens/gwswlib .
+- Set up automatic testing with travis: https://travis-ci.com/nens/hydxlib .
