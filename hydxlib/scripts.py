@@ -32,6 +32,58 @@ class OptionException(Exception):
 def run_import_export(
     import_type, export_type, hydx_path=None, threedi_db_settings=None
 ):
+    """ Run import and export functionality of hydxlib
+
+    Args:
+        import_type (str):          import operator ["hydx", "threedi"]
+        export_type (str):          export operator ["hydx", "threedi", "json"]
+        hydx_path (str):            folder with your hydx *.csv files
+        threedi_db_settings (dict): settings of your threedi database
+
+    Returns:
+        string: "INFO: method is finished"
+
+    *import_type*
+        hydx
+        threedi (not yet supported)
+
+    *export_type*
+        hydx (not yet supported)
+        threedi
+        json (not yet supported)
+
+    *hydx_path*
+        required when selected operator 'hydx'
+        
+        relative or absolute path to your hydx location files
+        example: hydx_path = "hydxlib\\tests\\example_files_structures_hydx"
+    
+    *threedi_db_settings*
+        required when selected operator 'threedi'
+
+        example:    threedi_db_settings = {
+                        "threedi_dbname": "test_gwsw",
+                        "threedi_host": "localhost",
+                        "threedi_user": "postgres",
+                        "threedi_password": TODO_TREEDI_DB_PASSWORD,
+                        "threedi_port": 5432,
+                    }
+        
+        threedi_dbname (str):   name of your threedi database, e.g. test_gwsw
+        threedi_host (str):     host of your threedi database, e.g. localhost
+        threedi_user (str):     username of your threedi database, e.g. postgres
+        threedi_password (str): password of your threedi database, e.g. postgres
+        threedi_port (int):     port of your threedi database, e.g. 5432
+
+    usage example:
+        from hydxlib import run_import_export, write_logging_to_file
+        log_relpath = log_relpath = os.path.join(
+            os.path.abspath(options.hydx_path), "import_hydx_hydxlib.log"
+        )
+        write_logging_to_file(hydx_path)
+        run_import_export(import_type, export_type, hydx_path, threedi_db_settings)
+        
+    """
     logger.info("Started exchange of GWSW-hydx at %s", datetime.now())
     logger.info("import type %r ", import_type)
     logger.info("export type %r ", export_type)
@@ -57,11 +109,12 @@ def run_import_export(
 
 
 def write_logging_to_file(log_relpath):
+    """ Add file handler for writing logfile with warning and errors of hydxlib """
     fh = logging.FileHandler(log_relpath, mode="w")
     fh.setLevel(logging.INFO)
     formatter = logging.Formatter("%(levelname)s: %(message)s")
     fh.setFormatter(formatter)
-    logging.getLogger("").addHandler(fh)
+    logging.getLogger("hydxlib").addHandler(fh)
 
 
 def get_parser():

@@ -5,6 +5,8 @@ Changelog of hydxlib
 0.2 (unreleased)
 ----------------
 
+- Added docstrings and updated the readme.
+
 - Enabled automatic pypi.org uploads from travis-ci.com
 
 
@@ -17,3 +19,4 @@ Changelog of hydxlib
 - Set up automatic testing with travis: https://travis-ci.com/nens/hydxlib .
 
 - First working version with hydx import and 3Di postgres output.
+  In this version only nodes, weirs, orifices and pumpstations are supported
