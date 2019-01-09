@@ -18,7 +18,7 @@ Therefore only nodes, weirs, orifices and pumpstations are currently supported.
 Installation
 ------------
 
-We're installed with: :
+We're installed with::
 
   $ pip install hydxlib
 
@@ -28,7 +28,7 @@ Running script
 
 It's possible to run this tool on command line or with python
 
-Commandline: :
+Commandline::
 
   $ hydxlib --import_type hydx --export_type threedi etc.
 
