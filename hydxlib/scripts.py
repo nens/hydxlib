@@ -105,7 +105,7 @@ def run_import_export(
 
     logger.info("Exchange of GWSW-hydx finished")
 
-    return "INFO: method is finished"  # Return value only for testing
+    return "method is finished"  # Return value only for testing
 
 
 def write_logging_to_file(log_relpath):
