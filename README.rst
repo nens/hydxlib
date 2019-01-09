@@ -3,8 +3,10 @@ A library for the GWSW-hydx exchange format
 
 RioNED is going to release a new format for exchanging sewerage data called GWSW-hydx.
 This tool could be used to exchange sewerage data from and to a hydx format (*.csv).  
+
 For more information about GWSW-hydx:  
 https://apps.gwsw.nl/item_definition  
+
 For more information about the database scheme of 3Di:  
 https://docs.3di.lizard.net/en/stable/d_before_you_begin.html#database-overview
 
