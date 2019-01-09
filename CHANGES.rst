@@ -5,14 +5,12 @@ Changelog of hydxlib
 0.3 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Added docstrings and updated the readme.
 
 
 0.2 (2019-01-09)
 
 ----------------
-
-- Added docstrings and updated the readme.
 
 - Enabled automatic pypi.org uploads from travis-ci.com
 
