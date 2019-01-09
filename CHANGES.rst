@@ -9,7 +9,6 @@ Changelog of hydxlib
 
 
 0.2 (2019-01-09)
-
 ----------------
 
 - Enabled automatic pypi.org uploads from travis-ci.com
