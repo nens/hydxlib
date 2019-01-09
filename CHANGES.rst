@@ -7,6 +7,8 @@ Changelog of hydxlib
 
 - Add docstrings and update readme.rst
 
+- Enabled automatic pypi.org uploads from travis-ci.com
+
 
 0.1 (2019-01-09)
 ----------------
