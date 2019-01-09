@@ -2,7 +2,7 @@ Changelog of hydxlib
 ===================================================
 
 
-0.1 (unreleased)
+0.1 (2019-01-09)
 ----------------
 
 - Initial project structure created with cookiecutter and
