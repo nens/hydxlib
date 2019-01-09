@@ -18,7 +18,7 @@ Therefore only nodes, weirs, orifices and pumpstations are currently supported.
 Installation
 ------------
 
-We're installed with::
+We're installed with: :
 
   $ pip install hydxlib
 
@@ -34,10 +34,10 @@ Commandline::
 
 Python::
 
-  $ from hydxlib import run_import_export, write_logging_to_file
-  $ log_relpath = log_relpath = os.path.join(os.path.abspath(options.hydx_path), "import_hydx_hydxlib.log")
-  $ write_logging_to_file(hydx_path)
-  $ run_import_export(import_type, export_type, hydx_path, threedi_db_settings)
+  from hydxlib import run_import_export, write_logging_to_file
+  log_relpath = log_relpath = os.path.join(os.path.abspath(options.hydx_path), "import_hydx_hydxlib.log")
+  write_logging_to_file(hydx_path)
+  run_import_export(import_type, export_type, hydx_path, threedi_db_settings)
 
 Installation for development
 ----------------------------
