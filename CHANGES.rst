@@ -5,7 +5,7 @@ Changelog of hydxlib
 0.2 (unreleased)
 ----------------
 
-- Add docstrings and update readme.rst
+- Added docstrings and updated the readme.
 
 - Enabled automatic pypi.org uploads from travis-ci.com
 
