@@ -57,4 +57,4 @@ def test_run_import_export_log_file(caplog):
     finished = scripts.run_import_export(
         import_type, export_type, hydx_path, threedi_db_settings
     )
-    assert finished == "method is finished"
+    assert finished == "INFO: method is finished"
