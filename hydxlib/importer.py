@@ -3,7 +3,7 @@ import logging
 import os
 import csv
 
-from gwswlib.hydx import Hydx
+from hydxlib.hydx import Hydx
 
 logger = logging.getLogger(__name__)
 

@@ -11,7 +11,7 @@ from sqlalchemy.sql import text
 
 # from .sqlalchemy_add_columns import create_and_upgrade
 
-from gwswlib.sql_models.model_schematisation import Base
+from hydxlib.sql_models.model_schematisation import Base
 
 
 class ThreediDatabase(object):

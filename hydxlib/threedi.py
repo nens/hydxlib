@@ -2,8 +2,8 @@
 import logging
 from collections import OrderedDict
 
-from gwswlib.sql_models.constants import Constants
-from gwswlib.hydx import Profile
+from hydxlib.sql_models.constants import Constants
+from hydxlib.hydx import Profile
 
 
 logger = logging.getLogger(__name__)

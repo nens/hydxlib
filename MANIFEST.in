@@ -1,7 +1,7 @@
 # Include docs in the root.
 include *.rst
 # Include everything in our project directory.
-graft gwswlib
+graft hydxlib
 # Exclude byte-compiled code
 global-exclude __pycache__
 global-exclude *.py[co]

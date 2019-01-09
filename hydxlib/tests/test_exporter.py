@@ -3,10 +3,10 @@
 from unittest import TestCase
 import pytest
 
-from gwswlib.sql_models.threedi_database import ThreediDatabase
-from gwswlib.importer import import_hydx
-from gwswlib.threedi import Threedi
-from gwswlib.exporter import (
+from hydxlib.sql_models.threedi_database import ThreediDatabase
+from hydxlib.importer import import_hydx
+from hydxlib.threedi import Threedi
+from hydxlib.exporter import (
     export_threedi,
     write_threedi_to_db,
     get_cross_section_definition_id,
@@ -55,7 +55,7 @@ def test_get_cross_section_definition_id_wrong(caplog):
 class TestThreedi(TestCase):
     def setUp(self):
         self.threedi = Threedi()
-        hydx_path = "gwswlib/tests/example_files_structures_hydx/"
+        hydx_path = "hydxlib/tests/example_files_structures_hydx/"
         self.threedi_db_settings = {
             "threedi_dbname": "test_gwsw",
             "threedi_host": "localhost",
