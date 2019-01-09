@@ -17,7 +17,6 @@ before_script:
   - psql -U postgres test_gwsw < hydxlib/tests/threedi_database_schema/work_empty_schema_2018-12-21.sql
 script:
   - pipenv run pytest
-  - pipenv run longtest
 after_success:
   - pipenv run coveralls
 
