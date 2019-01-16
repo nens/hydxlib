@@ -2,12 +2,12 @@ A library for the GWSW-hydx exchange format
 ===========================================
 
 RioNED is going to release a new format for exchanging sewerage data called GWSW-hydx.
-This tool could be used to exchange sewerage data from and to a hydx format (*.csv).  
+This tool could be used to exchange sewerage data from and to a hydx format (``*.csv``).
 
-For more information about GWSW-hydx:  
-https://apps.gwsw.nl/item_definition  
+For more information about GWSW-hydx:
+https://apps.gwsw.nl/item_definition
 
-For more information about the database scheme of 3Di:  
+For more information about the database scheme of 3Di:
 https://docs.3di.lizard.net/en/stable/d_before_you_begin.html#database-overview
 
 Purporse of this script is to exchange information between different formats.
@@ -39,9 +39,12 @@ Commandline::
 Python::
 
   from hydxlib import run_import_export, write_logging_to_file
-  log_relpath = log_relpath = os.path.join(os.path.abspath(options.hydx_path), "import_hydx_hydxlib.log")
+
+  log_relpath = os.path.join(os.path.abspath(options.hydx_path),
+                             "import_hydx_hydxlib.log")
   write_logging_to_file(hydx_path)
   run_import_export(import_type, export_type, hydx_path, threedi_db_settings)
+
 
 Installation for development
 ----------------------------
