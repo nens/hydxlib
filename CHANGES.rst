@@ -5,7 +5,7 @@ Changelog of hydxlib
 0.4 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Small fixes
 
 
 0.3 (2019-01-09)
