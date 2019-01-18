@@ -7,9 +7,10 @@ verify_ssl = true
 "black" = "==18.9.b0"
 "zest.releaser" = "*"
 "coveralls" = "*"
+v = {editable = true,version = "*"}
 
 [packages]
-"hydxlib" = {path = ".", editable = true, extras=["test"]}
+hydxlib = {path = ".",editable = true,extras = ["test"]}
 
 [requires]
 python_version = "3"
