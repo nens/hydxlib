@@ -1,5 +1,5 @@
 from setuptools import setup
-version = "0.4.dev0"
+version = "0.4"
 long_description = "\n\n".join([open("README.rst").read(), open("CHANGES.rst").read()])
 install_requires = ["sqlalchemy", "geoalchemy2", "psycopg2"]
 tests_require = ["pytest", "mock", "pytest-cov", "pytest-flakes", "pytest-black"]
