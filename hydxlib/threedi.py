@@ -407,7 +407,7 @@ class Threedi:
             or hydx_connection.stromingsrichting == "1_2"
         ):
             hydx_connection.discharge_coefficient_positive = (
-                hydx_structure.afvoercoefficientoverstortdrempel
+                self.get_structure_specific_coefficient(hydx_structure)
             )
 
         if (
@@ -420,9 +420,25 @@ class Threedi:
             or hydx_connection.stromingsrichting == "2_1"
         ):
             hydx_connection.discharge_coefficient_negative = (
-                hydx_structure.afvoercoefficientoverstortdrempel
+                self.get_structure_specific_coefficient(hydx_structure)
             )
         return hydx_connection
+
+    def get_structure_specific_coefficient(self, hydx_structure):
+        if hydx_structure.typekunstwerk == 'OVS':
+            return hydx_structure.afvoercoefficientoverstortdrempel
+        elif hydx_structure.typekunstwerk == 'DRL':
+            return hydx_structure.contractiecoefficientdoorlaatprofiel
+        else:
+            logging.warning(
+                "Discharge coefficient for %r could not be found for record %r",
+                hydx_structure.typekunstwerk,
+                hydx_structure.identificatieknooppuntofverbinding,
+            )
+            return None
+
+
+
 
 
 def get_hydx_default_profile():
