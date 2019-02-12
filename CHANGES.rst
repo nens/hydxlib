@@ -2,7 +2,13 @@ Changelog of hydxlib
 ===================================================
 
 
-0.5 (unreleased)
+0.6 (unreleased)
+----------------
+
+- Nothing changed yet.
+
+
+0.5 (2019-02-12)
 ----------------
 
 - Bug fix discharge coefficient orifices in Threedi.
