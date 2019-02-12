@@ -44,6 +44,11 @@ SHAPE_MAPPING = {
     "TPZ": Constants.SHAPE_TABULATED_TRAPEZIUM,
 }
 
+DISCHARGE_COEFFICIENT_MAPPING = {
+    "OVS": "afvoercoefficientoverstortdrempel",
+    "DRL": "contractiecoefficientdoorlaatprofiel",
+}
+
 
 class Threedi:
     def __init__(self):
@@ -406,8 +411,10 @@ class Threedi:
             hydx_connection.stromingsrichting == "OPN"
             or hydx_connection.stromingsrichting == "1_2"
         ):
-            hydx_connection.discharge_coefficient_positive = (
-                hydx_structure.afvoercoefficientoverstortdrempel
+            hydx_connection.discharge_coefficient_positive = getattr(
+                hydx_structure,
+                DISCHARGE_COEFFICIENT_MAPPING[hydx_structure.typekunstwerk],
+                None,
             )
 
         if (
@@ -419,8 +426,10 @@ class Threedi:
             hydx_connection.stromingsrichting == "OPN"
             or hydx_connection.stromingsrichting == "2_1"
         ):
-            hydx_connection.discharge_coefficient_negative = (
-                hydx_structure.afvoercoefficientoverstortdrempel
+            hydx_connection.discharge_coefficient_negative = getattr(
+                hydx_structure,
+                DISCHARGE_COEFFICIENT_MAPPING[hydx_structure.typekunstwerk],
+                None,
             )
         return hydx_connection
 
