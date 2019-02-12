@@ -44,6 +44,11 @@ SHAPE_MAPPING = {
     "TPZ": Constants.SHAPE_TABULATED_TRAPEZIUM,
 }
 
+DISCHARGE_COEFFICIENT_MAPPING = {
+    "OVS": "afvoercoefficientoverstortdrempel",
+    "DRL": "contractiecoefficientdoorlaatprofiel",
+}
+
 
 class Threedi:
     def __init__(self):
@@ -406,8 +411,10 @@ class Threedi:
             hydx_connection.stromingsrichting == "OPN"
             or hydx_connection.stromingsrichting == "1_2"
         ):
-            hydx_connection.discharge_coefficient_positive = (
-                self.get_structure_specific_coefficient(hydx_structure)
+            hydx_connection.discharge_coefficient_positive = getattr(
+                hydx_structure,
+                DISCHARGE_COEFFICIENT_MAPPING[hydx_structure.typekunstwerk],
+                None,
             )
 
         if (
@@ -419,26 +426,12 @@ class Threedi:
             hydx_connection.stromingsrichting == "OPN"
             or hydx_connection.stromingsrichting == "2_1"
         ):
-            hydx_connection.discharge_coefficient_negative = (
-                self.get_structure_specific_coefficient(hydx_structure)
+            hydx_connection.discharge_coefficient_negative = getattr(
+                hydx_structure,
+                DISCHARGE_COEFFICIENT_MAPPING[hydx_structure.typekunstwerk],
+                None,
             )
         return hydx_connection
-
-    def get_structure_specific_coefficient(self, hydx_structure):
-        if hydx_structure.typekunstwerk == 'OVS':
-            return hydx_structure.afvoercoefficientoverstortdrempel
-        elif hydx_structure.typekunstwerk == 'DRL':
-            return hydx_structure.contractiecoefficientdoorlaatprofiel
-        else:
-            logging.warning(
-                "Discharge coefficient for %r could not be found for record %r",
-                hydx_structure.typekunstwerk,
-                hydx_structure.identificatieknooppuntofverbinding,
-            )
-            return None
-
-
-
 
 
 def get_hydx_default_profile():
