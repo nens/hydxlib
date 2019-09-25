@@ -100,7 +100,12 @@ class ConnectionNode(Generic):
             "type": str,
             "required": True,
         },
-        {"csvheader": "KNP_VRM", "fieldname": "VormPut", "type": str, "required": True},
+        {
+            "csvheader": "KNP_VRM", 
+            "fieldname": "VormPut", 
+            "type": str, 
+            "required": True,
+        },
         {
             "csvheader": "KNP_BOK",
             "fieldname": "NiveauBinnenonderkantPut",
@@ -227,30 +232,6 @@ class Connection(Generic):
             "required": False,
         },
         {
-            "csvheader": "INV_KN1",
-            "fieldname": "InstroomverliescoefficientKnooppunt1",
-            "type": float,
-            "required": False,
-        },
-        {
-            "csvheader": "UTV_KN1",
-            "fieldname": "UitstroomverliescoefficientKnooppunt1",
-            "type": float,
-            "required": False,
-        },
-        {
-            "csvheader": "INV_KN2",
-            "fieldname": "InstroomverliescoefficientKnooppunt2",
-            "type": float,
-            "required": False,
-        },
-        {
-            "csvheader": "UTV_KN2",
-            "fieldname": "UitstroomverliescoefficientKnooppunt2",
-            "type": float,
-            "required": False,
-        },
-        {
             "csvheader": "ITO_IDE",
             "fieldname": "IdentificatieDefinitieIT_object",
             "type": str,
@@ -280,6 +261,13 @@ class Connection(Generic):
             "type": str,
             "required": False,
         },
+        {
+            "csvheader": "AAN_PRO",
+            "fieldname": "AannameProfiel",
+            "type": str,
+            "required": False,
+        },
+        
         {
             "csvheader": "INI_NIV",
             "fieldname": "InitieleWaterstand",
@@ -399,13 +387,13 @@ class Structure(Generic):
         {
             "csvheader": "QDH_NIV",
             "fieldname": "NiveauverschilDebiet_verhangrelatie",
-            "type": float,
+            "type": str,
             "required": False,
         },
         {
             "csvheader": "QDH_DEB",
             "fieldname": "DebietverschilDebiet_verhangrelatie",
-            "type": float,
+            "type": str,
             "required": False,
         },
         {
@@ -489,44 +477,14 @@ class Profile(Generic):
             "required": False,
         },
         {
-            "csvheader": "OPL_HL1",
-            "fieldname": "Co_tangensHelling1",
-            "type": float,
+            "csvheader": "TAB_BRE",
+            "fieldname": "TabulatedBreedte",
+            "type": str,
             "required": False,
         },
         {
-            "csvheader": "OPL_HL2",
-            "fieldname": "Co_tangensHelling2",
-            "type": float,
-            "required": False,
-        },
-        {
-            "csvheader": "PRO_NIV",
-            "fieldname": "NiveauBovenBob",
-            "type": float,
-            "required": False,
-        },
-        {
-            "csvheader": "PRO_NOP",
-            "fieldname": "NatOppervlakNiveau",
-            "type": float,
-            "required": False,
-        },
-        {
-            "csvheader": "PRO_NOM",
-            "fieldname": "NatteOmtrekNiveau",
-            "type": float,
-            "required": False,
-        },
-        {
-            "csvheader": "PRO_BRN",
-            "fieldname": "BreedteNiveau",
-            "type": float,
-            "required": False,
-        },
-        {
-            "csvheader": "AAN_PBR",
-            "fieldname": "AannameProfielbreedte",
+            "csvheader": "TAB_HGT",
+            "fieldname": "TabulatedHoogte",
             "type": str,
             "required": False,
         },
@@ -544,6 +502,125 @@ class Profile(Generic):
     def __repr__(self):
         return "<Profile %s>" % (getattr(self, "identificatieprofieldefinitie", None),)
 
+class Surface(Generic):
+    FIELDS = [
+    {
+            "csvheader": "UNI_IDE",
+            "fieldname": "IdentificatieKnooppuntOfVerbinding",
+            "type": str,
+            "required": True,
+        },
+        {
+            "csvheader": "NSL_STA",
+            "fieldname": "NeerslagStation",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "AFV_DEF",
+            "fieldname": "AfvoerConcept",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "AFV_IDE",
+            "fieldname": "AfvoerKenmerken",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "AFV_OPP",
+            "fieldname": "AfvoerendOppervlak",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "ALG_TOE",
+            "fieldname": "ToelichtingRegel",
+            "type": str,
+            "required": False,
+        },
+    ]
+    
+    def __init__(self):
+        pass
+
+    def __repr__(self):
+        return "<Surface %s>" % (getattr(self, "identificatieknooppuntofverbinding", None),)
+
+class Discharge(Generic):
+    FIELDS = [
+    {
+            "csvheader": "UNI_IDE",
+            "fieldname": "IdentificatieKnooppuntOfVerbinding",
+            "type": str,
+            "required": True,
+        },
+        {
+            "csvheader": "DEB_TYP",
+            "fieldname": "DebietType",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "VER_IDE",
+            "fieldname": "VerloopIdentificatie",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "AVV_ENH",
+            "fieldname": "AfvoerEenheden",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "AFV_OPP",
+            "fieldname": "AfvoerendOppervlak",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "ALG_TOE",
+            "fieldname": "ToelichtingRegel",
+            "type": str,
+            "required": False,
+        },
+    ]
+    
+    def __init__(self):
+        pass
+
+    def __repr__(self):
+        return "<Discharge %s>" % (getattr(self, "identificatieknooppuntofverbinding", None),)
+
+class Variation(Generic):
+    FIELDS = [
+    {
+            "csvheader": "VER_IDE",
+            "fieldname": "VerloopIdentificatie",
+            "type": str,
+            "required": True,
+        },
+        {
+            "csvheader": "VER_TYP",
+            "fieldname": "VerloopType",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "VER_VOL",
+            "fieldname": "VerloopVolume",
+            "type": str,
+            "required": False,
+        },
+    ]
+
+    def __init__(self):
+        pass
+
+    def __repr__(self):
+        return "<Variation %s>" % (getattr(self, "VerloopIdentificatie", None),)
 
 class Meta:
     pass
@@ -551,13 +628,16 @@ class Meta:
 
 class Hydx:
     CSVFILES = {
-        "Knooppunt1.csv": {
+        "Knooppunt.csv": {
             "hydx_class": ConnectionNode,
             "collection_name": "connection_nodes",
         },
-        "Kunstwerk1.csv": {"hydx_class": Structure, "collection_name": "structures"},
-        "Verbinding1.csv": {"hydx_class": Connection, "collection_name": "connections"},
-        "Profiel1.csv": {"hydx_class": Profile, "collection_name": "profiles"},
+        "Kunstwerk.csv": {"hydx_class": Structure, "collection_name": "structures"},
+        "Verbinding.csv": {"hydx_class": Connection, "collection_name": "connections"},
+        "Profiel.csv": {"hydx_class": Profile, "collection_name": "profiles"},
+        "Oppervlak.csv":{"hydx_class": Surface, "collection_name": "surfaces"},
+        "Debiet.csv":{"hydx_class": Discharge, "collection_name": "discharges"},
+        "Verloop.csv":{"hydx_class": Variation, "collection_name": "variations"},
     }
 
     def __init__(self):
@@ -565,6 +645,9 @@ class Hydx:
         self.connections = []
         self.structures = []
         self.profiles = []
+        self.surfaces = []
+        self.discharges = []
+        self.variations = []
 
     def import_csvfile(self, csvreader, csvfilename):
 

@@ -29,11 +29,19 @@ MATERIAL_MAPPING = {
     "PIJ": Constants.MATERIAL_TYPE_SHEET_IRON,
     "STL": Constants.MATERIAL_TYPE_STEEL,
 }
+# NVT tijdelijk(?) op transport gezet
+SEWERAGE_TYPE_MAPPING = {
+    "GMD": Constants.SEWERAGE_TYPE_COMBINED,
+    "HWA": Constants.SEWERAGE_TYPE_STORMWATER,
+    "DWA": Constants.SEWERAGE_TYPE_WASTEWATER,
+    "NVT": Constants.SEWERAGE_TYPE_TRANSPORT,
+}
 
-# for now skipping "CMP" and "ITP"
+# for now asuming "CMP" as INS and ignoring "ITP"
 MANHOLE_INDICATOR_MAPPING = {
     "INS": Constants.MANHOLE_INDICATOR_MANHOLE,
     "UIT": Constants.MANHOLE_INDICATOR_OUTLET,
+    "CMP": Constants.MANHOLE_INDICATOR_MANHOLE,
 }
 
 # for now skipping "MVR", "HEU"
@@ -48,7 +56,19 @@ DISCHARGE_COEFFICIENT_MAPPING = {
     "OVS": "afvoercoefficientoverstortdrempel",
     "DRL": "contractiecoefficientdoorlaatprofiel",
 }
+#half verhard mist 
+SURFACE_CLASS_MAPPING = {
+    "GVH": Constants.SURFACE_CLASS_GESLOTEN_VERHARDING,
+    "OVH": Constants.SURFACE_CLASS_OPEN_VERHARDING,
+    "ONV": Constants.SURFACE_CLASS_ONVERHARD,
+    "DAK": Constants.SURFACE_CLASS_PAND,
+}
 
+SURFACE_INCLINATION_MAPPING = {
+    "HEL": Constants.SURFACE_INCLINATION_HELLEND,
+    "VLA": Constants.SURFACE_INCLINATION_VLAK,
+    "VLU": Constants.SURFACE_INCLINATION_UITGESTREKT
+}
 
 class Threedi:
     def __init__(self):
@@ -62,6 +82,9 @@ class Threedi:
         self.weirs = []
         self.orifices = []
         self.cross_sections = []
+        self.pipes = []
+        self.impervious_surfaces = []
+        self.impervious_surface_maps = []
 
         for connection_node in hydx.connection_nodes:
             check_if_element_is_created_with_same_code(
@@ -104,10 +127,11 @@ class Threedi:
                     linkedprofile = linkedprofiles[0]
 
             if connection.typeverbinding in ["GSL", "OPL", "ITR"]:
-                logger.warning(
-                    'The following "typeverbinding" is not implemented in this importer: %s',
-                    connection.typeverbinding,
-                )
+                if linkedprofile is None:
+                    linkedprofile = get_hydx_default_profile()
+                    self.add_pipe(connection, linkedprofile)
+                else:
+                    self.add_pipe(connection, linkedprofile)
             elif connection.typeverbinding in ["PMP", "OVS", "DRL"]:
                 linkedstructures = [
                     structure
@@ -136,6 +160,23 @@ class Threedi:
                 )
 
         self.generate_cross_sections()
+
+        surface_nr = 1
+        for surface in hydx.surfaces:
+            self.add_impervious_surface_from_surface(surface, surface_nr)
+            surface_nr = surface_nr + 1
+
+        for discharge in hydx.discharges:
+            linkedvariations = None
+            linkedvariations = [
+                    variation
+                    for variation in hydx.variations
+                    if variation.verloopidentificatie
+                    == discharge.verloopidentificatie
+                ]
+            if len(linkedvariations)>0:
+                self.add_impervious_surface_from_discharge(discharge,surface_nr,linkedvariations)
+                surface_nr = surface_nr+1
 
     def add_connection_node(self, hydx_connection_node):
         """Add hydx.connection_node into threedi.connection_node and threedi.manhole"""
@@ -169,7 +210,7 @@ class Threedi:
             "bottom_level": hydx_connection_node.niveaubinnenonderkantput,
             "calculation_type": self.get_mapping_value(
                 CALCULATION_TYPE_MAPPING,
-                hydx_connection_node.materiaalput,
+                hydx_connection_node.maaiveldschematisering,
                 hydx_connection_node.identificatierioolput,
                 name_for_logging="manhole surface schematization",
             ),
@@ -182,6 +223,50 @@ class Threedi:
         }
 
         self.manholes.append(manhole)
+
+    def add_pipe(self,hydx_connection,hydx_profile=None):
+        self.check_if_nodes_of_connection_exists(hydx_connection)
+        combined_display_name_string = self.get_connection_display_names_from_manholes(
+            hydx_connection
+        )
+        breedte_diameterprofiel = transform_unit_mm_to_m(
+            hydx_profile.breedte_diameterprofiel
+        )
+        hoogteprofiel = transform_unit_mm_to_m(hydx_profile.hoogteprofiel)
+
+        pipe = {
+            "code": hydx_connection.identificatieknooppuntofverbinding,
+            "display_name": combined_display_name_string,
+            "start_node.code": hydx_connection.identificatieknooppunt1,
+            "end_node.code": hydx_connection.identificatieknooppunt2,
+            "cross_section_details": {
+                "shape": self.get_mapping_value(
+                    SHAPE_MAPPING,
+                    hydx_profile.vormprofiel,
+                    hydx_connection.identificatieprofieldefinitie,
+                    name_for_logging="shape of pipe",
+                ),
+                "width": breedte_diameterprofiel,
+                "height": hoogteprofiel,
+            },
+            "invert_level_start_point": hydx_connection.bobknooppunt1,
+            "invert_level_end_point": hydx_connection.bobknooppunt2,
+            "original_length":hydx_connection.lengteverbinding,
+            "material":self.get_mapping_value(
+                MATERIAL_MAPPING,
+                hydx_profile.materiaal,
+                combined_display_name_string,
+                name_for_logging="pipe material",
+            ),
+            "sewerage_type":self.get_mapping_value(
+                SEWERAGE_TYPE_MAPPING,
+                hydx_connection.typeinzameling,
+                combined_display_name_string,
+                name_for_logging="pipe sewer type",
+            ),
+            "calculation_type":1
+        }
+        self.pipes.append(pipe)
 
     def add_structure(self, hydx_connection, hydx_structure, hydx_profile=None):
         """Add hydx.structure and hydx.connection into threedi.pumpstation"""
@@ -278,10 +363,10 @@ class Threedi:
             hydx_connection, hydx_structure
         )
 
-        hydx_profile.breedte_diameterprofiel = transform_unit_mm_to_m(
+        breedte_diameterprofiel = transform_unit_mm_to_m(
             hydx_profile.breedte_diameterprofiel
         )
-        hydx_profile.hoogteprofiel = transform_unit_mm_to_m(hydx_profile.hoogteprofiel)
+        hoogteprofiel = transform_unit_mm_to_m(hydx_profile.hoogteprofiel)
 
         orifice = {
             "code": hydx_connection.identificatieknooppuntofverbinding,
@@ -295,13 +380,12 @@ class Threedi:
                     hydx_connection.identificatieknooppuntofverbinding,
                     name_for_logging="shape of orifice",
                 ),
-                "width": hydx_profile.breedte_diameterprofiel,
-                "height": hydx_profile.hoogteprofiel,
+                "width": breedte_diameterprofiel,
+                "height": hoogteprofiel,
             },
             "discharge_coefficient_positive": hydx_connection.discharge_coefficient_positive,
             "discharge_coefficient_negative": hydx_connection.discharge_coefficient_negative,
             "sewerage": True,
-            "max_capacity": hydx_structure.maximalecapaciteitdoorlaat,
             "crest_type": Constants.CREST_TYPE_SHARP_CRESTED,
             "crest_level": hydx_structure.niveaubinnenonderkantprofiel,
         }
@@ -317,7 +401,7 @@ class Threedi:
             "code": "default",
         }
 
-        connections_with_cross_sections = self.weirs + self.orifices
+        connections_with_cross_sections = self.weirs + self.orifices + self.pipes
         for connection in connections_with_cross_sections:
             cross_section = connection["cross_section_details"]
             if cross_section["shape"] == Constants.SHAPE_ROUND:
@@ -340,6 +424,73 @@ class Threedi:
             connection["cross_section_code"] = code
 
         self.cross_sections = cross_sections
+
+    def add_impervious_surface_from_surface(self, hydx_surface, surface_nr):
+        surface = {
+            "code": str(surface_nr),
+            "display_name": hydx_surface.identificatieknooppuntofverbinding,
+            "area": hydx_surface.afvoerendoppervlak,
+            "surface_class": self.get_mapping_value(
+                SURFACE_CLASS_MAPPING,
+                hydx_surface.afvoerkenmerken.split('_')[0],
+                hydx_surface.identificatieknooppuntofverbinding,
+                name_for_logging="surface class",
+            ),
+            "surface_inclination": self.get_mapping_value(
+                SURFACE_INCLINATION_MAPPING,
+                hydx_surface.afvoerkenmerken.split('_')[1],
+                hydx_surface.identificatieknooppuntofverbinding,
+                name_for_logging="surface inclination",
+            )
+        }
+
+        self.append_and_map_surface(surface,hydx_surface.identificatieknooppuntofverbinding,surface_nr)
+
+
+    def add_impervious_surface_from_discharge(self,hydx_discharge,surface_nr,linkedvariations):
+        #aanname dat dit altijd gesloten verharding vlak is (niet duidelijk in handleiding)
+        #controleren of ver_vol in m3/d of l/d is, aanname max voor dwf? of average?
+        dwf = max([variation.verloopvolume for variation in linkedvariations])
+        if hydx_discharge.afvoerendoppervlak:
+            area = hydx_discharge.afvoerendoppervlak
+        else:
+            area = 0
+
+        surface = {
+            "code": str(surface_nr),
+            "display_name": hydx_discharge.identificatieknooppuntofverbinding,
+            "area":area,
+            "surface_class": 'gesloten verharding',
+            "surface_inclination": 'vlak',
+            "dry_weather_flow": dwf,
+            "nr_of_inhabitants": hydx_discharge.afvoereenheden,
+            }
+        self.append_and_map_surface(surface,hydx_discharge.identificatieknooppuntofverbinding,surface_nr)
+
+    def append_and_map_surface(self,surface,mapping,surface_nr):
+        manh_list = [manhole["code"] for manhole in self.manholes]
+        pipe_list = [[pipe["code"],pipe["start_node.code"]] for pipe in self.pipes]
+        if mapping in manh_list:
+            node_code = mapping
+        elif True in [mapping in x for x in pipe_list]:
+            node_code = pipe_list[[mapping in x for x in pipe_list].index(True)][1]
+        else:
+            logging.error(
+                "Connection node %r could not be found for surface %r",
+                mapping,
+                surface["code"],
+            )
+            self.impervious_surfaces.append(surface)
+            return
+
+        surface_map = {
+            "node.code": node_code,
+            "imp_surface.code": str(surface_nr),
+            "percentage": 100,
+        }
+
+        self.impervious_surfaces.append(surface)
+        self.impervious_surface_maps.append(surface_map)
 
     def get_mapping_value(self, mapping, hydx_value, record_code, name_for_logging):
         if hydx_value in mapping:
@@ -442,13 +593,8 @@ def get_hydx_default_profile():
             ("PRO_VRM", "RND"),
             ("PRO_BRE", "1000"),
             ("PRO_HGT", "1000"),
-            ("OPL_HL1", ""),
-            ("OPL_HL2", ""),
-            ("PRO_NIV", ""),
-            ("PRO_NOP", ""),
-            ("PRO_NOM", ""),
-            ("PRO_BRN", ""),
-            ("AAN_PBR", ""),
+            ("TAB_BRE", ""),
+            ("TAB_HGT", ""),
             ("ALG_TOE", "default"),
         ]
     )
@@ -474,6 +620,6 @@ def check_if_element_is_created_with_same_code(
 
 def transform_unit_mm_to_m(value_mm):
     if value_mm is not None:
-        return float(value_mm) / 1000.0
+        return float(value_mm) / float(1000)
     else:
         return None

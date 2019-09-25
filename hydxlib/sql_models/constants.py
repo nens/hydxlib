@@ -176,22 +176,7 @@ class Constants(object):
     )
     INTEGRATION_METHODS = dict(INTEGRATION_METHOD_CHOICES)
 
-    # SURFACE_CLASS SURFACE_INCLINATION RIONED
-    # gesloten verharding hellend gvh_hel
-    # gesloten verharding vlak gvh_vla
-    # gesloten verharding uitgestrekt gvh_vlu
-    # open verharding hellend ovh_hel
-    # open verharding vlak ovh_vla
-    # open verharding uitgestrekt ovh_vlu
-    # onverhard hellend onv_hel
-    # onverhard vlak onv_vla
-    # onverhard uitgestrekt onv_vlu
-    # half verhard hellend onv_hel
-    # half verhard vlak onv_vla
-    # half verhard uitgestrekt onv_vlu
-    # pand hellend dak_hel
-    # pand vlak dak_vla
-    # pand uitgestrekt dak_vlu
+    # SURFACE_CLASS 
     SURFACE_CLASS_GESLOTEN_VERHARDING = "gesloten verharding"
     SURFACE_CLASS_OPEN_VERHARDING = "open verharding"
     SURFACE_CLASS_ONVERHARD = "onverhard"
@@ -207,6 +192,7 @@ class Constants(object):
     )
     SURFACE_CLASSES = dict(SURFACE_CLASS_CHOICES)
 
+    # SURFACE_INCLINATION
     SURFACE_INCLINATION_HELLEND = "hellend"
     SURFACE_INCLINATION_VLAK = "vlak"
     SURFACE_INCLINATION_UITGESTREKT = "uitgestrekt"
