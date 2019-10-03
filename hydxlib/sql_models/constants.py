@@ -176,7 +176,7 @@ class Constants(object):
     )
     INTEGRATION_METHODS = dict(INTEGRATION_METHOD_CHOICES)
 
-    # SURFACE_CLASS 
+    # SURFACE_CLASS
     SURFACE_CLASS_GESLOTEN_VERHARDING = "gesloten verharding"
     SURFACE_CLASS_OPEN_VERHARDING = "open verharding"
     SURFACE_CLASS_ONVERHARD = "onverhard"

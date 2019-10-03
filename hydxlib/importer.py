@@ -30,7 +30,7 @@ def import_hydx(hydx_path):
         "Knooppunt.csv",
         "Kunstwerk.csv",
         # "Meta1.csv",
-        # "Nwrw.csv",
+        # "Nwrw1.csv",
         "Oppervlak.csv",
         "Profiel.csv",
         "Verbinding.csv",

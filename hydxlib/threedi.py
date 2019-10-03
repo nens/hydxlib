@@ -56,7 +56,7 @@ DISCHARGE_COEFFICIENT_MAPPING = {
     "OVS": "afvoercoefficientoverstortdrempel",
     "DRL": "contractiecoefficientdoorlaatprofiel",
 }
-#half verhard mist 
+# TO DO: half verhard nog mappen
 SURFACE_CLASS_MAPPING = {
     "GVH": Constants.SURFACE_CLASS_GESLOTEN_VERHARDING,
     "OVH": Constants.SURFACE_CLASS_OPEN_VERHARDING,
@@ -67,8 +67,9 @@ SURFACE_CLASS_MAPPING = {
 SURFACE_INCLINATION_MAPPING = {
     "HEL": Constants.SURFACE_INCLINATION_HELLEND,
     "VLA": Constants.SURFACE_INCLINATION_VLAK,
-    "VLU": Constants.SURFACE_INCLINATION_UITGESTREKT
+    "VLU": Constants.SURFACE_INCLINATION_UITGESTREKT,
 }
+
 
 class Threedi:
     def __init__(self):
@@ -85,6 +86,7 @@ class Threedi:
         self.pipes = []
         self.impervious_surfaces = []
         self.impervious_surface_maps = []
+        self.outlets = []
 
         for connection_node in hydx.connection_nodes:
             check_if_element_is_created_with_same_code(
@@ -169,14 +171,24 @@ class Threedi:
         for discharge in hydx.discharges:
             linkedvariations = None
             linkedvariations = [
-                    variation
-                    for variation in hydx.variations
-                    if variation.verloopidentificatie
-                    == discharge.verloopidentificatie
-                ]
-            if len(linkedvariations)>0:
-                self.add_impervious_surface_from_discharge(discharge,surface_nr,linkedvariations)
-                surface_nr = surface_nr+1
+                variation
+                for variation in hydx.variations
+                if variation.verloopidentificatie == discharge.verloopidentificatie
+            ]
+            if len(linkedvariations) == 0 and discharge.afvoerendoppervlak is None:
+                logger.warning(
+                    "The following discharge object misses information to be used by 3Di exporter: %s",
+                    discharge.identificatieknooppuntofverbinding,
+                )
+            else:
+                self.add_impervious_surface_from_discharge(
+                    discharge, surface_nr, linkedvariations
+                )
+                surface_nr = surface_nr + 1
+
+        for structure in hydx.structures:
+            if structure.typekunstwerk == "UIT":
+                self.add_1d_boundary(structure)
 
     def add_connection_node(self, hydx_connection_node):
         """Add hydx.connection_node into threedi.connection_node and threedi.manhole"""
@@ -224,7 +236,7 @@ class Threedi:
 
         self.manholes.append(manhole)
 
-    def add_pipe(self,hydx_connection,hydx_profile=None):
+    def add_pipe(self, hydx_connection, hydx_profile=None):
         self.check_if_nodes_of_connection_exists(hydx_connection)
         combined_display_name_string = self.get_connection_display_names_from_manholes(
             hydx_connection
@@ -251,20 +263,20 @@ class Threedi:
             },
             "invert_level_start_point": hydx_connection.bobknooppunt1,
             "invert_level_end_point": hydx_connection.bobknooppunt2,
-            "original_length":hydx_connection.lengteverbinding,
-            "material":self.get_mapping_value(
+            "original_length": hydx_connection.lengteverbinding,
+            "material": self.get_mapping_value(
                 MATERIAL_MAPPING,
                 hydx_profile.materiaal,
                 combined_display_name_string,
                 name_for_logging="pipe material",
             ),
-            "sewerage_type":self.get_mapping_value(
+            "sewerage_type": self.get_mapping_value(
                 SEWERAGE_TYPE_MAPPING,
                 hydx_connection.typeinzameling,
                 combined_display_name_string,
                 name_for_logging="pipe sewer type",
             ),
-            "calculation_type":1
+            "calculation_type": 1,
         }
         self.pipes.append(pipe)
 
@@ -322,6 +334,12 @@ class Threedi:
         waterlevel_boundary = getattr(hydx_structure, "buitenwaterstand", None)
         if waterlevel_boundary is not None:
             timeseries = "0,{0}\n9999,{0} ".format(waterlevel_boundary)
+            boundary = {
+                "node.code": hydx_connection.identificatieknooppunt2,
+                "timeseries": timeseries,
+                "boundary_type": Constants.BOUNDARY_TYPE_WATERLEVEL,
+            }
+            self.outlets.append(boundary)
         else:
             timeseries = None
 
@@ -344,10 +362,6 @@ class Threedi:
             "discharge_coefficient_positive": hydx_connection.discharge_coefficient_positive,
             "discharge_coefficient_negative": hydx_connection.discharge_coefficient_negative,
             "sewerage": True,
-            "boundary_details": {
-                "timeseries": timeseries,
-                "boundary_type": Constants.BOUNDARY_TYPE_WATERLEVEL,
-            },
         }
         self.weirs.append(weir)
 
@@ -432,25 +446,32 @@ class Threedi:
             "area": hydx_surface.afvoerendoppervlak,
             "surface_class": self.get_mapping_value(
                 SURFACE_CLASS_MAPPING,
-                hydx_surface.afvoerkenmerken.split('_')[0],
+                hydx_surface.afvoerkenmerken.split("_")[0],
                 hydx_surface.identificatieknooppuntofverbinding,
                 name_for_logging="surface class",
             ),
             "surface_inclination": self.get_mapping_value(
                 SURFACE_INCLINATION_MAPPING,
-                hydx_surface.afvoerkenmerken.split('_')[1],
+                hydx_surface.afvoerkenmerken.split("_")[1],
                 hydx_surface.identificatieknooppuntofverbinding,
                 name_for_logging="surface inclination",
-            )
+            ),
         }
 
-        self.append_and_map_surface(surface,hydx_surface.identificatieknooppuntofverbinding,surface_nr)
+        self.append_and_map_surface(
+            surface, hydx_surface.identificatieknooppuntofverbinding, surface_nr
+        )
 
+    def add_impervious_surface_from_discharge(
+        self, hydx_discharge, surface_nr, linkedvariations
+    ):
+        # aanname dat dit altijd gesloten verharding vlak is (niet duidelijk in handleiding)
+        # controleren of ver_vol in m3/d of l/d is, aanname max voor dwf? of average?
+        if len(linkedvariations) > 0:
+            dwf = max([variation.verloopvolume for variation in linkedvariations])
+        else:
+            dwf = 0
 
-    def add_impervious_surface_from_discharge(self,hydx_discharge,surface_nr,linkedvariations):
-        #aanname dat dit altijd gesloten verharding vlak is (niet duidelijk in handleiding)
-        #controleren of ver_vol in m3/d of l/d is, aanname max voor dwf? of average?
-        dwf = max([variation.verloopvolume for variation in linkedvariations])
         if hydx_discharge.afvoerendoppervlak:
             area = hydx_discharge.afvoerendoppervlak
         else:
@@ -459,25 +480,43 @@ class Threedi:
         surface = {
             "code": str(surface_nr),
             "display_name": hydx_discharge.identificatieknooppuntofverbinding,
-            "area":area,
-            "surface_class": 'gesloten verharding',
-            "surface_inclination": 'vlak',
+            "area": area,
+            "surface_class": "gesloten verharding",
+            "surface_inclination": "vlak",
             "dry_weather_flow": dwf,
             "nr_of_inhabitants": hydx_discharge.afvoereenheden,
-            }
-        self.append_and_map_surface(surface,hydx_discharge.identificatieknooppuntofverbinding,surface_nr)
+        }
+        self.append_and_map_surface(
+            surface, hydx_discharge.identificatieknooppuntofverbinding, surface_nr
+        )
 
-    def append_and_map_surface(self,surface,mapping,surface_nr):
-        manh_list = [manhole["code"] for manhole in self.manholes]
-        pipe_list = [[pipe["code"],pipe["start_node.code"]] for pipe in self.pipes]
-        if mapping in manh_list:
-            node_code = mapping
-        elif True in [mapping in x for x in pipe_list]:
-            node_code = pipe_list[[mapping in x for x in pipe_list].index(True)][1]
-        else:
+    def add_1d_boundary(self, hydx_structure):
+        waterlevel_boundary = getattr(hydx_structure, "buitenwaterstand", None)
+        if waterlevel_boundary is not None:
+            timeseries = "0,{0}\n9999,{0} ".format(waterlevel_boundary)
+            boundary = {
+                "node.code": hydx_structure.identificatieknooppuntofverbinding,
+                "timeseries": timeseries,
+                "boundary_type": Constants.BOUNDARY_TYPE_WATERLEVEL,
+            }
+            self.outlets.append(boundary)
+
+    def append_and_map_surface(
+        self, surface, manhole_or_line_id, surface_nr, node_code=None
+    ):
+        manhole_codes = [manhole["code"] for manhole in self.manholes]
+        if manhole_or_line_id in manhole_codes:
+            node_code = manhole_or_line_id
+        if node_code is None:
+            for pipe in self.pipes:
+                if manhole_or_line_id == pipe["code"]:
+                    node_code = pipe["start_node.code"]
+                    break
+
+        if node_code is None:
             logging.error(
                 "Connection node %r could not be found for surface %r",
-                mapping,
+                manhole_or_line_id,
                 surface["code"],
             )
             self.impervious_surfaces.append(surface)
