@@ -142,6 +142,64 @@ class TestThreedi(TestCase):
         self.threedi.import_hydx(self.hydx)
         assert self.threedi.pumpstations[0] == pumpstation_1
 
+    def test_add_pipe(self):
+        pipe_1 = {
+            "code": "lei1",
+            # check if connection number 1 is created for second structure with these nodes
+            "display_name": "1003-1004-1",
+            "start_node.code": "knp3",
+            "end_node.code": "knp4",
+            "sewerage_type": 0,
+            "invert_level_start_point": 0.10,
+            "invert_level_end_point": 0.00,
+            "original_length": 48.0,
+            "material": 0,
+            "sewerage_type": 0,
+            "calculation_type": 1,
+            "cross_section_details": {
+                "code": "round_1.1",
+                "shape": 2,
+                "width": 1.1,
+                "height": None,
+            },
+            "cross_section_code": "round_1.1",
+        }
+        self.threedi.import_hydx(self.hydx)
+        assert self.threedi.pipes[0] == pipe_1
+
+    def test_add_surface(self):
+        surface_1 = {
+            "code": "1",
+            "display_name": "knp8",
+            "area": 9.0,
+            "surface_class": "gesloten verharding",
+            "surface_inclination": "uitgestrekt",
+        }
+        self.threedi.import_hydx(self.hydx)
+        assert self.threedi.impervious_surfaces[0] == surface_1
+
+    def test_add_discharge(self):
+        discharge_3 = {
+            "code": "263",
+            "display_name": "knp61",
+            "area": 0.0,
+            "surface_class": "gesloten verharding",
+            "surface_inclination": "vlak",
+            "dry_weather_flow": 60.0,
+            "nr_of_inhabitants": "2",
+        }
+        self.threedi.import_hydx(self.hydx)
+        assert self.threedi.impervious_surfaces[262] == discharge_3
+
+    def test_add_boundary(self):
+        boundary_1 = {
+            "node.code": "knp78",
+            "timeseries": "0,-5.0\n9999,-5.0 ",
+            "boundary_type": 1,
+        }
+        self.threedi.import_hydx(self.hydx)
+        assert self.threedi.outlets[0] == boundary_1
+
     def test_add_first_pump_with_same_code(self):
         self.threedi.import_hydx(self.hydx)
         # select first manhole from dataset for check

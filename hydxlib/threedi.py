@@ -13,7 +13,7 @@ MANHOLE_SHAPE_MAPPING = {
     "RHK": Constants.MANHOLE_SHAPE_RECTANGLE,
 }
 
-# for now skipping "VRL"
+# for now assuming "VRL" to be connected
 CALCULATION_TYPE_MAPPING = {
     "KNV": Constants.CALCULATION_TYPE_ISOLATED,
     "RES": Constants.CALCULATION_TYPE_CONNECTED,
@@ -29,7 +29,7 @@ MATERIAL_MAPPING = {
     "PIJ": Constants.MATERIAL_TYPE_SHEET_IRON,
     "STL": Constants.MATERIAL_TYPE_STEEL,
 }
-# NVT tijdelijk(?) op transport gezet
+# NVT temporary (?) on transport
 SEWERAGE_TYPE_MAPPING = {
     "GMD": Constants.SEWERAGE_TYPE_COMBINED,
     "HWA": Constants.SEWERAGE_TYPE_STORMWATER,
@@ -37,18 +37,18 @@ SEWERAGE_TYPE_MAPPING = {
     "NVT": Constants.SEWERAGE_TYPE_TRANSPORT,
 }
 
-# for now asuming "CMP" as INS and ignoring "ITP"
+# for now ignoring CMP and ITP
 MANHOLE_INDICATOR_MAPPING = {
     "INS": Constants.MANHOLE_INDICATOR_MANHOLE,
     "UIT": Constants.MANHOLE_INDICATOR_OUTLET,
-    "CMP": Constants.MANHOLE_INDICATOR_MANHOLE,
 }
 
 # for now skipping "MVR", "HEU"
 SHAPE_MAPPING = {
     "RND": Constants.SHAPE_ROUND,
     "EIV": Constants.SHAPE_EGG,
-    "RHK": Constants.SHAPE_TABULATED_RECTANGLE,
+    "RHK": Constants.SHAPE_RECTANGLE,
+    "TAB": Constants.SHAPE_TABULATED_RECTANGLE,
     "TPZ": Constants.SHAPE_TABULATED_TRAPEZIUM,
 }
 
@@ -56,7 +56,7 @@ DISCHARGE_COEFFICIENT_MAPPING = {
     "OVS": "afvoercoefficientoverstortdrempel",
     "DRL": "contractiecoefficientdoorlaatprofiel",
 }
-# TO DO: half verhard nog mappen
+
 SURFACE_CLASS_MAPPING = {
     "GVH": Constants.SURFACE_CLASS_GESLOTEN_VERHARDING,
     "OVH": Constants.SURFACE_CLASS_OPEN_VERHARDING,
@@ -466,7 +466,7 @@ class Threedi:
         self, hydx_discharge, surface_nr, linkedvariations
     ):
         # aanname dat dit altijd gesloten verharding vlak is (niet duidelijk in handleiding)
-        # controleren of ver_vol in m3/d of l/d is, aanname max voor dwf? of average?
+        # aanname max voor dwf? of average?
         if len(linkedvariations) > 0:
             dwf = max([variation.verloopvolume for variation in linkedvariations])
         else:
@@ -483,7 +483,7 @@ class Threedi:
             "area": area,
             "surface_class": "gesloten verharding",
             "surface_inclination": "vlak",
-            "dry_weather_flow": dwf,
+            "dry_weather_flow": float(dwf) * 1000,
             "nr_of_inhabitants": hydx_discharge.afvoereenheden,
         }
         self.append_and_map_surface(
