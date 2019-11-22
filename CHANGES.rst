@@ -2,7 +2,7 @@ Changelog of hydxlib
 ===================================================
 
 
-0.6 (unreleased)
+0.6 (2019-11-22)
 ----------------
 
 - Using the final version of the hydx format.
