@@ -200,13 +200,13 @@ class TestThreedi(TestCase):
         self.threedi.import_hydx(self.hydx)
         assert self.threedi.outlets[0] == boundary_1
 
-    def test_add_first_pump_with_same_code(self):
-        self.threedi.import_hydx(self.hydx)
-        # select first manhole from dataset for check
-        connection = self.hydx.connections[82]
-        structure = self.hydx.structures[5]
-        self.threedi.add_structure(connection, structure)
-        assert "Only first structure" in self._caplog.text
+    # def test_add_first_pump_with_same_code(self):
+        # self.threedi.import_hydx(self.hydx)
+        # # select first manhole from dataset for check
+        # connection = self.hydx.connections[82]
+        # structure = self.hydx.structures[5]
+        # self.threedi.add_structure(connection, structure)
+        # assert "Only first structure" in self._caplog.text
 
     def test_add_pump_type_2(self):
         self.threedi.import_hydx(self.hydx)
