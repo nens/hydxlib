@@ -51,9 +51,15 @@ Installation for development
 
 We're installed with `pipenv <https://docs.pipenv.org/>`_, a handy wrapper
 around pip and virtualenv. Install that first with ``pip install
-pipenv``. Then run::
+pipenv``. Then run on Linux::
 
   $ PIPENV_VENV_IN_PROJECT=1 pipenv --three
+  $ pipenv install --dev
+
+on Windows::
+
+  $ set PIPENV_VENV_IN_PROJECT=1
+  $ pipenv --three
   $ pipenv install --dev
 
 There will be a script you can run like this::

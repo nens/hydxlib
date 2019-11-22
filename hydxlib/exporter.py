@@ -153,46 +153,18 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     session.bulk_save_objects(man_list)
     session.commit()
 
-    # pipe_list = []
-    # for pipe in threedi.pipes:
-    #     try:
-    #         pipe['connection_node_start_id'] = connection_node_dict[
-    #             pipe['start_node.code']]
-    #     except KeyError:
-    #         self.log.add(
-    #             logging.ERROR,
-    #             'Start node of pipe not found in nodes',
-    #             {},
-    #             'Start node {start_node} of pipe with code {code} not '
-    #             'found',
-    #             {'start_node': pipe['start_node.code'],
-    #                 'code': pipe['code']}
-    #         )
-
-    #     try:
-    #         pipe['connection_node_end_id'] = connection_node_dict[
-    #             pipe['end_node.code']]
-    #     except KeyError:
-    #         self.log.add(
-    #             logging.ERROR,
-    #             'End node of pipe not found in nodes',
-    #             {},
-    #             'End node {end_node} of pipe with code {code} not found',
-    #             {'end_node': pipe['end_node.code'], 'code': pipe['code']}
-    #         )
-
-    #     pipe['cross_section_definition_id'] = cross_section_dict[pipe['cross_section_code']]
-
-    #     del pipe['start_node.code']
-    #     del pipe['end_node.code']
-    #     del pipe['cross_section_code']
-    #     del pipe['cross_section_details']
-
-    #     pipe_list.append(Pipe(**pipe))
-
-    # commit_counts['pipes'] = len(pipe_list)
-    # session.bulk_save_objects(pipe_list)
-    # session.commit()
+    pipe_list = []
+    for pipe in threedi.pipes:
+        pipe = get_start_and_end_connection_node(pipe, connection_node_dict)
+        pipe = get_cross_section_definition_id(pipe, cross_section_dict)
+        del pipe["start_node.code"]
+        del pipe["end_node.code"]
+        del pipe["cross_section_code"]
+        del pipe["cross_section_details"]
+        pipe_list.append(Pipe(**pipe))
+    commit_counts["pipes"] = len(pipe_list)
+    session.bulk_save_objects(pipe_list)
+    session.commit()
 
     pump_list = []
     for pump in threedi.pumpstations:
@@ -213,7 +185,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         del weir["end_node.code"]
         del weir["cross_section_code"]
         del weir["cross_section_details"]
-        del weir["boundary_details"]
         weir_list.append(Weir(**weir))
     commit_counts["weirs"] = len(weir_list)
     session.bulk_save_objects(weir_list)
@@ -233,66 +204,43 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     session.bulk_save_objects(orifice_list)
     session.commit()
 
-    # # Outlets (must be saved after weirs, orifice, pumpstation, etc.
-    # # because of constraints)
-    # outlet_list = []
-    # for outlet in threedi.outlets:
-    #     try:
-    #         outlet['connection_node_id'] = connection_node_dict[outlet['node.code']]
+    # Outlets (must be saved after weirs, orifice, pumpstation, etc.
+    # because of constraints) TO DO: bounds aan meerdere leidingen overslaan
+    outlet_list = []
+    for outlet in threedi.outlets:
+        outlet["connection_node_id"] = connection_node_dict[outlet["node.code"]]
+        del outlet["node.code"]
+        outlet_list.append(BoundaryCondition1D(**outlet))
 
-    #         del outlet['node.code']
-    #         outlet_list.append(BoundaryCondition1D(**outlet))
-    #     except KeyError:
-    #         self.log.add(
-    #             logging.ERROR,
-    #             'node of outlet not found in nodes',
-    #             {},
-    #             'node {node} of outlet definition not found',
-    #             {'node': outlet['node.code']}
-    #         )
+    commit_counts["outlets"] = len(outlet_list)
+    session.bulk_save_objects(outlet_list)
+    session.commit()
 
-    # commit_counts['outlets'] = len(outlet_list)
-    # session.bulk_save_objects(outlet_list)
-    # session.commit()
+    # Impervious surfaces
+    imp_list = []
+    for imp in threedi.impervious_surfaces:
+        imp_list.append(ImperviousSurface(**imp))
+    commit_counts["impervious_surfaces"] = len(imp_list)
+    session.bulk_save_objects(imp_list)
+    session.commit()
 
-    # # Impervious surfaces
-    # imp_list = []
-    # for imp in threedi.impervious_surfaces:
-    #     imp_list.append(ImperviousSurface(**imp))
+    imp_list = (
+        session.query(ImperviousSurface)
+        .options(load_only("id", "code"))
+        .order_by(ImperviousSurface.id)
+        .all()
+    )
+    imp_dict = {m.code: m.id for m in imp_list}
 
-    # commit_counts['impervious_surfaces'] = len(imp_list)
-    # session.bulk_save_objects(imp_list)
-    # session.commit()
-
-    # imp_list = session.query(ImperviousSurface).options(
-    #     load_only("id", "code")).order_by(ImperviousSurface.id).all()
-    # imp_dict = {m.code: m.id for m in imp_list}
-
-    # map_list = []
-    # for imp_map in threedi.impervious_surface_maps:
-    #     try:
-    #         imp_map['connection_node_id'] = connection_node_dict[imp_map['node.code']]
-    #     except KeyError:
-    #         self.log.add(
-    #             logging.ERROR,
-    #             'Manhole connected to impervious surface not found',
-    #             {},
-    #             'Node {node} of impervious surface map connected to '
-    #             'impervious surface with code {code} not found',
-    #             {'node': imp_map['node.code'],
-    #                 'code': imp_map['imp_surface.code']}
-    #         )
-    #         continue
-
-    #     imp_map['impervious_surface_id'] = imp_dict[
-    #         imp_map['imp_surface.code']]
-    #     del imp_map['node.code']
-    #     del imp_map['imp_surface.code']
-
-    #     map_list.append(ImperviousSurfaceMap(**imp_map))
-
-    # session.bulk_save_objects(map_list)
-    # session.commit()
+    map_list = []
+    for imp_map in threedi.impervious_surface_maps:
+        imp_map["impervious_surface_id"] = imp_dict[imp_map["imp_surface.code"]]
+        imp_map["connection_node_id"] = connection_node_dict[imp_map["node.code"]]
+        del imp_map["node.code"]
+        del imp_map["imp_surface.code"]
+        map_list.append(ImperviousSurfaceMap(**imp_map))
+    session.bulk_save_objects(map_list)
+    session.commit()
 
     return commit_counts
 

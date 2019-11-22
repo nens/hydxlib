@@ -227,30 +227,6 @@ class Connection(Generic):
             "required": False,
         },
         {
-            "csvheader": "INV_KN1",
-            "fieldname": "InstroomverliescoefficientKnooppunt1",
-            "type": float,
-            "required": False,
-        },
-        {
-            "csvheader": "UTV_KN1",
-            "fieldname": "UitstroomverliescoefficientKnooppunt1",
-            "type": float,
-            "required": False,
-        },
-        {
-            "csvheader": "INV_KN2",
-            "fieldname": "InstroomverliescoefficientKnooppunt2",
-            "type": float,
-            "required": False,
-        },
-        {
-            "csvheader": "UTV_KN2",
-            "fieldname": "UitstroomverliescoefficientKnooppunt2",
-            "type": float,
-            "required": False,
-        },
-        {
             "csvheader": "ITO_IDE",
             "fieldname": "IdentificatieDefinitieIT_object",
             "type": str,
@@ -277,6 +253,12 @@ class Connection(Generic):
         {
             "csvheader": "AAN_BB2",
             "fieldname": "AannameBobKnooppunt2",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "AAN_PRO",
+            "fieldname": "AannameProfiel",
             "type": str,
             "required": False,
         },
@@ -399,13 +381,13 @@ class Structure(Generic):
         {
             "csvheader": "QDH_NIV",
             "fieldname": "NiveauverschilDebiet_verhangrelatie",
-            "type": float,
+            "type": str,
             "required": False,
         },
         {
             "csvheader": "QDH_DEB",
             "fieldname": "DebietverschilDebiet_verhangrelatie",
-            "type": float,
+            "type": str,
             "required": False,
         },
         {
@@ -489,44 +471,14 @@ class Profile(Generic):
             "required": False,
         },
         {
-            "csvheader": "OPL_HL1",
-            "fieldname": "Co_tangensHelling1",
-            "type": float,
+            "csvheader": "TAB_BRE",
+            "fieldname": "TabulatedBreedte",
+            "type": str,
             "required": False,
         },
         {
-            "csvheader": "OPL_HL2",
-            "fieldname": "Co_tangensHelling2",
-            "type": float,
-            "required": False,
-        },
-        {
-            "csvheader": "PRO_NIV",
-            "fieldname": "NiveauBovenBob",
-            "type": float,
-            "required": False,
-        },
-        {
-            "csvheader": "PRO_NOP",
-            "fieldname": "NatOppervlakNiveau",
-            "type": float,
-            "required": False,
-        },
-        {
-            "csvheader": "PRO_NOM",
-            "fieldname": "NatteOmtrekNiveau",
-            "type": float,
-            "required": False,
-        },
-        {
-            "csvheader": "PRO_BRN",
-            "fieldname": "BreedteNiveau",
-            "type": float,
-            "required": False,
-        },
-        {
-            "csvheader": "AAN_PBR",
-            "fieldname": "AannameProfielbreedte",
+            "csvheader": "TAB_HGT",
+            "fieldname": "TabulatedHoogte",
             "type": str,
             "required": False,
         },
@@ -545,19 +497,305 @@ class Profile(Generic):
         return "<Profile %s>" % (getattr(self, "identificatieprofieldefinitie", None),)
 
 
+class Surface(Generic):
+    FIELDS = [
+        {
+            "csvheader": "UNI_IDE",
+            "fieldname": "IdentificatieKnooppuntOfVerbinding",
+            "type": str,
+            "required": True,
+        },
+        {
+            "csvheader": "NSL_STA",
+            "fieldname": "NeerslagStation",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "AFV_DEF",
+            "fieldname": "AfvoerConcept",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "AFV_IDE",
+            "fieldname": "AfvoerKenmerken",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "AFV_OPP",
+            "fieldname": "AfvoerendOppervlak",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "ALG_TOE",
+            "fieldname": "ToelichtingRegel",
+            "type": str,
+            "required": False,
+        },
+    ]
+
+    def __init__(self):
+        pass
+
+    def __repr__(self):
+        return "<Surface %s>" % (
+            getattr(self, "identificatieknooppuntofverbinding", None),
+        )
+
+
+class Discharge(Generic):
+    FIELDS = [
+        {
+            "csvheader": "UNI_IDE",
+            "fieldname": "IdentificatieKnooppuntOfVerbinding",
+            "type": str,
+            "required": True,
+        },
+        {
+            "csvheader": "DEB_TYP",
+            "fieldname": "DebietType",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "VER_IDE",
+            "fieldname": "VerloopIdentificatie",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "AVV_ENH",
+            "fieldname": "AfvoerEenheden",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "AFV_OPP",
+            "fieldname": "AfvoerendOppervlak",
+            "type": float,
+            "required": False,
+        },
+        {
+            "csvheader": "ALG_TOE",
+            "fieldname": "ToelichtingRegel",
+            "type": str,
+            "required": False,
+        },
+    ]
+
+    def __init__(self):
+        pass
+
+    def __repr__(self):
+        return "<Discharge %s>" % (
+            getattr(self, "identificatieknooppuntofverbinding", None),
+        )
+
+
+class Variation(Generic):
+    FIELDS = [
+        {
+            "csvheader": "VER_IDE",
+            "fieldname": "VerloopIdentificatie",
+            "type": str,
+            "required": True,
+        },
+        {
+            "csvheader": "VER_TYP",
+            "fieldname": "VerloopType",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "VER_DAG",
+            "fieldname": "VerloopDag",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "VER_VOL",
+            "fieldname": "VerloopVolume",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "U00_DAG",
+            "fieldname": "Uur0Dag",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "U01_DAG",
+            "fieldname": "Uur1Dag",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "U02_DAG",
+            "fieldname": "Uur2Dag",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "U03_DAG",
+            "fieldname": "Uur3Dag",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "U04_DAG",
+            "fieldname": "Uur4Dag",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "U05_DAG",
+            "fieldname": "Uur5Dag",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "U06_DAG",
+            "fieldname": "Uur6Dag",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "U07_DAG",
+            "fieldname": "Uur7Dag",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "U08_DAG",
+            "fieldname": "Uur8Dag",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "U09_DAG",
+            "fieldname": "Uur9Dag",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "U10_DAG",
+            "fieldname": "Uur10Dag",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "U11_DAG",
+            "fieldname": "Uur11Dag",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "U12_DAG",
+            "fieldname": "Uur12Dag",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "U13_DAG",
+            "fieldname": "Uur13Dag",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "U14_DAG",
+            "fieldname": "Uur14Dag",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "U15_DAG",
+            "fieldname": "Uur15Dag",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "U16_DAG",
+            "fieldname": "Uur16Dag",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "U17_DAG",
+            "fieldname": "Uur17Dag",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "U18_DAG",
+            "fieldname": "Uur18Dag",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "U19_DAG",
+            "fieldname": "Uur19Dag",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "U20_DAG",
+            "fieldname": "Uur20Dag",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "U21_DAG",
+            "fieldname": "Uur21Dag",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "U22_DAG",
+            "fieldname": "Uur22Dag",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "U23_DAG",
+            "fieldname": "Uur23Dag",
+            "type": str,
+            "required": False,
+        },
+        {
+            "csvheader": "ALG_TOE",
+            "fieldname": "ToelichtingRegel",
+            "type": str,
+            "required": False,
+        },
+    ]
+
+    def __init__(self):
+        pass
+
+    def __repr__(self):
+        return "<Variation %s>" % (getattr(self, "VerloopIdentificatie", None),)
+
+
 class Meta:
     pass
 
 
 class Hydx:
     CSVFILES = {
-        "Knooppunt1.csv": {
+        "Knooppunt.csv": {
             "hydx_class": ConnectionNode,
             "collection_name": "connection_nodes",
         },
-        "Kunstwerk1.csv": {"hydx_class": Structure, "collection_name": "structures"},
-        "Verbinding1.csv": {"hydx_class": Connection, "collection_name": "connections"},
-        "Profiel1.csv": {"hydx_class": Profile, "collection_name": "profiles"},
+        "Kunstwerk.csv": {"hydx_class": Structure, "collection_name": "structures"},
+        "Verbinding.csv": {"hydx_class": Connection, "collection_name": "connections"},
+        "Profiel.csv": {"hydx_class": Profile, "collection_name": "profiles"},
+        "Oppervlak.csv": {"hydx_class": Surface, "collection_name": "surfaces"},
+        "Debiet.csv": {"hydx_class": Discharge, "collection_name": "discharges"},
+        "Verloop.csv": {"hydx_class": Variation, "collection_name": "variations"},
     }
 
     def __init__(self):
@@ -565,6 +803,9 @@ class Hydx:
         self.connections = []
         self.structures = []
         self.profiles = []
+        self.surfaces = []
+        self.discharges = []
+        self.variations = []
 
     def import_csvfile(self, csvreader, csvfilename):
 

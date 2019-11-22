@@ -72,16 +72,19 @@ class TestThreedi(TestCase):
 
     def test_export_threedi(self):
         output = export_threedi(self.hydx, self.threedi_db_settings)
-        assert len(output.connection_nodes) == 7
+        assert len(output.connection_nodes) == 85
 
     def test_write_to_db_con_nodes_huge(self):
         commit_counts_expected = {
-            "connection_nodes": 7,
-            "manholes": 6,
-            "pumpstations": 5,
-            "weirs": 3,
-            "cross_sections": 7,
-            "orifices": 5,
+            "connection_nodes": 85,
+            "manholes": 84,
+            "pumpstations": 8,
+            "weirs": 6,
+            "cross_sections": 40,
+            "orifices": 2,
+            "impervious_surfaces": 330,
+            "pipes": 80,
+            "outlets": 3,
         }
         commit_counts = write_threedi_to_db(self.threedi, self.threedi_db_settings)
         assert commit_counts == commit_counts_expected
