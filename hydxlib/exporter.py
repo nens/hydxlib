@@ -243,6 +243,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     session.commit()
 
     session.close()
+    db.engine.dispose()
 
     return commit_counts
 
