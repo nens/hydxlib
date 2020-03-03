@@ -242,6 +242,8 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     session.bulk_save_objects(map_list)
     session.commit()
 
+    session.close()
+
     return commit_counts
 
 
