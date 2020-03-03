@@ -48,7 +48,7 @@ MANHOLE_INDICATOR_MAPPING = {
 SHAPE_MAPPING = {
     "RND": Constants.SHAPE_ROUND,
     "EIV": Constants.SHAPE_EGG,
-    "RHK": Constants.SHAPE_RECTANGLE,
+    "RHK": Constants.SHAPE_TABULATED_RECTANGLE,
     "TAB": Constants.SHAPE_TABULATED_RECTANGLE,
     "TPZ": Constants.SHAPE_TABULATED_TRAPEZIUM,
 }
@@ -424,7 +424,9 @@ class Threedi:
             elif cross_section["shape"] == Constants.SHAPE_EGG:
                 code = "egg_w{width}_h{height}".format(**cross_section)
             elif cross_section["shape"] == Constants.SHAPE_RECTANGLE:
-                code = "rectangle_w{width}_open".format(**cross_section)
+                code = "rectangle_w{width}_h{height}".format(**cross_section)
+                cross_section["width"] = "{0} {0} 0".format(cross_section["width"])
+                cross_section["height"] = "0 {0} {0}".format(cross_section["height"])
             elif cross_section["shape"] == Constants.SHAPE_TABULATED_RECTANGLE:
                 code = "rectangle_w{width}_h{height}".format(**cross_section)
                 cross_section["width"] = "{0}".format(cross_section["width"])
@@ -439,7 +441,6 @@ class Threedi:
             connection["cross_section_code"] = code
 
         self.cross_sections = cross_sections
-
 
     def add_impervious_surface_from_surface(self, hydx_surface, surface_nr):
         surface = {
