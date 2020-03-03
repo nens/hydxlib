@@ -223,7 +223,6 @@ class TestThreedi(TestCase):
             "start_node.code": "knp8",
             "end_node.code": "knp55",
             "cross_section_details": {
-                "code": "rectangle_w3.0_open",
                 "shape": 1,
                 "width": 3,
                 "height": None,
@@ -233,7 +232,7 @@ class TestThreedi(TestCase):
             "discharge_coefficient_positive": 0.9,
             "discharge_coefficient_negative": 0.9,
             "sewerage": True,
-            "cross_section_code": "rectangle_w3.0_open",
+            "cross_section_code": "default",
         }
         self.threedi.import_hydx(self.hydx)
         assert self.threedi.weirs[1] == weir_1

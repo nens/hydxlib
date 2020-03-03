@@ -80,7 +80,7 @@ class TestThreedi(TestCase):
             "manholes": 84,
             "pumpstations": 8,
             "weirs": 6,
-            "cross_sections": 40,
+            "cross_sections": 38,
             "orifices": 2,
             "impervious_surfaces": 330,
             "pipes": 80,
