@@ -2,7 +2,7 @@ Changelog of hydxlib
 ===================================================
 
 
-0.7 (unreleased)
+0.7 (2020-03-03)
 ----------------
 
 - Closing database connection
