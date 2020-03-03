@@ -5,7 +5,8 @@ Changelog of hydxlib
 0.7 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Closing database connection
+- Updating bug in rectangular cross sections
 
 
 0.6 (2019-11-22)
