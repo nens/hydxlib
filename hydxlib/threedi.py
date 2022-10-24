@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from .hydx import Profile
 from collections import OrderedDict
+from enum import Enum
 from math import sqrt
 from threedi_modelchecker.threedi_model.constants import BoundaryType
 from threedi_modelchecker.threedi_model.constants import CrestType
@@ -15,26 +16,32 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-MANHOLE_SHAPE_RECTANGLE = "rect"
-MANHOLE_SHAPE_ROUND = "rnd"
-AFVOERCOEFFICIENT_OVERSTORTDREMPEL = 0.8
-CONTRATIECOEFFICIENT_DOORLAATPROFIEL = 0.8
-MATERIAL_TYPE_CONCRETE = 0
-MATERIAL_TYPE_PVC = 1
-MATERIAL_TYPE_STONEWARE = 2
-MATERIAL_TYPE_CAST_IRON = 3
-MATERIAL_TYPE_BRICKWORK = 4
-MATERIAL_TYPE_HPE = 5
-MATERIAL_TYPE_HPDE = 6
-MATERIAL_TYPE_SHEET_IRON = 7
-MATERIAL_TYPE_STEEL = 8
-MANHOLE_INDICATOR_MANHOLE = 0
-MANHOLE_INDICATOR_OUTLET = 1
+
+class PipeMaterialType(Enum):
+    CONCRETE = 0
+    PVC = 1
+    STONEWARE = 2
+    CAST_IRON = 3
+    BRICKWORK = 4
+    HPE = 5
+    HPDE = 6
+    SHEET_IRON = 7
+    STEEL = 8
+
+
+class ManholeIndicator(Enum):
+    MANHOLE = 0
+    OUTLET = 1
+
+
+class ManholeShape(Enum):
+    RECTANGLE = "rect"
+    ROUND = "rnd"
 
 
 MANHOLE_SHAPE_MAPPING = {
-    "RND": MANHOLE_SHAPE_ROUND,
-    "RHK": MANHOLE_SHAPE_RECTANGLE,
+    "RND": ManholeShape.ROUND.value,
+    "RHK": ManholeShape.RECTANGLE.value,
 }
 
 # for now assuming "VRL" to be connected
@@ -45,14 +52,14 @@ CALCULATION_TYPE_MAPPING = {
 }
 
 MATERIAL_MAPPING = {
-    "BET": MATERIAL_TYPE_CONCRETE,
-    "PVC": MATERIAL_TYPE_PVC,
-    "GRE": MATERIAL_TYPE_STONEWARE,
-    "GIJ": MATERIAL_TYPE_CAST_IRON,
-    "MSW": MATERIAL_TYPE_BRICKWORK,
-    "HPE": MATERIAL_TYPE_HPE,
-    "PIJ": MATERIAL_TYPE_SHEET_IRON,
-    "STL": MATERIAL_TYPE_STEEL,
+    "BET": PipeMaterialType.CONCRETE.value,
+    "PVC": PipeMaterialType.PVC.value,
+    "GRE": PipeMaterialType.STONEWARE.value,
+    "GIJ": PipeMaterialType.CAST_IRON.value,
+    "MSW": PipeMaterialType.BRICKWORK.value,
+    "HPE": PipeMaterialType.HPE.value,
+    "PIJ": PipeMaterialType.SHEET_IRON.value,
+    "STL": PipeMaterialType.STEEL.value,
 }
 # NVT temporary (?) on transport
 SEWERAGE_TYPE_MAPPING = {
@@ -64,8 +71,8 @@ SEWERAGE_TYPE_MAPPING = {
 
 # for now ignoring CMP and ITP
 MANHOLE_INDICATOR_MAPPING = {
-    "INS": MANHOLE_INDICATOR_MANHOLE,
-    "UIT": MANHOLE_INDICATOR_OUTLET,
+    "INS": ManholeIndicator.MANHOLE.value,
+    "UIT": ManholeIndicator.OUTLET.value,
 }
 
 # for now skipping, "HEU"
@@ -79,8 +86,8 @@ SHAPE_MAPPING = {
 }
 
 DISCHARGE_COEFFICIENT_MAPPING = {
-    "OVS": AFVOERCOEFFICIENT_OVERSTORTDREMPEL,
-    "DRL": CONTRATIECOEFFICIENT_DOORLAATPROFIEL,
+    "OVS": 0.8,  # AFVOERCOEFFICIENT_OVERSTORTDREMPEL
+    "DRL": 0.8,  # CONTRATIECOEFFICIENT_DOORLAATPROFIEL
 }
 
 SURFACE_CLASS_MAPPING = {
