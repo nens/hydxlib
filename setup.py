@@ -1,7 +1,20 @@
 from setuptools import setup
 
+import pathlib
 
-version = "0.8.dev0"
+
+def get_version():
+    # Edited from https://packaging.python.org/guides/single-sourcing-package-version/
+    init_path = pathlib.Path(__file__).parent / "hydxlib/__init__.py"
+    for line in init_path.open("r").readlines():
+        if line.startswith("__version__"):
+            delim = '"' if '"' in line else "'"
+            return line.split(delim)[1]
+    else:
+        raise RuntimeError("Unable to find version string.")
+
+
+version = get_version()
 long_description = "\n\n".join([open("README.rst").read(), open("CHANGES.rst").read()])
 install_requires = [
     "sqlalchemy",
