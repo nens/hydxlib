@@ -1,75 +1,99 @@
 # -*- coding: utf-8 -*-
-import logging
-from collections import OrderedDict
-
-from .sql_models.constants import Constants
 from .hydx import Profile
+from collections import OrderedDict
 from math import sqrt
+from threedi_modelchecker.threedi_model.constants import BoundaryType
+from threedi_modelchecker.threedi_model.constants import CrestType
+from threedi_modelchecker.threedi_model.constants import CrossSectionShape
+from threedi_modelchecker.threedi_model.constants import PipeCalculationType
+from threedi_modelchecker.threedi_model.constants import SewerageType
+from threedi_modelchecker.threedi_model.constants import SurfaceClass
+from threedi_modelchecker.threedi_model.constants import SurfaceInclinationType
+
+import logging
+
 
 logger = logging.getLogger(__name__)
 
+MANHOLE_SHAPE_RECTANGLE = "rect"
+MANHOLE_SHAPE_ROUND = "rnd"
+AFVOERCOEFFICIENT_OVERSTORTDREMPEL = 0.8
+CONTRATIECOEFFICIENT_DOORLAATPROFIEL = 0.8
+MATERIAL_TYPE_CONCRETE = 0
+MATERIAL_TYPE_PVC = 1
+MATERIAL_TYPE_STONEWARE = 2
+MATERIAL_TYPE_CAST_IRON = 3
+MATERIAL_TYPE_BRICKWORK = 4
+MATERIAL_TYPE_HPE = 5
+MATERIAL_TYPE_HPDE = 6
+MATERIAL_TYPE_SHEET_IRON = 7
+MATERIAL_TYPE_STEEL = 8
+MANHOLE_INDICATOR_MANHOLE = 0
+MANHOLE_INDICATOR_OUTLET = 1
+
+
 MANHOLE_SHAPE_MAPPING = {
-    "RND": Constants.MANHOLE_SHAPE_ROUND,
-    "RHK": Constants.MANHOLE_SHAPE_RECTANGLE,
+    "RND": MANHOLE_SHAPE_ROUND,
+    "RHK": MANHOLE_SHAPE_RECTANGLE,
 }
 
 # for now assuming "VRL" to be connected
 CALCULATION_TYPE_MAPPING = {
-    "KNV": Constants.CALCULATION_TYPE_ISOLATED,
-    "RES": Constants.CALCULATION_TYPE_CONNECTED,
-    "VRL": Constants.CALCULATION_TYPE_CONNECTED,
+    "KNV": PipeCalculationType.ISOLATED.value,
+    "RES": PipeCalculationType.CONNECTED.value,
+    "VRL": PipeCalculationType.CONNECTED.value,
 }
 
 MATERIAL_MAPPING = {
-    "BET": Constants.MATERIAL_TYPE_CONCRETE,
-    "PVC": Constants.MATERIAL_TYPE_PVC,
-    "GRE": Constants.MATERIAL_TYPE_STONEWARE,
-    "GIJ": Constants.MATERIAL_TYPE_CAST_IRON,
-    "MSW": Constants.MATERIAL_TYPE_BRICKWORK,
-    "HPE": Constants.MATERIAL_TYPE_HPE,
-    "PIJ": Constants.MATERIAL_TYPE_SHEET_IRON,
-    "STL": Constants.MATERIAL_TYPE_STEEL,
+    "BET": MATERIAL_TYPE_CONCRETE,
+    "PVC": MATERIAL_TYPE_PVC,
+    "GRE": MATERIAL_TYPE_STONEWARE,
+    "GIJ": MATERIAL_TYPE_CAST_IRON,
+    "MSW": MATERIAL_TYPE_BRICKWORK,
+    "HPE": MATERIAL_TYPE_HPE,
+    "PIJ": MATERIAL_TYPE_SHEET_IRON,
+    "STL": MATERIAL_TYPE_STEEL,
 }
 # NVT temporary (?) on transport
 SEWERAGE_TYPE_MAPPING = {
-    "GMD": Constants.SEWERAGE_TYPE_COMBINED,
-    "HWA": Constants.SEWERAGE_TYPE_STORMWATER,
-    "DWA": Constants.SEWERAGE_TYPE_WASTEWATER,
-    "NVT": Constants.SEWERAGE_TYPE_TRANSPORT,
+    "GMD": SewerageType.MIXED.value,
+    "HWA": SewerageType.RAIN_WATER.value,
+    "DWA": SewerageType.DRY_WEATHER_FLOW.value,
+    "NVT": SewerageType.TRANSPORT.value,
 }
 
 # for now ignoring CMP and ITP
 MANHOLE_INDICATOR_MAPPING = {
-    "INS": Constants.MANHOLE_INDICATOR_MANHOLE,
-    "UIT": Constants.MANHOLE_INDICATOR_OUTLET,
+    "INS": MANHOLE_INDICATOR_MANHOLE,
+    "UIT": MANHOLE_INDICATOR_OUTLET,
 }
 
 # for now skipping, "HEU"
 SHAPE_MAPPING = {
-    "RND": Constants.SHAPE_ROUND,
-    "EIV": Constants.SHAPE_EGG,
-    "RHK": Constants.SHAPE_RECTANGLE,
-    "TAB": Constants.SHAPE_TABULATED_RECTANGLE,
-    "TPZ": Constants.SHAPE_TABULATED_TRAPEZIUM,
-    "MVR": Constants.SHAPE_TABULATED_TRAPEZIUM,
+    "RND": CrossSectionShape.CIRCLE.value,
+    "EIV": CrossSectionShape.EGG.value,
+    "RHK": CrossSectionShape.RECTANGLE.value,
+    "TAB": CrossSectionShape.TABULATED_RECTANGLE.value,
+    "TPZ": CrossSectionShape.TABULATED_TRAPEZIUM.value,
+    "MVR": CrossSectionShape.TABULATED_TRAPEZIUM.value,
 }
 
 DISCHARGE_COEFFICIENT_MAPPING = {
-    "OVS": Constants.AFVOERCOEFFICIENT_OVERSTORTDREMPEL,
-    "DRL": Constants.CONTRATIECOEFFICIENT_DOORLAATPROFIEL,
+    "OVS": AFVOERCOEFFICIENT_OVERSTORTDREMPEL,
+    "DRL": CONTRATIECOEFFICIENT_DOORLAATPROFIEL,
 }
 
 SURFACE_CLASS_MAPPING = {
-    "GVH": Constants.SURFACE_CLASS_GESLOTEN_VERHARDING,
-    "OVH": Constants.SURFACE_CLASS_OPEN_VERHARDING,
-    "ONV": Constants.SURFACE_CLASS_ONVERHARD,
-    "DAK": Constants.SURFACE_CLASS_PAND,
+    "GVH": SurfaceClass.GESLOTEN_VERHARDING.value,
+    "OVH": SurfaceClass.OPEN_VERHARDING.value,
+    "ONV": SurfaceClass.ONVERHARD.value,
+    "DAK": SurfaceClass.PAND.value,
 }
 
 SURFACE_INCLINATION_MAPPING = {
-    "HEL": Constants.SURFACE_INCLINATION_HELLEND,
-    "VLA": Constants.SURFACE_INCLINATION_VLAK,
-    "VLU": Constants.SURFACE_INCLINATION_UITGESTREKT,
+    "HEL": SurfaceInclinationType.HELLEND.value,
+    "VLA": SurfaceInclinationType.VLAK.value,
+    "VLU": SurfaceInclinationType.UITGESTREKT.value,
 }
 
 
@@ -347,7 +371,7 @@ class Threedi:
             boundary = {
                 "node.code": hydx_connection.identificatieknooppunt2,
                 "timeseries": timeseries,
-                "boundary_type": Constants.BOUNDARY_TYPE_WATERLEVEL,
+                "boundary_type": BoundaryType.WATERLEVEL.value,
             }
             self.outlets.append(boundary)
         else:
@@ -363,11 +387,11 @@ class Threedi:
             "start_node.code": hydx_connection.identificatieknooppunt1,
             "end_node.code": hydx_connection.identificatieknooppunt2,
             "cross_section_details": {
-                "shape": Constants.SHAPE_RECTANGLE,
+                "shape": CrossSectionShape.RECTANGLE.value,
                 "width": hydx_structure.breedteoverstortdrempel,
                 "height": None,
             },
-            "crest_type": Constants.CREST_TYPE_SHARP_CRESTED,
+            "crest_type": CrestType.SHORT_CRESTED.value,
             "crest_level": hydx_structure.niveauoverstortdrempel,
             "discharge_coefficient_positive": hydx_connection.discharge_coefficient_positive,
             "discharge_coefficient_negative": hydx_connection.discharge_coefficient_negative,
@@ -412,7 +436,7 @@ class Threedi:
             "discharge_coefficient_positive": hydx_connection.discharge_coefficient_positive,
             "discharge_coefficient_negative": hydx_connection.discharge_coefficient_negative,
             "sewerage": True,
-            "crest_type": Constants.CREST_TYPE_SHARP_CRESTED,
+            "crest_type": CrestType.SHORT_CRESTED.value,
             "crest_level": hydx_structure.niveaubinnenonderkantprofiel,
         }
 
@@ -423,7 +447,7 @@ class Threedi:
         cross_sections["unknown"] = {
             "width": 1,
             "height": 1,
-            "shape": Constants.SHAPE_ROUND,
+            "shape": CrossSectionShape.CIRCLE.value,
             "code": "unknown",
         }
 
@@ -431,17 +455,17 @@ class Threedi:
         for connection in connections_with_cross_sections:
             print(connection)
             cross_section = connection["cross_section_details"]
-            if cross_section["shape"] == Constants.SHAPE_ROUND:
+            if cross_section["shape"] == CrossSectionShape.CIRCLE.value:
                 code = "round_{width}".format(**cross_section)
-            elif cross_section["shape"] == Constants.SHAPE_EGG:
+            elif cross_section["shape"] == CrossSectionShape.EGG.value:
                 code = "egg_w{width}_h{height}".format(**cross_section)
-            elif cross_section["shape"] == Constants.SHAPE_RECTANGLE:
+            elif cross_section["shape"] == CrossSectionShape.RECTANGLE.value:
                 code = "rectangle_w{width}_open".format(**cross_section)
-            elif cross_section["shape"] == Constants.SHAPE_TABULATED_RECTANGLE:
+            elif cross_section["shape"] == CrossSectionShape.TABULATED_RECTANGLE.value:
                 code = "rectangle_w{width}_h{height}".format(**cross_section)
                 cross_section["width"] = "{0}".format(cross_section["width"])
                 cross_section["height"] = "{0}".format(cross_section["height"])
-            elif cross_section["shape"] == Constants.SHAPE_TABULATED_TRAPEZIUM:
+            elif cross_section["shape"] == CrossSectionShape.TABULATED_TRAPEZIUM.value:
                 code = "muil_w{width}_h{height}".format(**cross_section)
                 height, width = muil_to_tabulated(cross_section)
                 cross_section["width"] = width
@@ -515,7 +539,7 @@ class Threedi:
             boundary = {
                 "node.code": hydx_structure.identificatieknooppuntofverbinding,
                 "timeseries": timeseries,
-                "boundary_type": Constants.BOUNDARY_TYPE_WATERLEVEL,
+                "boundary_type": BoundaryType.WATERLEVEL.value,
             }
             self.outlets.append(boundary)
 

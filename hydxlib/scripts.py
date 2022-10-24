@@ -5,23 +5,18 @@ A library for the GWSW-hydx exchange format
 Consists of a import and export functionality for currently hydx and threedi.
 Author: Arnold van 't Veld - Nelen & Schuurmans
 """
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from .exporter import export_threedi
+from .importer import import_hydx
+from argparse import ArgumentDefaultsHelpFormatter
+from argparse import ArgumentParser
+from datetime import datetime
+
 import logging
 import os
 import sys
-from datetime import datetime
 
-from .importer import import_hydx
-from .exporter import export_threedi
 
 logger = logging.getLogger(__name__)
-
-if "TRAVIS" in os.environ:
-    # TODO: temporary measure, Reinout will have to investigate proper db env
-    # variables. If we run on travis-ci, the default password should be empty.
-    TODO_TREEDI_DB_PASSWORD = ""
-else:
-    TODO_TREEDI_DB_PASSWORD = "postgres"
 
 
 class OptionException(Exception):
@@ -31,13 +26,13 @@ class OptionException(Exception):
 def run_import_export(
     import_type, export_type, hydx_path=None, threedi_db_settings=None
 ):
-    """ Run import and export functionality of hydxlib
+    """Run import and export functionality of hydxlib
 
     Args:
         import_type (str):          import operator ["hydx", "threedi"]
         export_type (str):          export operator ["hydx", "threedi", "json"]
         hydx_path (str):            folder with your hydx *.csv files
-        threedi_db_settings (dict): settings of your threedi database
+        threedi_db_settings (str):  path to the 3Di spatialite file
 
     Returns:
         string: "INFO: method is finished"
@@ -53,26 +48,14 @@ def run_import_export(
 
     *hydx_path*
         required when selected operator 'hydx'
-        
+
         relative or absolute path to your hydx location files
         example: hydx_path = "hydxlib\\tests\\example_files_structures_hydx"
-    
+
     *threedi_db_settings*
         required when selected operator 'threedi'
 
-        example:    threedi_db_settings = {
-                        "threedi_dbname": "test_gwsw",
-                        "threedi_host": "localhost",
-                        "threedi_user": "postgres",
-                        "threedi_password": TODO_TREEDI_DB_PASSWORD,
-                        "threedi_port": 5432,
-                    }
-        
-        threedi_dbname (str):   name of your threedi database, e.g. test_gwsw
-        threedi_host (str):     host of your threedi database, e.g. localhost
-        threedi_user (str):     username of your threedi database, e.g. postgres
-        threedi_password (str): password of your threedi database, e.g. postgres
-        threedi_port (int):     port of your threedi database, e.g. 5432
+        a path to a spatialite file
 
     usage example:
         from hydxlib import run_import_export, write_logging_to_file
@@ -81,7 +64,7 @@ def run_import_export(
         )
         write_logging_to_file(hydx_path)
         run_import_export(import_type, export_type, hydx_path, threedi_db_settings)
-        
+
     """
     logger.info("Started exchange of GWSW-hydx at %s", datetime.now())
     logger.info("import type %r ", import_type)
@@ -155,40 +138,10 @@ def get_parser():
     )
     group_threedi = parser.add_argument_group("Import or export a 3di database")
     group_threedi.add_argument(
-        "--threedi_dbname",
-        metavar="DBNAME",
-        default="test_gwsw",
+        "--sqlite_path",
+        metavar="SQLITE_PATH",
         dest="threedi_dbname",
         help="name of your threedi database",
-    )
-    group_threedi.add_argument(
-        "--threedi_host",
-        default="localhost",
-        metavar="HOST",
-        dest="threedi_host",
-        help="host of your threedi database",
-    )
-    group_threedi.add_argument(
-        "--threedi_user",
-        default="postgres",
-        metavar="USERNAME",
-        dest="threedi_user",
-        help="username of your threedi database",
-    )
-    group_threedi.add_argument(
-        "--threedi_password",
-        default=TODO_TREEDI_DB_PASSWORD,
-        metavar="PASSWORD",
-        dest="threedi_password",
-        help="password of your threedi database",
-    )
-    group_threedi.add_argument(
-        "--threedi_port",
-        default=5432,
-        type=int,
-        metavar="PORT",
-        dest="threedi_port",
-        help="port of your threedi database",
     )
     return parser
 
@@ -196,9 +149,6 @@ def get_parser():
 def main():
     """Call command with args from parser."""
     options = get_parser().parse_args()
-    threedi_db_settings = {
-        k: vars(options)[k] for k in vars(options) if k.startswith("threedi_")
-    }
 
     if options.verbose:
         log_level = logging.DEBUG
@@ -219,7 +169,7 @@ def main():
             options.import_type,
             options.export_type,
             options.hydx_path,
-            threedi_db_settings,
+            options.sqlite_path,
         )
     except OptionException as e:
         logger.critical(e)

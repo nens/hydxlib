@@ -1,25 +1,23 @@
 # -*- coding: utf-8 -*-
-import logging
-from sqlalchemy.orm import load_only
-from copy import copy
+from .threedi import Threedi
+from osgeo import __version__ as osgeo_version
 from osgeo import ogr
 from osgeo import osr
-from osgeo import __version__ as osgeo_version
+from sqlalchemy.orm import load_only
+from threedi_modelchecker import ThreediDatabase
+from threedi_modelchecker.threedi_model.models import BoundaryCondition1D
+from threedi_modelchecker.threedi_model.models import ConnectionNode
+from threedi_modelchecker.threedi_model.models import CrossSectionDefinition
+from threedi_modelchecker.threedi_model.models import ImperviousSurface
+from threedi_modelchecker.threedi_model.models import ImperviousSurfaceMap
+from threedi_modelchecker.threedi_model.models import Manhole
+from threedi_modelchecker.threedi_model.models import Orifice
+from threedi_modelchecker.threedi_model.models import Pipe
+from threedi_modelchecker.threedi_model.models import Pumpstation
+from threedi_modelchecker.threedi_model.models import Weir
 
-from .threedi import Threedi
-from .sql_models.threedi_database import ThreediDatabase
-from .sql_models.model_schematisation import (
-    ConnectionNode,
-    Manhole,
-    BoundaryCondition1D,
-    Pipe,
-    CrossSectionDefinition,
-    Orifice,
-    Weir,
-    Pumpstation,
-    ImperviousSurface,
-    ImperviousSurfaceMap,
-)
+import logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -67,49 +65,14 @@ def write_threedi_to_db(threedi, threedi_db_settings):
 
     commit_counts = {}
 
-    db_type = threedi_db_settings.get("type", "Postgresql")
+    if isinstance(threedi_db_settings, dict):
+        path = threedi_db_settings["db_file"]
+    else:
+        path = threedi_db_settings
 
-    if db_type == "Spatialite":
-        db = ThreediDatabase(
-            {
-                "db_file": threedi_db_settings["db_file"],
-                "db_path": threedi_db_settings["db_file"],
-            }
-        )
-
-    elif db_type == "Postgresql":
-        db = ThreediDatabase(
-            {
-                "host": threedi_db_settings["threedi_host"],
-                "port": threedi_db_settings["threedi_port"],
-                "database": threedi_db_settings["threedi_dbname"],
-                "username": threedi_db_settings["threedi_user"],
-                "password": threedi_db_settings["threedi_password"],
-            },
-            "postgres",
-        )
+    db = ThreediDatabase(path)
 
     session = db.get_session()
-
-    # set all autoincrement counters to max ids
-    if db.db_type == "postgres":
-        for table in (
-            ConnectionNode,
-            Manhole,
-            BoundaryCondition1D,
-            Pipe,
-            CrossSectionDefinition,
-            Orifice,
-            Weir,
-            Pumpstation,
-            ImperviousSurface,
-            ImperviousSurfaceMap,
-        ):
-            session.execute(
-                "SELECT setval('{table}_id_seq', max(id)) "
-                "FROM {table}".format(table=table.__tablename__)
-            )
-        session.commit()
 
     cross_section_list = []
     for cross_section in threedi.cross_sections.values():
@@ -137,13 +100,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
 
     connection_node_list = []
     srid = 4326
-    if db.db_type == "postgres":
-        geom_col = session.execute(
-            "SELECT srid FROM geometry_columns "
-            "WHERE f_table_name = 'v2_connection_nodes' AND "
-            "f_geometry_column = 'the_geom'"
-        )
-        srid = geom_col.fetchone()[0]
 
     for connection_node in threedi.connection_nodes:
         wkt = transform("POINT({0} {1})".format(*connection_node["geom"]), 28992, srid)

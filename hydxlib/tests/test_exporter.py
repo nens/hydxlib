@@ -1,34 +1,13 @@
 # -*- coding: utf-8 -*-
 """Tests for importer.py"""
-from unittest import TestCase
-import pytest
-
-from hydxlib.sql_models.threedi_database import ThreediDatabase
+from hydxlib.exporter import export_threedi
+from hydxlib.exporter import get_cross_section_definition_id
+from hydxlib.exporter import get_start_and_end_connection_node
+from hydxlib.exporter import write_threedi_to_db
 from hydxlib.importer import import_hydx
 from hydxlib.threedi import Threedi
-from hydxlib.exporter import (
-    export_threedi,
-    write_threedi_to_db,
-    get_cross_section_definition_id,
-    get_start_and_end_connection_node,
-)
 
-
-def test_check_connection_db(caplog):
-    # temporarily db setup!
-    db = ThreediDatabase(
-        {
-            "host": "localhost",
-            "port": "5432",
-            "database": "test_gwsw",
-            "username": "postgres",
-            "password": "postgres",
-        },
-        "postgres",
-    )
-
-    session = db.get_session()
-    assert session is not None
+import pytest
 
 
 def test_get_start_and_end_connection_node_right():
@@ -61,27 +40,22 @@ def hydx_setup():
     return hydx, threedi
 
 
-@pytest.fixture
-def threedi_db_settings(tmp_path):
-    fn = tmp_path / "test-gwsw.sqlite"
-    return {"type": "Spatialite", "db_file": str(fn)}
-
-
-def test_export_threedi(hydx_setup, threedi_db_settings):
-    output = export_threedi(hydx_setup[0], threedi_db_settings)
+def test_export_threedi(hydx_setup, mock_exporter_db):
+    output = export_threedi(hydx_setup[0], "/some/path")
     assert len(output.connection_nodes) == 85
 
-def test_write_to_db_con_nodes_huge(hydx_setup, threedi_db_settings):
+
+def test_write_to_db_con_nodes_huge(hydx_setup, mock_exporter_db):
     commit_counts_expected = {
         "connection_nodes": 85,
         "manholes": 84,
         "pumpstations": 8,
         "weirs": 6,
-        "cross_sections": 40,
+        "cross_sections": 41,
         "orifices": 2,
         "impervious_surfaces": 330,
         "pipes": 80,
         "outlets": 3,
     }
-    commit_counts = write_threedi_to_db(hydx_setup[1], threedi_db_settings)
+    commit_counts = write_threedi_to_db(hydx_setup[1], "/some/path")
     assert commit_counts == commit_counts_expected

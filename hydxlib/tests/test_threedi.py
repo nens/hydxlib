@@ -1,22 +1,23 @@
 # -*- coding: utf-8 -*-
 """Tests for threedi.py"""
-from unittest import TestCase
-import pytest
-import mock
-
 from hydxlib.importer import import_hydx
-from hydxlib.threedi import (
-    Threedi,
-    check_if_element_is_created_with_same_code,
-    get_hydx_default_profile,
-)
-from hydxlib.sql_models.constants import Constants
+from hydxlib.threedi import check_if_element_is_created_with_same_code
+from hydxlib.threedi import get_hydx_default_profile
+from hydxlib.threedi import Threedi
+from unittest import TestCase
+
+import mock
+import pytest
+
+
+MANHOLE_SHAPE_RECTANGLE = "rect"
+MANHOLE_SHAPE_ROUND = "rnd"
 
 
 def test_get_mapping_value_wrong(caplog):
     MANHOLE_SHAPE_MAPPING = {
-        "RND": Constants.MANHOLE_SHAPE_ROUND,
-        "RHK": Constants.MANHOLE_SHAPE_RECTANGLE,
+        "RND": MANHOLE_SHAPE_ROUND,
+        "RHK": MANHOLE_SHAPE_RECTANGLE,
     }
     shape_code = "SQR"
     record_code = "01_TEST"
@@ -29,8 +30,8 @@ def test_get_mapping_value_wrong(caplog):
 
 def test_get_mapping_value_right(caplog):
     MANHOLE_SHAPE_MAPPING = {
-        "RND": Constants.MANHOLE_SHAPE_ROUND,
-        "RHK": Constants.MANHOLE_SHAPE_RECTANGLE,
+        "RND": MANHOLE_SHAPE_ROUND,
+        "RHK": MANHOLE_SHAPE_RECTANGLE,
     }
     shape_code = "RND"
     record_code = "01_TEST"
