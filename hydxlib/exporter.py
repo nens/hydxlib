@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 import logging
 from sqlalchemy.orm import load_only
+from copy import copy
+from osgeo import ogr
+from osgeo import osr
+from osgeo import __version__ as osgeo_version
 
-from hydxlib.threedi import Threedi
-from hydxlib.sql_models.threedi_database import ThreediDatabase
-from hydxlib.sql_models.model_schematisation import (
+from .threedi import Threedi
+from .sql_models.threedi_database import ThreediDatabase
+from .sql_models.model_schematisation import (
     ConnectionNode,
     Manhole,
     BoundaryCondition1D,
@@ -20,6 +24,28 @@ from hydxlib.sql_models.model_schematisation import (
 logger = logging.getLogger(__name__)
 
 
+def transform(wkt, srid_source, srid_dest):
+    source_crs = osr.SpatialReference()
+    source_crs.ImportFromEPSG(srid_source)
+    dest_crs = osr.SpatialReference()
+    dest_crs.ImportFromEPSG(srid_dest)
+    if int(osgeo_version[0]) >= 3:
+        source_crs.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
+        dest_crs.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
+    transformation = osr.CoordinateTransformation(source_crs, dest_crs)
+
+    point = ogr.CreateGeometryFromWkt(wkt)
+    point.Transform(transformation)
+    return point.ExportToWkt()
+
+
+def quote_nullable(x):
+    if x is None:
+        return "NULL"
+    else:
+        return f"'{x}'"
+
+
 def export_threedi(hydx, threedi_db_settings):
     threedi = Threedi()
     threedi.import_hydx(hydx)
@@ -30,27 +56,38 @@ def export_threedi(hydx, threedi_db_settings):
 
 def write_threedi_to_db(threedi, threedi_db_settings):
     """
-        writes threedi to model database
+    writes threedi to model database
 
-        threedi (dict): dictionary with for each object type a list of objects
+    threedi (dict): dictionary with for each object type a list of objects
 
-        returns: (dict) with number of objects committed to the database of
-                 each object type
+    returns: (dict) with number of objects committed to the database of
+             each object type
 
-        """
+    """
 
     commit_counts = {}
 
-    db = ThreediDatabase(
-        {
-            "host": threedi_db_settings["threedi_host"],
-            "port": threedi_db_settings["threedi_port"],
-            "database": threedi_db_settings["threedi_dbname"],
-            "username": threedi_db_settings["threedi_user"],
-            "password": threedi_db_settings["threedi_password"],
-        },
-        "postgres",
-    )
+    db_type = threedi_db_settings.get("type", "Postgresql")
+
+    if db_type == "Spatialite":
+        db = ThreediDatabase(
+            {
+                "db_file": threedi_db_settings["db_file"],
+                "db_path": threedi_db_settings["db_file"],
+            }
+        )
+
+    elif db_type == "Postgresql":
+        db = ThreediDatabase(
+            {
+                "host": threedi_db_settings["threedi_host"],
+                "port": threedi_db_settings["threedi_port"],
+                "database": threedi_db_settings["threedi_dbname"],
+                "username": threedi_db_settings["threedi_user"],
+                "password": threedi_db_settings["threedi_password"],
+            },
+            "postgres",
+        )
 
     session = db.get_session()
 
@@ -68,7 +105,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
             ImperviousSurface,
             ImperviousSurfaceMap,
         ):
-
             session.execute(
                 "SELECT setval('{table}_id_seq', max(id)) "
                 "FROM {table}".format(table=table.__tablename__)
@@ -79,8 +115,17 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     for cross_section in threedi.cross_sections.values():
         cross_section_list.append(CrossSectionDefinition(**cross_section))
     commit_counts["cross_sections"] = len(cross_section_list)
-    session.bulk_save_objects(cross_section_list)
-    session.commit()
+    # session.bulk_save_objects(cross_section_list)
+    # session.commit()
+    for xsec in cross_section_list:
+        session.execute(
+            "INSERT INTO v2_cross_section_definition(shape,width,height,code) VALUES({0}, {1}, {2}, {3})".format(
+                quote_nullable(xsec.shape),
+                quote_nullable(xsec.width),
+                quote_nullable(xsec.height),
+                quote_nullable(xsec.code),
+            )
+        )
 
     cross_section_list = (
         session.query(CrossSectionDefinition)
@@ -91,13 +136,21 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     cross_section_dict = {m.code: m.id for m in cross_section_list}
 
     connection_node_list = []
-    srid = 28992
+    srid = 4326
+    if db.db_type == "postgres":
+        geom_col = session.execute(
+            "SELECT srid FROM geometry_columns "
+            "WHERE f_table_name = 'v2_connection_nodes' AND "
+            "f_geometry_column = 'the_geom'"
+        )
+        srid = geom_col.fetchone()[0]
+
     for connection_node in threedi.connection_nodes:
-        wkt = "POINT({0} {1})".format(*connection_node["geom"])
+        wkt = transform("POINT({0} {1})".format(*connection_node["geom"]), 28992, srid)
         connection_node_list.append(
             ConnectionNode(
                 code=connection_node["code"],
-                storage_area=None,
+                storage_area=connection_node["storage_area"],
                 the_geom="srid={0};{1}".format(srid, wkt),
             )
         )
@@ -241,9 +294,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         map_list.append(ImperviousSurfaceMap(**imp_map))
     session.bulk_save_objects(map_list)
     session.commit()
-
-    session.close()
-    db.engine.dispose()
 
     return commit_counts
 

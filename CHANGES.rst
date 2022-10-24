@@ -5,7 +5,7 @@ Changelog of hydxlib
 0.8 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Backport changes from https://github.com/threedi/beta-plugins.
 
 
 0.7 (2020-03-03)

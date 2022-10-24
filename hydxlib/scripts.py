@@ -11,11 +11,10 @@ import os
 import sys
 from datetime import datetime
 
-from hydxlib.importer import import_hydx
-from hydxlib.exporter import export_threedi
+from .importer import import_hydx
+from .exporter import export_threedi
 
 logger = logging.getLogger(__name__)
-
 
 if "TRAVIS" in os.environ:
     # TODO: temporary measure, Reinout will have to investigate proper db env
@@ -109,16 +108,17 @@ def run_import_export(
 
 
 def write_logging_to_file(log_relpath):
-    """ Add file handler for writing logfile with warning and errors of hydxlib """
+    """Add file handler for writing logfile with warning and errors of hydxlib"""
     fh = logging.FileHandler(log_relpath, mode="w")
-    fh.setLevel(logging.INFO)
+    fh.setLevel(logging.DEBUG)
     formatter = logging.Formatter("%(levelname)s: %(message)s")
     fh.setFormatter(formatter)
-    logging.getLogger("hydxlib").addHandler(fh)
+    logging.getLogger("import_hydx").addHandler(fh)
+    return
 
 
 def get_parser():
-    """ Return argument parser. """
+    """Return argument parser."""
     parser = ArgumentParser(
         description=__doc__, formatter_class=ArgumentDefaultsHelpFormatter
     )
@@ -194,7 +194,7 @@ def get_parser():
 
 
 def main():
-    """ Call command with args from parser. """
+    """Call command with args from parser."""
     options = get_parser().parse_args()
     threedi_db_settings = {
         k: vars(options)[k] for k in vars(options) if k.startswith("threedi_")

@@ -40,7 +40,7 @@ class GlobalSetting(Base):
     sim_time_step = Column(Float)
 
     def __str__(self):
-        return u"Global setting [dem_file=%s, frict_coef_file=%s]" % (
+        return "Global setting [dem_file=%s, frict_coef_file=%s]" % (
             self.dem_file,
             self.frict_coef_file,
         )

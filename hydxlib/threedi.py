@@ -2,9 +2,9 @@
 import logging
 from collections import OrderedDict
 
-from hydxlib.sql_models.constants import Constants
-from hydxlib.hydx import Profile
-
+from .sql_models.constants import Constants
+from .hydx import Profile
+from math import sqrt
 
 logger = logging.getLogger(__name__)
 
@@ -44,18 +44,19 @@ MANHOLE_INDICATOR_MAPPING = {
     "UIT": Constants.MANHOLE_INDICATOR_OUTLET,
 }
 
-# for now skipping "MVR", "HEU"
+# for now skipping, "HEU"
 SHAPE_MAPPING = {
     "RND": Constants.SHAPE_ROUND,
     "EIV": Constants.SHAPE_EGG,
-    "RHK": Constants.SHAPE_TABULATED_RECTANGLE,
-    "TAB": Constants.SHAPE_TABULATED_TRAPEZIUM,
+    "RHK": Constants.SHAPE_RECTANGLE,
+    "TAB": Constants.SHAPE_TABULATED_RECTANGLE,
     "TPZ": Constants.SHAPE_TABULATED_TRAPEZIUM,
+    "MVR": Constants.SHAPE_TABULATED_TRAPEZIUM,
 }
 
 DISCHARGE_COEFFICIENT_MAPPING = {
-    "OVS": "afvoercoefficientoverstortdrempel",
-    "DRL": "contractiecoefficientdoorlaatprofiel",
+    "OVS": Constants.AFVOERCOEFFICIENT_OVERSTORTDREMPEL,
+    "DRL": Constants.CONTRATIECOEFFICIENT_DOORLAATPROFIEL,
 }
 
 SURFACE_CLASS_MAPPING = {
@@ -195,9 +196,13 @@ class Threedi:
         """Add hydx.connection_node into threedi.connection_node and threedi.manhole"""
 
         # get connection_nodes attributes
+        lengte = transform_unit_mm_to_m(hydx_connection_node.lengteputbodem)
+        breedte = transform_unit_mm_to_m(hydx_connection_node.breedte_diameterputbodem)
+        area = determine_area(breedte, lengte)
         connection_node = {
             "code": hydx_connection_node.identificatieknooppuntofverbinding,
             "initial_waterlevel": hydx_connection_node.initielewaterstand,
+            "storage_area": round(area, 2),
             "geom": point(
                 hydx_connection_node.x_coordinaat,
                 hydx_connection_node.y_coordinaat,
@@ -212,8 +217,8 @@ class Threedi:
             "code": hydx_connection_node.identificatieknooppuntofverbinding,
             "display_name": hydx_connection_node.identificatierioolput,
             "surface_level": hydx_connection_node.niveaumaaiveld,
-            "width": hydx_connection_node.breedte_diameterputbodem,
-            "length": hydx_connection_node.lengteputbodem,
+            "width": breedte,
+            "length": lengte,
             "shape": self.get_mapping_value(
                 MANHOLE_SHAPE_MAPPING,
                 hydx_connection_node.vormput,
@@ -242,10 +247,14 @@ class Threedi:
         combined_display_name_string = self.get_connection_display_names_from_manholes(
             hydx_connection
         )
-        breedte_diameterprofiel = transform_unit_mm_to_m(
-            hydx_profile.breedte_diameterprofiel
-        )
-        hoogteprofiel = transform_unit_mm_to_m(hydx_profile.hoogteprofiel)
+        if hydx_profile.vormprofiel in ("EIV", "RND", "RHK", "MVR"):
+            breedte_diameterprofiel = transform_unit_mm_to_m(
+                hydx_profile.breedte_diameterprofiel
+            )
+            hoogteprofiel = transform_unit_mm_to_m(hydx_profile.hoogteprofiel)
+        else:
+            breedte_diameterprofiel = hydx_profile.tabulatedbreedte
+            hoogteprofiel = hydx_profile.tabulatedhoogte
 
         pipe = {
             "code": hydx_connection.identificatieknooppuntofverbinding,
@@ -326,7 +335,7 @@ class Threedi:
             "lower_stop_level": pumpstation_stop_level,
             # upper_stop_level is not supported by hydx
             "upper_stop_level": None,
-            "capacity": round(float(hydx_structure.pompcapaciteit) / 3.6, 5),
+            "capacity": transform_capacity_to_ls(hydx_structure.pompcapaciteit),
             "sewerage": True,
         }
         self.pumpstations.append(pumpstation)
@@ -334,7 +343,7 @@ class Threedi:
     def add_weir(self, hydx_connection, hydx_structure, combined_display_name_string):
         waterlevel_boundary = getattr(hydx_structure, "buitenwaterstand", None)
         if waterlevel_boundary is not None:
-            timeseries = "0,{0}\n9999,{0} ".format(waterlevel_boundary)
+            timeseries = "0,{0}\n9999,{0}".format(waterlevel_boundary)
             boundary = {
                 "node.code": hydx_connection.identificatieknooppunt2,
                 "timeseries": timeseries,
@@ -373,15 +382,17 @@ class Threedi:
         hydx_profile,
         combined_display_name_string,
     ):
-
         hydx_connection = self.get_discharge_coefficients(
             hydx_connection, hydx_structure
         )
-
-        breedte_diameterprofiel = transform_unit_mm_to_m(
-            hydx_profile.breedte_diameterprofiel
-        )
-        hoogteprofiel = transform_unit_mm_to_m(hydx_profile.hoogteprofiel)
+        if hydx_profile.vormprofiel in ("EIV", "RND", "RHK", "MVR"):
+            breedte_diameterprofiel = transform_unit_mm_to_m(
+                hydx_profile.breedte_diameterprofiel
+            )
+            hoogteprofiel = transform_unit_mm_to_m(hydx_profile.hoogteprofiel)
+        else:
+            breedte_diameterprofiel = hydx_profile.tabulatedbreedte
+            hoogteprofiel = hydx_profile.tabulatedhoogte
 
         orifice = {
             "code": hydx_connection.identificatieknooppuntofverbinding,
@@ -409,30 +420,34 @@ class Threedi:
 
     def generate_cross_sections(self):
         cross_sections = {}
-        cross_sections["default"] = {
+        cross_sections["unknown"] = {
             "width": 1,
             "height": 1,
             "shape": Constants.SHAPE_ROUND,
-            "code": "default",
+            "code": "unknown",
         }
 
         connections_with_cross_sections = self.weirs + self.orifices + self.pipes
         for connection in connections_with_cross_sections:
+            print(connection)
             cross_section = connection["cross_section_details"]
             if cross_section["shape"] == Constants.SHAPE_ROUND:
                 code = "round_{width}".format(**cross_section)
             elif cross_section["shape"] == Constants.SHAPE_EGG:
                 code = "egg_w{width}_h{height}".format(**cross_section)
+            elif cross_section["shape"] == Constants.SHAPE_RECTANGLE:
+                code = "rectangle_w{width}_open".format(**cross_section)
             elif cross_section["shape"] == Constants.SHAPE_TABULATED_RECTANGLE:
-                code = "rectangle_w{width}_h{height}".format(**cross_section)
-                cross_section["width"] = "{0} {0} 0".format(cross_section["width"])
-                cross_section["height"] = "0 {0} {0}".format(cross_section["height"])
-            elif cross_section["shape"] == Constants.SHAPE_TABULATED_TRAPEZIUM:
                 code = "rectangle_w{width}_h{height}".format(**cross_section)
                 cross_section["width"] = "{0}".format(cross_section["width"])
                 cross_section["height"] = "{0}".format(cross_section["height"])
+            elif cross_section["shape"] == Constants.SHAPE_TABULATED_TRAPEZIUM:
+                code = "muil_w{width}_h{height}".format(**cross_section)
+                height, width = muil_to_tabulated(cross_section)
+                cross_section["width"] = width
+                cross_section["height"] = height
             else:
-                code = "default"
+                code = "unknown"
             # add unique cross_sections to cross_section definition
             if code not in cross_sections:
                 cross_sections[code] = cross_section
@@ -496,7 +511,7 @@ class Threedi:
     def add_1d_boundary(self, hydx_structure):
         waterlevel_boundary = getattr(hydx_structure, "buitenwaterstand", None)
         if waterlevel_boundary is not None:
-            timeseries = "0,{0}\n9999,{0} ".format(waterlevel_boundary)
+            timeseries = "0,{0}\n9999,{0}".format(waterlevel_boundary)
             boundary = {
                 "node.code": hydx_structure.identificatieknooppuntofverbinding,
                 "timeseries": timeseries,
@@ -594,35 +609,53 @@ class Threedi:
                 hydx_connection.typeverbinding,
                 hydx_connection.identificatieknooppuntofverbinding,
             )
-
-        if (
-            hydx_connection.stromingsrichting == "GSL"
-            or hydx_connection.stromingsrichting == "2_1"
-        ):
+        if hydx_connection.stromingsrichting == "GSL":
             hydx_connection.discharge_coefficient_positive = 0
-        elif (
-            hydx_connection.stromingsrichting == "OPN"
-            or hydx_connection.stromingsrichting == "1_2"
-        ):
-            hydx_connection.discharge_coefficient_positive = getattr(
-                hydx_structure,
-                DISCHARGE_COEFFICIENT_MAPPING[hydx_structure.typekunstwerk],
-                None,
-            )
-
-        if (
-            hydx_connection.stromingsrichting == "GSL"
-            or hydx_connection.stromingsrichting == "1_2"
-        ):
             hydx_connection.discharge_coefficient_negative = 0
-        elif (
-            hydx_connection.stromingsrichting == "OPN"
-            or hydx_connection.stromingsrichting == "2_1"
-        ):
-            hydx_connection.discharge_coefficient_negative = getattr(
-                hydx_structure,
-                DISCHARGE_COEFFICIENT_MAPPING[hydx_structure.typekunstwerk],
-                None,
+        elif hydx_connection.stromingsrichting == "OPN":
+            hydx_connection.discharge_coefficient_positive = (
+                hydx_structure.contractiecoefficientdoorlaatprofiel
+                or hydx_structure.afvoercoefficientoverstortdrempel
+                or self.get_mapping_value(
+                    DISCHARGE_COEFFICIENT_MAPPING,
+                    hydx_structure.typekunstwerk,
+                    hydx_structure.identificatieknooppuntofverbinding,
+                    name_for_logging="discharge coefficient",
+                )
+            )
+            hydx_connection.discharge_coefficient_negative = (
+                hydx_structure.contractiecoefficientdoorlaatprofiel
+                or hydx_structure.afvoercoefficientoverstortdrempel
+                or self.get_mapping_value(
+                    DISCHARGE_COEFFICIENT_MAPPING,
+                    hydx_structure.typekunstwerk,
+                    hydx_structure.identificatieknooppuntofverbinding,
+                    name_for_logging="discharge coefficient",
+                )
+            )
+        elif hydx_connection.stromingsrichting == "1_2":
+            hydx_connection.discharge_coefficient_negative = 0
+            hydx_connection.discharge_coefficient_positive = (
+                hydx_structure.contractiecoefficientdoorlaatprofiel
+                or hydx_structure.afvoercoefficientoverstortdrempel
+                or self.get_mapping_value(
+                    DISCHARGE_COEFFICIENT_MAPPING,
+                    hydx_structure.typekunstwerk,
+                    hydx_structure.identificatieknooppuntofverbinding,
+                    name_for_logging="discharge coefficient",
+                )
+            )
+        elif hydx_connection.stromingsrichting == "2_1":
+            hydx_connection.discharge_coefficient_positive = 0
+            hydx_connection.discharge_coefficient_negative = (
+                hydx_structure.contractiecoefficientdoorlaatprofiel
+                or hydx_structure.afvoercoefficientoverstortdrempel
+                or self.get_mapping_value(
+                    DISCHARGE_COEFFICIENT_MAPPING,
+                    hydx_structure.typekunstwerk,
+                    hydx_structure.identificatieknooppuntofverbinding,
+                    name_for_logging="discharge coefficient",
+                )
             )
         return hydx_connection
 
@@ -660,8 +693,87 @@ def check_if_element_is_created_with_same_code(
         )
 
 
+def transform_capacity_to_ls(capacity):
+    if capacity is not None:
+        return round(float(capacity) / 3.6, 5)
+    else:
+        return None
+
+
 def transform_unit_mm_to_m(value_mm):
     if value_mm is not None:
         return float(value_mm) / float(1000)
     else:
         return None
+
+
+def determine_area(width, height):
+    if width and height:
+        return width * height
+    elif width:
+        return width * width
+    elif height:
+        return height * height
+    else:
+        return 0
+
+
+def muil_to_tabulated(cross_section):
+    hoogte = cross_section["height"]
+    breedte = cross_section["width"]
+    if None not in (hoogte, breedte):
+        increment = hoogte / 15
+        breedte_punt = hoogte / 3 - hoogte / 2
+        hoogte_temp_list = []
+        hoogte_list = []
+        breedte_list = []
+        for x in range(15):
+            if x == 0:
+                hoogte_temp_list.append(hoogte / -2)
+                breedte_list.append(
+                    round(
+                        sqrt(
+                            (
+                                ((hoogte / 2) ** 2 - hoogte_temp_list[x] ** 2)
+                                * (breedte / 2) ** 2
+                            )
+                            / (
+                                (hoogte / 2) ** 2
+                                + 2 * breedte_punt * hoogte_temp_list[x]
+                                + breedte_punt**2
+                            )
+                        )
+                        * 2,
+                        2,
+                    )
+                )
+            else:
+                hoogte_temp_list.append(hoogte_temp_list[x - 1] + increment)
+                breedte_list.append(
+                    round(
+                        sqrt(
+                            (
+                                ((hoogte / 2) ** 2 - hoogte_temp_list[x] ** 2)
+                                * (breedte / 2) ** 2
+                            )
+                            / (
+                                (hoogte / 2) ** 2
+                                + 2 * breedte_punt * hoogte_temp_list[x]
+                                + breedte_punt**2
+                            )
+                        )
+                        * 2,
+                        2,
+                    )
+                )
+            hoogte_list.append(round(hoogte_temp_list[x] * -1 + hoogte / 2, 2))
+        hoogte_list.append(0)
+        breedte_list.append(0)
+        hoogte_list_rev = hoogte_list[::-1]
+        breedte_list_rev = breedte_list[::-1]
+        hoogte_profiel = " ".join([str(elem) for elem in hoogte_list_rev])
+        breedte_profiel = " ".join([str(elem) for elem in breedte_list_rev])
+    else:
+        hoogte_profiel = None
+        breedte_profiel = None
+    return hoogte_profiel, breedte_profiel

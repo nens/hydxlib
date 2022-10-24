@@ -106,6 +106,7 @@ class TestThreedi(TestCase):
             "code": "knp1",
             "initial_waterlevel": None,
             "geom": (400, 50, 28992),
+            "storage_area": 50.0,
         }
         self.threedi.import_hydx(self.hydx)
         assert self.threedi.connection_nodes[0] == connection_node_0
@@ -115,8 +116,8 @@ class TestThreedi(TestCase):
             "code": "knp1",
             "display_name": "1001",
             "surface_level": 2.75,
-            "width": 7071,
-            "length": 7071,
+            "width": 7.071,
+            "length": 7.071,
             "shape": "rnd",
             "bottom_level": 0,
             "calculation_type": 2,
@@ -194,19 +195,19 @@ class TestThreedi(TestCase):
     def test_add_boundary(self):
         boundary_1 = {
             "node.code": "knp78",
-            "timeseries": "0,-5.0\n9999,-5.0 ",
+            "timeseries": "0,-5.0\n9999,-5.0",
             "boundary_type": 1,
         }
         self.threedi.import_hydx(self.hydx)
         assert self.threedi.outlets[0] == boundary_1
 
     # def test_add_first_pump_with_same_code(self):
-        # self.threedi.import_hydx(self.hydx)
-        # # select first manhole from dataset for check
-        # connection = self.hydx.connections[82]
-        # structure = self.hydx.structures[5]
-        # self.threedi.add_structure(connection, structure)
-        # assert "Only first structure" in self._caplog.text
+    # self.threedi.import_hydx(self.hydx)
+    # # select first manhole from dataset for check
+    # connection = self.hydx.connections[82]
+    # structure = self.hydx.structures[5]
+    # self.threedi.add_structure(connection, structure)
+    # assert "Only first structure" in self._caplog.text
 
     def test_add_pump_type_2(self):
         self.threedi.import_hydx(self.hydx)
@@ -223,6 +224,7 @@ class TestThreedi(TestCase):
             "start_node.code": "knp8",
             "end_node.code": "knp55",
             "cross_section_details": {
+                "code": "rectangle_w3.0_open",
                 "shape": 1,
                 "width": 3,
                 "height": None,
@@ -232,7 +234,7 @@ class TestThreedi(TestCase):
             "discharge_coefficient_positive": 0.9,
             "discharge_coefficient_negative": 0.9,
             "sewerage": True,
-            "cross_section_code": "default",
+            "cross_section_code": "rectangle_w3.0_open",
         }
         self.threedi.import_hydx(self.hydx)
         assert self.threedi.weirs[1] == weir_1
