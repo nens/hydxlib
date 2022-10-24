@@ -1,7 +1,5 @@
 [run]
-omit =
-    */migrations/*
-    *settings.py
+omit = hydxlib/tests/*
 source = hydxlib
 
 [report]
