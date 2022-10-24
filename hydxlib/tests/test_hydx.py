@@ -4,8 +4,11 @@ from collections import OrderedDict
 from hydxlib.hydx import check_headers
 from hydxlib.hydx import Connection
 from hydxlib.hydx import ConnectionNode
+from hydxlib.hydx import Discharge
 from hydxlib.hydx import Profile
 from hydxlib.hydx import Structure
+from hydxlib.hydx import Surface
+from hydxlib.hydx import Variation
 from hydxlib.importer import import_hydx
 from unittest import TestCase
 
@@ -44,7 +47,7 @@ def test_check_init_connectionnode():
             ("CMP_IDE", ""),
             ("MVD_NIV", ""),
             ("MVD_SCH", ""),
-            ("WOS_OPP", ""),
+            ("WOS_OPP", "1.a"),  # invalid
             ("KNP_MAT", ""),
             ("KNP_VRM", ""),
             ("KNP_BOK", ""),
@@ -82,16 +85,6 @@ def test_check_init_connectionnode():
     }
     connection_node = ConnectionNode.import_csvline(csvline=line_in)
     assert connection_node.__dict__ == line_out
-
-
-def test_repr_uninitialized_connection_nodes():
-    connection_node = ConnectionNode()
-    assert repr(connection_node)
-
-
-def test_str_uninitialized_connection_nodes():
-    connection_node = ConnectionNode()
-    assert str(connection_node)
 
 
 def test_check_init_connection():
@@ -139,16 +132,6 @@ def test_check_init_connection():
     }
     connection = Connection.import_csvline(csvline=line_in)
     assert connection.__dict__ == line_out
-
-
-def test_repr_uninitialized_connection():
-    connection = Connection()
-    assert repr(connection)
-
-
-def test_str_uninitialized_connection():
-    connection = Connection()
-    assert str(connection)
 
 
 class TestHydx(TestCase):
@@ -224,16 +207,6 @@ def test_check_init_structure():
     assert structure.__dict__ == line_out
 
 
-def test_repr_uninitialized_structure():
-    structure = Structure()
-    assert repr(structure)
-
-
-def test_str_uninitialized_structure():
-    structure = Structure()
-    assert structure
-
-
 def test_check_init_profile():
     line_in = OrderedDict(
         [
@@ -261,11 +234,40 @@ def test_check_init_profile():
     assert profile.__dict__ == line_out
 
 
-def test_repr_uninitialized_profile():
-    profile = Profile()
-    assert repr(profile)
+def test_check_init_surface():
+    line_in = OrderedDict(
+        [
+            ("UNI_IDE", "knp8"),
+            ("NSL_STA", "DeBilt"),
+            ("AFV_DEF", "nwrw.csv"),
+            ("AFV_IDE", "GVH_VLU"),
+            ("AFV_OPP", "9"),
+            ("ALG_TOE", ""),
+        ]
+    )
+    line_out = {
+        "identificatieknooppuntofverbinding": "knp8",
+        "neerslagstation": "DeBilt",
+        "afvoerconcept": "nwrw.csv",
+        "afvoerkenmerken": "GVH_VLU",
+        "afvoerendoppervlak": 9.0,
+        "toelichtingregel": None,
+    }
+    connection_node = Surface.import_csvline(csvline=line_in)
+    assert connection_node.__dict__ == line_out
 
 
-def test_str_uninitialized_profile():
-    profile = Profile()
-    assert str(profile)
+@pytest.mark.parametrize(
+    "cls",
+    [Connection, ConnectionNode, Profile, Structure, Surface, Discharge, Variation],
+)
+def test_repr_uninitialized(cls):
+    assert repr(cls())
+
+
+@pytest.mark.parametrize(
+    "cls",
+    [Connection, ConnectionNode, Profile, Structure, Surface, Discharge, Variation],
+)
+def test_str_uninitialized(cls):
+    assert str(cls())

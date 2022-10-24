@@ -6,7 +6,7 @@ from unittest import mock
 import pytest
 
 
-@mock.patch("sys.argv", ["program"])
+@mock.patch("sys.argv", ["program", "--hydx_path", "a", "--sqlite_path", "b"])
 def test_get_parser():
     parser = scripts.get_parser()
     # As a test, we just check one option. That's enough.

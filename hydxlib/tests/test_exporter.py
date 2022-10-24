@@ -57,5 +57,5 @@ def test_write_to_db_con_nodes_huge(hydx_setup, mock_exporter_db):
         "pipes": 80,
         "outlets": 3,
     }
-    commit_counts = write_threedi_to_db(hydx_setup[1], "/some/path")
+    commit_counts = write_threedi_to_db(hydx_setup[1], {"db_file": "/some/path"})
     assert commit_counts == commit_counts_expected

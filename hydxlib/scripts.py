@@ -117,31 +117,32 @@ def get_parser():
         "--import",
         dest="import_type",
         default="hydx",
-        choices=["hydx", "threedi"],
+        choices=["hydx"],
         help="select your import operator",
     )
     parser.add_argument(
         "--export",
         dest="export_type",
         default="threedi",
-        choices=["hydx", "threedi", "json"],
+        choices=["threedi"],
         help="select your export operator",
     )
 
     group_hydx = parser.add_argument_group("Import or export a hydx")
     group_hydx.add_argument(
         "--hydx_path",
-        default="hydxlib\\tests\\example_files_structures_hydx",
         metavar="HYDX_PATH",
         dest="hydx_path",
         help="Folder with your hydx *.csv files",
+        required=True,
     )
     group_threedi = parser.add_argument_group("Import or export a 3di database")
     group_threedi.add_argument(
         "--sqlite_path",
         metavar="SQLITE_PATH",
-        dest="threedi_dbname",
-        help="name of your threedi database",
+        dest="sqlite_path",
+        help="Path to your 3Di *.sqlite file",
+        required=True,
     )
     return parser
 
