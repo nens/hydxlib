@@ -3,8 +3,11 @@ from setuptools import setup
 
 version = "0.8.dev0"
 long_description = "\n\n".join([open("README.rst").read(), open("CHANGES.rst").read()])
-install_requires = ["sqlalchemy", "threedi-modelchecker"]
-tests_require = ["pytest", "pytest-cov"]
+install_requires = [
+    "sqlalchemy",
+    "threedi-modelchecker @ git+https://github.com/nens/threedi-modelchecker",
+]
+tests_require = ["pytest"]
 
 setup(
     name="hydxlib",
@@ -12,7 +15,11 @@ setup(
     description="Importer and Exporter for GWSW",
     long_description=long_description,
     # Get strings from http://www.python.org/pypi?%3Aaction=list_classifiers
-    classifiers=["Programming Language :: Python"],
+    classifiers=[
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Development Status :: 4 - Beta",
+    ],
     keywords=[],
     author="Nelen & Schuurmans",
     author_email="info@nelen-schuurmans.nl",
