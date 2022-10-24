@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
-import logging
 from collections import Counter
+
+import logging
+
 
 logger = logging.getLogger(__name__)
 

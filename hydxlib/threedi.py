@@ -1,74 +1,106 @@
 # -*- coding: utf-8 -*-
-import logging
+from .hydx import Profile
 from collections import OrderedDict
+from enum import Enum
+from math import sqrt
+from threedi_modelchecker.threedi_model.constants import BoundaryType
+from threedi_modelchecker.threedi_model.constants import CrestType
+from threedi_modelchecker.threedi_model.constants import CrossSectionShape
+from threedi_modelchecker.threedi_model.constants import PipeCalculationType
+from threedi_modelchecker.threedi_model.constants import SewerageType
+from threedi_modelchecker.threedi_model.constants import SurfaceClass
+from threedi_modelchecker.threedi_model.constants import SurfaceInclinationType
 
-from hydxlib.sql_models.constants import Constants
-from hydxlib.hydx import Profile
+import logging
 
 
 logger = logging.getLogger(__name__)
 
+
+class PipeMaterialType(Enum):
+    CONCRETE = 0
+    PVC = 1
+    STONEWARE = 2
+    CAST_IRON = 3
+    BRICKWORK = 4
+    HPE = 5
+    HPDE = 6
+    SHEET_IRON = 7
+    STEEL = 8
+
+
+class ManholeIndicator(Enum):
+    MANHOLE = 0
+    OUTLET = 1
+
+
+class ManholeShape(Enum):
+    RECTANGLE = "rect"
+    ROUND = "rnd"
+
+
 MANHOLE_SHAPE_MAPPING = {
-    "RND": Constants.MANHOLE_SHAPE_ROUND,
-    "RHK": Constants.MANHOLE_SHAPE_RECTANGLE,
+    "RND": ManholeShape.ROUND.value,
+    "RHK": ManholeShape.RECTANGLE.value,
 }
 
 # for now assuming "VRL" to be connected
 CALCULATION_TYPE_MAPPING = {
-    "KNV": Constants.CALCULATION_TYPE_ISOLATED,
-    "RES": Constants.CALCULATION_TYPE_CONNECTED,
-    "VRL": Constants.CALCULATION_TYPE_CONNECTED,
+    "KNV": PipeCalculationType.ISOLATED.value,
+    "RES": PipeCalculationType.CONNECTED.value,
+    "VRL": PipeCalculationType.CONNECTED.value,
 }
 
 MATERIAL_MAPPING = {
-    "BET": Constants.MATERIAL_TYPE_CONCRETE,
-    "PVC": Constants.MATERIAL_TYPE_PVC,
-    "GRE": Constants.MATERIAL_TYPE_STONEWARE,
-    "GIJ": Constants.MATERIAL_TYPE_CAST_IRON,
-    "MSW": Constants.MATERIAL_TYPE_BRICKWORK,
-    "HPE": Constants.MATERIAL_TYPE_HPE,
-    "PIJ": Constants.MATERIAL_TYPE_SHEET_IRON,
-    "STL": Constants.MATERIAL_TYPE_STEEL,
+    "BET": PipeMaterialType.CONCRETE.value,
+    "PVC": PipeMaterialType.PVC.value,
+    "GRE": PipeMaterialType.STONEWARE.value,
+    "GIJ": PipeMaterialType.CAST_IRON.value,
+    "MSW": PipeMaterialType.BRICKWORK.value,
+    "HPE": PipeMaterialType.HPE.value,
+    "PIJ": PipeMaterialType.SHEET_IRON.value,
+    "STL": PipeMaterialType.STEEL.value,
 }
 # NVT temporary (?) on transport
 SEWERAGE_TYPE_MAPPING = {
-    "GMD": Constants.SEWERAGE_TYPE_COMBINED,
-    "HWA": Constants.SEWERAGE_TYPE_STORMWATER,
-    "DWA": Constants.SEWERAGE_TYPE_WASTEWATER,
-    "NVT": Constants.SEWERAGE_TYPE_TRANSPORT,
+    "GMD": SewerageType.MIXED.value,
+    "HWA": SewerageType.RAIN_WATER.value,
+    "DWA": SewerageType.DRY_WEATHER_FLOW.value,
+    "NVT": SewerageType.TRANSPORT.value,
 }
 
 # for now ignoring CMP and ITP
 MANHOLE_INDICATOR_MAPPING = {
-    "INS": Constants.MANHOLE_INDICATOR_MANHOLE,
-    "UIT": Constants.MANHOLE_INDICATOR_OUTLET,
+    "INS": ManholeIndicator.MANHOLE.value,
+    "UIT": ManholeIndicator.OUTLET.value,
 }
 
-# for now skipping "MVR", "HEU"
+# for now skipping, "HEU"
 SHAPE_MAPPING = {
-    "RND": Constants.SHAPE_ROUND,
-    "EIV": Constants.SHAPE_EGG,
-    "RHK": Constants.SHAPE_TABULATED_RECTANGLE,
-    "TAB": Constants.SHAPE_TABULATED_TRAPEZIUM,
-    "TPZ": Constants.SHAPE_TABULATED_TRAPEZIUM,
+    "RND": CrossSectionShape.CIRCLE.value,
+    "EIV": CrossSectionShape.EGG.value,
+    "RHK": CrossSectionShape.RECTANGLE.value,
+    "TAB": CrossSectionShape.TABULATED_RECTANGLE.value,
+    "TPZ": CrossSectionShape.TABULATED_TRAPEZIUM.value,
+    "MVR": CrossSectionShape.TABULATED_TRAPEZIUM.value,
 }
 
 DISCHARGE_COEFFICIENT_MAPPING = {
-    "OVS": "afvoercoefficientoverstortdrempel",
-    "DRL": "contractiecoefficientdoorlaatprofiel",
+    "OVS": 0.8,  # AFVOERCOEFFICIENT_OVERSTORTDREMPEL
+    "DRL": 0.8,  # CONTRATIECOEFFICIENT_DOORLAATPROFIEL
 }
 
 SURFACE_CLASS_MAPPING = {
-    "GVH": Constants.SURFACE_CLASS_GESLOTEN_VERHARDING,
-    "OVH": Constants.SURFACE_CLASS_OPEN_VERHARDING,
-    "ONV": Constants.SURFACE_CLASS_ONVERHARD,
-    "DAK": Constants.SURFACE_CLASS_PAND,
+    "GVH": SurfaceClass.GESLOTEN_VERHARDING.value,
+    "OVH": SurfaceClass.OPEN_VERHARDING.value,
+    "ONV": SurfaceClass.ONVERHARD.value,
+    "DAK": SurfaceClass.PAND.value,
 }
 
 SURFACE_INCLINATION_MAPPING = {
-    "HEL": Constants.SURFACE_INCLINATION_HELLEND,
-    "VLA": Constants.SURFACE_INCLINATION_VLAK,
-    "VLU": Constants.SURFACE_INCLINATION_UITGESTREKT,
+    "HEL": SurfaceInclinationType.HELLEND.value,
+    "VLA": SurfaceInclinationType.VLAK.value,
+    "VLU": SurfaceInclinationType.UITGESTREKT.value,
 }
 
 
@@ -195,9 +227,13 @@ class Threedi:
         """Add hydx.connection_node into threedi.connection_node and threedi.manhole"""
 
         # get connection_nodes attributes
+        lengte = transform_unit_mm_to_m(hydx_connection_node.lengteputbodem)
+        breedte = transform_unit_mm_to_m(hydx_connection_node.breedte_diameterputbodem)
+        area = determine_area(breedte, lengte)
         connection_node = {
             "code": hydx_connection_node.identificatieknooppuntofverbinding,
             "initial_waterlevel": hydx_connection_node.initielewaterstand,
+            "storage_area": round(area, 2),
             "geom": point(
                 hydx_connection_node.x_coordinaat,
                 hydx_connection_node.y_coordinaat,
@@ -212,8 +248,8 @@ class Threedi:
             "code": hydx_connection_node.identificatieknooppuntofverbinding,
             "display_name": hydx_connection_node.identificatierioolput,
             "surface_level": hydx_connection_node.niveaumaaiveld,
-            "width": hydx_connection_node.breedte_diameterputbodem,
-            "length": hydx_connection_node.lengteputbodem,
+            "width": breedte,
+            "length": lengte,
             "shape": self.get_mapping_value(
                 MANHOLE_SHAPE_MAPPING,
                 hydx_connection_node.vormput,
@@ -242,10 +278,14 @@ class Threedi:
         combined_display_name_string = self.get_connection_display_names_from_manholes(
             hydx_connection
         )
-        breedte_diameterprofiel = transform_unit_mm_to_m(
-            hydx_profile.breedte_diameterprofiel
-        )
-        hoogteprofiel = transform_unit_mm_to_m(hydx_profile.hoogteprofiel)
+        if hydx_profile.vormprofiel in ("EIV", "RND", "RHK", "MVR"):
+            breedte_diameterprofiel = transform_unit_mm_to_m(
+                hydx_profile.breedte_diameterprofiel
+            )
+            hoogteprofiel = transform_unit_mm_to_m(hydx_profile.hoogteprofiel)
+        else:
+            breedte_diameterprofiel = hydx_profile.tabulatedbreedte
+            hoogteprofiel = hydx_profile.tabulatedhoogte
 
         pipe = {
             "code": hydx_connection.identificatieknooppuntofverbinding,
@@ -326,7 +366,7 @@ class Threedi:
             "lower_stop_level": pumpstation_stop_level,
             # upper_stop_level is not supported by hydx
             "upper_stop_level": None,
-            "capacity": round(float(hydx_structure.pompcapaciteit) / 3.6, 5),
+            "capacity": transform_capacity_to_ls(hydx_structure.pompcapaciteit),
             "sewerage": True,
         }
         self.pumpstations.append(pumpstation)
@@ -334,11 +374,11 @@ class Threedi:
     def add_weir(self, hydx_connection, hydx_structure, combined_display_name_string):
         waterlevel_boundary = getattr(hydx_structure, "buitenwaterstand", None)
         if waterlevel_boundary is not None:
-            timeseries = "0,{0}\n9999,{0} ".format(waterlevel_boundary)
+            timeseries = "0,{0}\n9999,{0}".format(waterlevel_boundary)
             boundary = {
                 "node.code": hydx_connection.identificatieknooppunt2,
                 "timeseries": timeseries,
-                "boundary_type": Constants.BOUNDARY_TYPE_WATERLEVEL,
+                "boundary_type": BoundaryType.WATERLEVEL.value,
             }
             self.outlets.append(boundary)
         else:
@@ -354,11 +394,11 @@ class Threedi:
             "start_node.code": hydx_connection.identificatieknooppunt1,
             "end_node.code": hydx_connection.identificatieknooppunt2,
             "cross_section_details": {
-                "shape": Constants.SHAPE_RECTANGLE,
+                "shape": CrossSectionShape.RECTANGLE.value,
                 "width": hydx_structure.breedteoverstortdrempel,
                 "height": None,
             },
-            "crest_type": Constants.CREST_TYPE_SHARP_CRESTED,
+            "crest_type": CrestType.SHORT_CRESTED.value,
             "crest_level": hydx_structure.niveauoverstortdrempel,
             "discharge_coefficient_positive": hydx_connection.discharge_coefficient_positive,
             "discharge_coefficient_negative": hydx_connection.discharge_coefficient_negative,
@@ -373,15 +413,17 @@ class Threedi:
         hydx_profile,
         combined_display_name_string,
     ):
-
         hydx_connection = self.get_discharge_coefficients(
             hydx_connection, hydx_structure
         )
-
-        breedte_diameterprofiel = transform_unit_mm_to_m(
-            hydx_profile.breedte_diameterprofiel
-        )
-        hoogteprofiel = transform_unit_mm_to_m(hydx_profile.hoogteprofiel)
+        if hydx_profile.vormprofiel in ("EIV", "RND", "RHK", "MVR"):
+            breedte_diameterprofiel = transform_unit_mm_to_m(
+                hydx_profile.breedte_diameterprofiel
+            )
+            hoogteprofiel = transform_unit_mm_to_m(hydx_profile.hoogteprofiel)
+        else:
+            breedte_diameterprofiel = hydx_profile.tabulatedbreedte
+            hoogteprofiel = hydx_profile.tabulatedhoogte
 
         orifice = {
             "code": hydx_connection.identificatieknooppuntofverbinding,
@@ -401,7 +443,7 @@ class Threedi:
             "discharge_coefficient_positive": hydx_connection.discharge_coefficient_positive,
             "discharge_coefficient_negative": hydx_connection.discharge_coefficient_negative,
             "sewerage": True,
-            "crest_type": Constants.CREST_TYPE_SHARP_CRESTED,
+            "crest_type": CrestType.SHORT_CRESTED.value,
             "crest_level": hydx_structure.niveaubinnenonderkantprofiel,
         }
 
@@ -409,30 +451,34 @@ class Threedi:
 
     def generate_cross_sections(self):
         cross_sections = {}
-        cross_sections["default"] = {
+        cross_sections["unknown"] = {
             "width": 1,
             "height": 1,
-            "shape": Constants.SHAPE_ROUND,
-            "code": "default",
+            "shape": CrossSectionShape.CIRCLE.value,
+            "code": "unknown",
         }
 
         connections_with_cross_sections = self.weirs + self.orifices + self.pipes
         for connection in connections_with_cross_sections:
+            print(connection)
             cross_section = connection["cross_section_details"]
-            if cross_section["shape"] == Constants.SHAPE_ROUND:
+            if cross_section["shape"] == CrossSectionShape.CIRCLE.value:
                 code = "round_{width}".format(**cross_section)
-            elif cross_section["shape"] == Constants.SHAPE_EGG:
+            elif cross_section["shape"] == CrossSectionShape.EGG.value:
                 code = "egg_w{width}_h{height}".format(**cross_section)
-            elif cross_section["shape"] == Constants.SHAPE_TABULATED_RECTANGLE:
-                code = "rectangle_w{width}_h{height}".format(**cross_section)
-                cross_section["width"] = "{0} {0} 0".format(cross_section["width"])
-                cross_section["height"] = "0 {0} {0}".format(cross_section["height"])
-            elif cross_section["shape"] == Constants.SHAPE_TABULATED_TRAPEZIUM:
+            elif cross_section["shape"] == CrossSectionShape.RECTANGLE.value:
+                code = "rectangle_w{width}_open".format(**cross_section)
+            elif cross_section["shape"] == CrossSectionShape.TABULATED_RECTANGLE.value:
                 code = "rectangle_w{width}_h{height}".format(**cross_section)
                 cross_section["width"] = "{0}".format(cross_section["width"])
                 cross_section["height"] = "{0}".format(cross_section["height"])
+            elif cross_section["shape"] == CrossSectionShape.TABULATED_TRAPEZIUM.value:
+                code = "muil_w{width}_h{height}".format(**cross_section)
+                height, width = muil_to_tabulated(cross_section)
+                cross_section["width"] = width
+                cross_section["height"] = height
             else:
-                code = "default"
+                code = "unknown"
             # add unique cross_sections to cross_section definition
             if code not in cross_sections:
                 cross_sections[code] = cross_section
@@ -496,11 +542,11 @@ class Threedi:
     def add_1d_boundary(self, hydx_structure):
         waterlevel_boundary = getattr(hydx_structure, "buitenwaterstand", None)
         if waterlevel_boundary is not None:
-            timeseries = "0,{0}\n9999,{0} ".format(waterlevel_boundary)
+            timeseries = "0,{0}\n9999,{0}".format(waterlevel_boundary)
             boundary = {
                 "node.code": hydx_structure.identificatieknooppuntofverbinding,
                 "timeseries": timeseries,
-                "boundary_type": Constants.BOUNDARY_TYPE_WATERLEVEL,
+                "boundary_type": BoundaryType.WATERLEVEL.value,
             }
             self.outlets.append(boundary)
 
@@ -594,35 +640,53 @@ class Threedi:
                 hydx_connection.typeverbinding,
                 hydx_connection.identificatieknooppuntofverbinding,
             )
-
-        if (
-            hydx_connection.stromingsrichting == "GSL"
-            or hydx_connection.stromingsrichting == "2_1"
-        ):
+        if hydx_connection.stromingsrichting == "GSL":
             hydx_connection.discharge_coefficient_positive = 0
-        elif (
-            hydx_connection.stromingsrichting == "OPN"
-            or hydx_connection.stromingsrichting == "1_2"
-        ):
-            hydx_connection.discharge_coefficient_positive = getattr(
-                hydx_structure,
-                DISCHARGE_COEFFICIENT_MAPPING[hydx_structure.typekunstwerk],
-                None,
-            )
-
-        if (
-            hydx_connection.stromingsrichting == "GSL"
-            or hydx_connection.stromingsrichting == "1_2"
-        ):
             hydx_connection.discharge_coefficient_negative = 0
-        elif (
-            hydx_connection.stromingsrichting == "OPN"
-            or hydx_connection.stromingsrichting == "2_1"
-        ):
-            hydx_connection.discharge_coefficient_negative = getattr(
-                hydx_structure,
-                DISCHARGE_COEFFICIENT_MAPPING[hydx_structure.typekunstwerk],
-                None,
+        elif hydx_connection.stromingsrichting == "OPN":
+            hydx_connection.discharge_coefficient_positive = (
+                hydx_structure.contractiecoefficientdoorlaatprofiel
+                or hydx_structure.afvoercoefficientoverstortdrempel
+                or self.get_mapping_value(
+                    DISCHARGE_COEFFICIENT_MAPPING,
+                    hydx_structure.typekunstwerk,
+                    hydx_structure.identificatieknooppuntofverbinding,
+                    name_for_logging="discharge coefficient",
+                )
+            )
+            hydx_connection.discharge_coefficient_negative = (
+                hydx_structure.contractiecoefficientdoorlaatprofiel
+                or hydx_structure.afvoercoefficientoverstortdrempel
+                or self.get_mapping_value(
+                    DISCHARGE_COEFFICIENT_MAPPING,
+                    hydx_structure.typekunstwerk,
+                    hydx_structure.identificatieknooppuntofverbinding,
+                    name_for_logging="discharge coefficient",
+                )
+            )
+        elif hydx_connection.stromingsrichting == "1_2":
+            hydx_connection.discharge_coefficient_negative = 0
+            hydx_connection.discharge_coefficient_positive = (
+                hydx_structure.contractiecoefficientdoorlaatprofiel
+                or hydx_structure.afvoercoefficientoverstortdrempel
+                or self.get_mapping_value(
+                    DISCHARGE_COEFFICIENT_MAPPING,
+                    hydx_structure.typekunstwerk,
+                    hydx_structure.identificatieknooppuntofverbinding,
+                    name_for_logging="discharge coefficient",
+                )
+            )
+        elif hydx_connection.stromingsrichting == "2_1":
+            hydx_connection.discharge_coefficient_positive = 0
+            hydx_connection.discharge_coefficient_negative = (
+                hydx_structure.contractiecoefficientdoorlaatprofiel
+                or hydx_structure.afvoercoefficientoverstortdrempel
+                or self.get_mapping_value(
+                    DISCHARGE_COEFFICIENT_MAPPING,
+                    hydx_structure.typekunstwerk,
+                    hydx_structure.identificatieknooppuntofverbinding,
+                    name_for_logging="discharge coefficient",
+                )
             )
         return hydx_connection
 
@@ -660,8 +724,87 @@ def check_if_element_is_created_with_same_code(
         )
 
 
+def transform_capacity_to_ls(capacity):
+    if capacity is not None:
+        return round(float(capacity) / 3.6, 5)
+    else:
+        return None
+
+
 def transform_unit_mm_to_m(value_mm):
     if value_mm is not None:
         return float(value_mm) / float(1000)
     else:
         return None
+
+
+def determine_area(width, height):
+    if width and height:
+        return width * height
+    elif width:
+        return width * width
+    elif height:
+        return height * height
+    else:
+        return 0
+
+
+def muil_to_tabulated(cross_section):
+    hoogte = cross_section["height"]
+    breedte = cross_section["width"]
+    if None not in (hoogte, breedte):
+        increment = hoogte / 15
+        breedte_punt = hoogte / 3 - hoogte / 2
+        hoogte_temp_list = []
+        hoogte_list = []
+        breedte_list = []
+        for x in range(15):
+            if x == 0:
+                hoogte_temp_list.append(hoogte / -2)
+                breedte_list.append(
+                    round(
+                        sqrt(
+                            (
+                                ((hoogte / 2) ** 2 - hoogte_temp_list[x] ** 2)
+                                * (breedte / 2) ** 2
+                            )
+                            / (
+                                (hoogte / 2) ** 2
+                                + 2 * breedte_punt * hoogte_temp_list[x]
+                                + breedte_punt**2
+                            )
+                        )
+                        * 2,
+                        2,
+                    )
+                )
+            else:
+                hoogte_temp_list.append(hoogte_temp_list[x - 1] + increment)
+                breedte_list.append(
+                    round(
+                        sqrt(
+                            (
+                                ((hoogte / 2) ** 2 - hoogte_temp_list[x] ** 2)
+                                * (breedte / 2) ** 2
+                            )
+                            / (
+                                (hoogte / 2) ** 2
+                                + 2 * breedte_punt * hoogte_temp_list[x]
+                                + breedte_punt**2
+                            )
+                        )
+                        * 2,
+                        2,
+                    )
+                )
+            hoogte_list.append(round(hoogte_temp_list[x] * -1 + hoogte / 2, 2))
+        hoogte_list.append(0)
+        breedte_list.append(0)
+        hoogte_list_rev = hoogte_list[::-1]
+        breedte_list_rev = breedte_list[::-1]
+        hoogte_profiel = " ".join([str(elem) for elem in hoogte_list_rev])
+        breedte_profiel = " ".join([str(elem) for elem in breedte_list_rev])
+    else:
+        hoogte_profiel = None
+        breedte_profiel = None
+    return hoogte_profiel, breedte_profiel

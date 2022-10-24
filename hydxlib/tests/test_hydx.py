@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
 """Tests for hydx.py"""
 from collections import OrderedDict
-from unittest import TestCase
-import pytest
-
-from hydxlib.hydx import check_headers, ConnectionNode, Connection, Structure, Profile
+from hydxlib.hydx import check_headers
+from hydxlib.hydx import Connection
+from hydxlib.hydx import ConnectionNode
+from hydxlib.hydx import Profile
+from hydxlib.hydx import Structure
 from hydxlib.importer import import_hydx
+from unittest import TestCase
+
+import pytest
 
 
 def test_check_headers(caplog):

@@ -1,22 +1,23 @@
 # -*- coding: utf-8 -*-
 """Tests for threedi.py"""
-from unittest import TestCase
-import pytest
-import mock
-
 from hydxlib.importer import import_hydx
-from hydxlib.threedi import (
-    Threedi,
-    check_if_element_is_created_with_same_code,
-    get_hydx_default_profile,
-)
-from hydxlib.sql_models.constants import Constants
+from hydxlib.threedi import check_if_element_is_created_with_same_code
+from hydxlib.threedi import get_hydx_default_profile
+from hydxlib.threedi import Threedi
+from unittest import mock
+from unittest import TestCase
+
+import pytest
+
+
+MANHOLE_SHAPE_RECTANGLE = "rect"
+MANHOLE_SHAPE_ROUND = "rnd"
 
 
 def test_get_mapping_value_wrong(caplog):
     MANHOLE_SHAPE_MAPPING = {
-        "RND": Constants.MANHOLE_SHAPE_ROUND,
-        "RHK": Constants.MANHOLE_SHAPE_RECTANGLE,
+        "RND": MANHOLE_SHAPE_ROUND,
+        "RHK": MANHOLE_SHAPE_RECTANGLE,
     }
     shape_code = "SQR"
     record_code = "01_TEST"
@@ -29,8 +30,8 @@ def test_get_mapping_value_wrong(caplog):
 
 def test_get_mapping_value_right(caplog):
     MANHOLE_SHAPE_MAPPING = {
-        "RND": Constants.MANHOLE_SHAPE_ROUND,
-        "RHK": Constants.MANHOLE_SHAPE_RECTANGLE,
+        "RND": MANHOLE_SHAPE_ROUND,
+        "RHK": MANHOLE_SHAPE_RECTANGLE,
     }
     shape_code = "RND"
     record_code = "01_TEST"
@@ -106,6 +107,7 @@ class TestThreedi(TestCase):
             "code": "knp1",
             "initial_waterlevel": None,
             "geom": (400, 50, 28992),
+            "storage_area": 50.0,
         }
         self.threedi.import_hydx(self.hydx)
         assert self.threedi.connection_nodes[0] == connection_node_0
@@ -115,8 +117,8 @@ class TestThreedi(TestCase):
             "code": "knp1",
             "display_name": "1001",
             "surface_level": 2.75,
-            "width": 7071,
-            "length": 7071,
+            "width": 7.071,
+            "length": 7.071,
             "shape": "rnd",
             "bottom_level": 0,
             "calculation_type": 2,
@@ -194,19 +196,19 @@ class TestThreedi(TestCase):
     def test_add_boundary(self):
         boundary_1 = {
             "node.code": "knp78",
-            "timeseries": "0,-5.0\n9999,-5.0 ",
+            "timeseries": "0,-5.0\n9999,-5.0",
             "boundary_type": 1,
         }
         self.threedi.import_hydx(self.hydx)
         assert self.threedi.outlets[0] == boundary_1
 
     # def test_add_first_pump_with_same_code(self):
-        # self.threedi.import_hydx(self.hydx)
-        # # select first manhole from dataset for check
-        # connection = self.hydx.connections[82]
-        # structure = self.hydx.structures[5]
-        # self.threedi.add_structure(connection, structure)
-        # assert "Only first structure" in self._caplog.text
+    # self.threedi.import_hydx(self.hydx)
+    # # select first manhole from dataset for check
+    # connection = self.hydx.connections[82]
+    # structure = self.hydx.structures[5]
+    # self.threedi.add_structure(connection, structure)
+    # assert "Only first structure" in self._caplog.text
 
     def test_add_pump_type_2(self):
         self.threedi.import_hydx(self.hydx)
@@ -223,6 +225,7 @@ class TestThreedi(TestCase):
             "start_node.code": "knp8",
             "end_node.code": "knp55",
             "cross_section_details": {
+                "code": "rectangle_w3.0_open",
                 "shape": 1,
                 "width": 3,
                 "height": None,
@@ -232,7 +235,7 @@ class TestThreedi(TestCase):
             "discharge_coefficient_positive": 0.9,
             "discharge_coefficient_negative": 0.9,
             "sewerage": True,
-            "cross_section_code": "default",
+            "cross_section_code": "rectangle_w3.0_open",
         }
         self.threedi.import_hydx(self.hydx)
         assert self.threedi.weirs[1] == weir_1

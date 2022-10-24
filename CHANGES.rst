@@ -5,7 +5,12 @@ Changelog of hydxlib
 0.8 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Backport changes from https://github.com/threedi/beta-plugins.
+
+- Added threedi-modelchecker as a dependency, and used the 3Di schema in
+  it as a replacement for hydxlib.sql_models.
+
+- Removed PostGRES support (only spatialite remains).
 
 
 0.7 (2020-03-03)

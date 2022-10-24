@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
+from .hydx import Hydx
+
+import csv
 import logging
 import os
-import csv
 
-from hydxlib.hydx import Hydx
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +58,7 @@ def import_hydx(hydx_path):
 
     for f in existing_files:
         csvpath = os.path.join(hydx_path, f)
-        with open(csvpath) as csvfile:
+        with open(csvpath, encoding="utf-8-sig") as csvfile:
             csvreader = csv.DictReader(csvfile, delimiter=";")
             hydx.import_csvfile(csvreader, f)
 
