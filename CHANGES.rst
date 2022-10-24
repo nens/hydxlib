@@ -12,6 +12,8 @@ Changelog of hydxlib
 
 - Removed PostGRES support (only spatialite remains).
 
+- Replaced GDAL with pyproj.
+
 
 0.7 (2020-03-03)
 ----------------

@@ -19,6 +19,7 @@ long_description = "\n\n".join([open("README.rst").read(), open("CHANGES.rst").r
 install_requires = [
     "sqlalchemy",
     "threedi-modelchecker>=0.30",
+    "pyproj>=3",
 ]
 tests_require = ["pytest"]
 

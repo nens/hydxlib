@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from .threedi import Threedi
-from osgeo import __version__ as osgeo_version
-from osgeo import ogr
-from osgeo import osr
+from functools import lru_cache
+from pyproj import Transformer
+from pyproj.crs import CRS
 from sqlalchemy.orm import load_only
 from threedi_modelchecker import ThreediDatabase
 from threedi_modelchecker.threedi_model.models import BoundaryCondition1D
@@ -19,22 +19,28 @@ from threedi_modelchecker.threedi_model.models import Weir
 import logging
 
 
+SOURCE_EPSG = 28992
+TARGET_EPSG = 4326
+
+
 logger = logging.getLogger(__name__)
 
 
-def transform(wkt, srid_source, srid_dest):
-    source_crs = osr.SpatialReference()
-    source_crs.ImportFromEPSG(srid_source)
-    dest_crs = osr.SpatialReference()
-    dest_crs.ImportFromEPSG(srid_dest)
-    if int(osgeo_version[0]) >= 3:
-        source_crs.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
-        dest_crs.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
-    transformation = osr.CoordinateTransformation(source_crs, dest_crs)
+# Constructing a Transformer takes quite long, so we use caching here. The
+# function is deterministic so this doesn't have any side effects.
+@lru_cache(maxsize=1)
+def get_transformer(source_epsg, target_epsg):
+    return Transformer.from_crs(
+        CRS.from_epsg(source_epsg), CRS.from_epsg(target_epsg), always_xy=True
+    )
 
-    point = ogr.CreateGeometryFromWkt(wkt)
-    point.Transform(transformation)
-    return point.ExportToWkt()
+
+def transform(x, y, source_epsg, target_epsg):
+    return get_transformer(source_epsg, target_epsg).transform(x, y)
+
+
+def to_ewkt(x, y, srid):
+    return "srid={};POINT ({}, {})".format(srid, x, y)
 
 
 def quote_nullable(x):
@@ -99,15 +105,14 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     cross_section_dict = {m.code: m.id for m in cross_section_list}
 
     connection_node_list = []
-    srid = 4326
-
     for connection_node in threedi.connection_nodes:
-        wkt = transform("POINT({0} {1})".format(*connection_node["geom"]), 28992, srid)
+        x, y, source_epsg = connection_node["geom"]
+        x, y = transform(x, y, source_epsg, TARGET_EPSG)
         connection_node_list.append(
             ConnectionNode(
                 code=connection_node["code"],
                 storage_area=connection_node["storage_area"],
-                the_geom="srid={0};{1}".format(srid, wkt),
+                the_geom=to_ewkt(x, y, TARGET_EPSG),
             )
         )
     commit_counts["connection_nodes"] = len(connection_node_list)
