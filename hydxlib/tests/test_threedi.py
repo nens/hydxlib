@@ -4,9 +4,9 @@ from hydxlib.importer import import_hydx
 from hydxlib.threedi import check_if_element_is_created_with_same_code
 from hydxlib.threedi import get_hydx_default_profile
 from hydxlib.threedi import Threedi
+from unittest import mock
 from unittest import TestCase
 
-import mock
 import pytest
 
 

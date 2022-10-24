@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Tests for scripts.py"""
 from hydxlib import scripts
+from unittest import mock
 
-import mock
 import pytest
 
 
