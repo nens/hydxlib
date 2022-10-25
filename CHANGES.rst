@@ -14,6 +14,8 @@ Changelog of hydxlib
 
 - Replaced GDAL with pyproj.
 
+- An 'RHK' profile is now interpreted as a closed (instead of open) rectangle.
+
 - Add JSON export format.
 
 

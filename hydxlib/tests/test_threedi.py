@@ -227,7 +227,7 @@ class TestThreedi(TestCase):
             "cross_section_details": {
                 "code": "rectangle_w3.0_open",
                 "shape": 1,
-                "width": 3,
+                "width": 3.0,
                 "height": None,
             },
             "crest_type": 4,

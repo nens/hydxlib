@@ -79,7 +79,7 @@ MANHOLE_INDICATOR_MAPPING = {
 SHAPE_MAPPING = {
     "RND": CrossSectionShape.CIRCLE.value,
     "EIV": CrossSectionShape.EGG.value,
-    "RHK": CrossSectionShape.RECTANGLE.value,
+    "RHK": CrossSectionShape.CLOSED_RECTANGLE.value,
     "TAB": CrossSectionShape.TABULATED_RECTANGLE.value,
     "TPZ": CrossSectionShape.TABULATED_TRAPEZIUM.value,
     "MVR": CrossSectionShape.TABULATED_TRAPEZIUM.value,
@@ -468,6 +468,8 @@ class Threedi:
                 code = "egg_w{width}_h{height}".format(**cross_section)
             elif cross_section["shape"] == CrossSectionShape.RECTANGLE.value:
                 code = "rectangle_w{width}_open".format(**cross_section)
+            elif cross_section["shape"] == CrossSectionShape.CLOSED_RECTANGLE.value:
+                code = "rectangle_w{width}_closed".format(**cross_section)
             elif cross_section["shape"] == CrossSectionShape.TABULATED_RECTANGLE.value:
                 code = "rectangle_w{width}_h{height}".format(**cross_section)
                 cross_section["width"] = "{0}".format(cross_section["width"])
