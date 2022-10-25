@@ -2,7 +2,7 @@ Changelog of hydxlib
 ===================================================
 
 
-0.8 (unreleased)
+1.0 (2022-10-25)
 ----------------
 
 - Backport changes from https://github.com/threedi/beta-plugins.
