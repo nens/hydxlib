@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Tests for importer.py"""
+from hydxlib.exporter import export_json
 from hydxlib.exporter import export_threedi
 from hydxlib.exporter import get_cross_section_definition_id
 from hydxlib.exporter import get_start_and_end_connection_node
@@ -7,6 +8,7 @@ from hydxlib.exporter import write_threedi_to_db
 from hydxlib.importer import import_hydx
 from hydxlib.threedi import Threedi
 
+import json
 import pytest
 
 
@@ -31,7 +33,7 @@ def test_get_cross_section_definition_id_wrong(caplog):
     assert "Cross section" in caplog.text
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def hydx_setup():
     threedi = Threedi()
     hydx_path = "hydxlib/tests/example_files_structures_hydx/"
@@ -59,3 +61,28 @@ def test_write_to_db_con_nodes_huge(hydx_setup, mock_exporter_db):
     }
     commit_counts = write_threedi_to_db(hydx_setup[1], {"db_file": "/some/path"})
     assert commit_counts == commit_counts_expected
+
+
+def test_export_json(hydx_setup, tmp_path):
+    json_path = tmp_path / "export.json"
+    export_json(hydx_setup[0], json_path)
+
+    with open(json_path, "r") as f:
+        data = json.load(f)
+
+    obj_count_expected = {
+        "connection_nodes": 85,
+        "manholes": 85,
+        "pumpstations": 8,
+        "weirs": 6,
+        "cross_sections": 41,
+        "orifices": 2,
+        "impervious_surfaces": 330,
+        "impervious_surface_maps": 330,
+        "pipes": 80,
+        "outlets": 3,
+        "connections": 0,
+    }
+    obj_count_actual = {k: len(data[k]) for k in data}
+
+    assert obj_count_expected == obj_count_actual

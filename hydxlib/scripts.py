@@ -5,6 +5,7 @@ A library for the GWSW-hydx exchange format
 Consists of a import and export functionality for currently hydx and threedi.
 Author: Arnold van 't Veld - Nelen & Schuurmans
 """
+from .exporter import export_json
 from .exporter import export_threedi
 from .importer import import_hydx
 from argparse import ArgumentDefaultsHelpFormatter
@@ -23,28 +24,20 @@ class OptionException(Exception):
     pass
 
 
-def run_import_export(
-    import_type, export_type, hydx_path=None, threedi_db_settings=None
-):
+def run_import_export(export_type, hydx_path=None, out_path=None):
     """Run import and export functionality of hydxlib
 
     Args:
-        import_type (str):          import operator ["hydx", "threedi"]
-        export_type (str):          export operator ["hydx", "threedi", "json"]
+        export_type (str):          export operator ["threedi", "json"]
         hydx_path (str):            folder with your hydx *.csv files
-        threedi_db_settings (str):  path to the 3Di spatialite file
+        out_path (str):             output path
 
     Returns:
-        string: "INFO: method is finished"
-
-    *import_type*
-        hydx
-        threedi (not yet supported)
+        string: "INFO: method is finished"threedi_db_settings
 
     *export_type*
-        hydx (not yet supported)
         threedi
-        json (not yet supported)
+        json
 
     *hydx_path*
         required when selected operator 'hydx'
@@ -67,21 +60,14 @@ def run_import_export(
 
     """
     logger.info("Started exchange of GWSW-hydx at %s", datetime.now())
-    logger.info("import type %r ", import_type)
     logger.info("export type %r ", export_type)
 
-    if import_type == export_type:
-        raise OptionException(
-            "not allowed to use same import and export type %r" % import_type
-        )
-
-    if import_type == "hydx":
-        hydx = import_hydx(hydx_path)
-    else:
-        raise OptionException("no available import type %r is selected" % import_type)
+    hydx = import_hydx(hydx_path)
 
     if export_type == "threedi":
-        export_threedi(hydx, threedi_db_settings)
+        export_threedi(hydx, out_path)
+    elif export_type == "json":
+        export_json(hydx, out_path)
     else:
         raise OptionException("no available export type %r is selected" % export_type)
 
@@ -106,6 +92,16 @@ def get_parser():
         description=__doc__, formatter_class=ArgumentDefaultsHelpFormatter
     )
     parser.add_argument(
+        "hydx_path",
+        nargs=1,
+        help="Folder with your hydx *.csv files",
+    )
+    parser.add_argument(
+        "out_path",
+        nargs=1,
+        help="Output path",
+    )
+    parser.add_argument(
         "-v",
         "--verbose",
         action="store_true",
@@ -114,35 +110,11 @@ def get_parser():
         help="Verbose output",
     )
     parser.add_argument(
-        "--import",
-        dest="import_type",
-        default="hydx",
-        choices=["hydx"],
-        help="select your import operator",
-    )
-    parser.add_argument(
         "--export",
         dest="export_type",
         default="threedi",
-        choices=["threedi"],
+        choices=["threedi", "json"],
         help="select your export operator",
-    )
-
-    group_hydx = parser.add_argument_group("Import or export a hydx")
-    group_hydx.add_argument(
-        "--hydx_path",
-        metavar="HYDX_PATH",
-        dest="hydx_path",
-        help="Folder with your hydx *.csv files",
-        required=True,
-    )
-    group_threedi = parser.add_argument_group("Import or export a 3di database")
-    group_threedi.add_argument(
-        "--sqlite_path",
-        metavar="SQLITE_PATH",
-        dest="sqlite_path",
-        help="Path to your 3Di *.sqlite file",
-        required=True,
     )
     return parser
 
@@ -158,19 +130,17 @@ def main():
     logging.basicConfig(level=log_level, format="%(levelname)s: %(message)s")
 
     # add file handler to logging options
-    if options.import_type == "hydx":
-        log_relpath = os.path.join(
-            os.path.abspath(options.hydx_path), "import_hydx_hydxlib.log"
-        )
-        write_logging_to_file(log_relpath)
-        logger.info("Log file is created in hydx directory: %r", log_relpath)
+    log_relpath = os.path.join(
+        os.path.abspath(options.hydx_path[0]), "import_hydx_hydxlib.log"
+    )
+    write_logging_to_file(log_relpath)
+    logger.info("Log file is created in hydx directory: %r", log_relpath)
 
     try:
         run_import_export(
-            options.import_type,
             options.export_type,
-            options.hydx_path,
-            options.sqlite_path,
+            options.hydx_path[0],
+            options.out_path[0],
         )
     except OptionException as e:
         logger.critical(e)

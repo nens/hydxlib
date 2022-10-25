@@ -2,7 +2,8 @@ A library for the GWSW-hydx exchange format
 ===========================================
 
 RioNED is going to release a new format for exchanging sewerage data called GWSW-hydx.
-This tool could be used to exchange sewerage data from and to a hydx format (``*.csv``).
+hydxlib can be used to import sewerage data from a hydx format (``*.csv``) to
+3Di native spatialite files, or alternatively JSON.
 
 For more information about GWSW-hydx:
 https://apps.gwsw.nl/item_definition
@@ -22,7 +23,7 @@ Therefore only nodes, weirs, orifices and pumpstations are currently supported.
 Installation
 ------------
 
-We're installed with::
+hydxlib is installed with::
 
   $ pip install hydxlib
 
@@ -30,56 +31,41 @@ We're installed with::
 Running script
 --------------
 
-It's possible to run this tool on command line or with python
+It's possible to run this tool on command line or with python.
 
 Commandline::
 
-  $ hydxlib --import_type hydx --export_type threedi etc.
+  $ run-hydxlib path/to/hydx/dir path/to/threedi.sqlite
 
 Python::
 
-  from hydxlib import run_import_export, write_logging_to_file
+  from hydxlib import run_import_export
 
-  log_relpath = os.path.join(os.path.abspath(options.hydx_path),
-                             "import_hydx_hydxlib.log")
-  write_logging_to_file(hydx_path)
-  run_import_export(import_type, export_type, hydx_path, threedi_db_settings)
+  run_import_export("threedi", "path/to/hydx/dir", "path/to/threedi.sqlite")
 
 
 Installation for development
 ----------------------------
 
-We're installed with `pipenv <https://docs.pipenv.org/>`_, a handy wrapper
-around pip and virtualenv. Install that first with ``pip install
-pipenv``. Then run on Linux::
+Clone ``hydxlib`` from github and then install locally using pip + virtualenv::
 
-  $ PIPENV_VENV_IN_PROJECT=1 pipenv --three
-  $ pipenv install --dev
-
-on Windows::
-
-  $ set PIPENV_VENV_IN_PROJECT=1
-  $ pipenv --three
-  $ pipenv install --dev
+  $ virtualenv .venv
+  $ source .venv/bin/activate
+  $ pip install -e .[test]
 
 There will be a script you can run like this::
 
-  $ pipenv run run-hydxlib
+  $ run-hydxlib ...
 
 It runs the `main()` function in `hydxlib/scripts.py`,
 adjust that if necessary. The script is configured in `setup.py` (see
 `entry_points`).
 
-In order to get nicely formatted python files without having to spend manual
-work on it, run the following command periodically::
+Run the tests regularly::
 
-  $ pipenv run black hydxlib
+  $ pytest hydxlib --cov
 
-Run the tests regularly. This also checks with pyflakes, black and it reports
-coverage. Pure luxury::
+The code is linted automatically on each PR. To enable autoformatting locally,
+install `pre-commit`::
 
-  $ pipenv run pytest
-
-The tests are also run automatically on "travis", you'll see it in the pull
-requests. There's also `coverage reporting
-<https://coveralls.io/github/nens/hydxlib>`_ on coveralls.io.
+  $ pre-commit install
