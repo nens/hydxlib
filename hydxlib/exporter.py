@@ -16,6 +16,7 @@ from threedi_modelchecker.threedi_model.models import Pipe
 from threedi_modelchecker.threedi_model.models import Pumpstation
 from threedi_modelchecker.threedi_model.models import Weir
 
+import json
 import logging
 
 
@@ -296,3 +297,10 @@ def get_cross_section_definition_id(connection, cross_section_dict):
             connection["code"],
         )
     return connection
+
+
+def export_json(hydx, path):
+    threedi = Threedi()
+    threedi.import_hydx(hydx)
+    with open(path, "w") as f:
+        json.dump(threedi.__dict__, f)

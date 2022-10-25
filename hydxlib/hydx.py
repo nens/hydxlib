@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from collections import Counter
+from collections import OrderedDict
 
 import logging
 
@@ -38,6 +39,14 @@ class Generic:
 
     def __str__(self):
         return self.__repr__().strip("<>")
+
+    def dict(self):
+        return OrderedDict(
+            [
+                (x["fieldname"].lower(), getattr(self, x["fieldname"].lower()))
+                for x in self.FIELDS
+            ]
+        )
 
 
 class ConnectionNode(Generic):

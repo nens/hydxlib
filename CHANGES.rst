@@ -16,6 +16,8 @@ Changelog of hydxlib
 
 - An 'RHK' profile is now interpreted as a closed (instead of open) rectangle.
 
+- Add JSON export format.
+
 
 0.7 (2020-03-03)
 ----------------
