@@ -14,7 +14,7 @@ Changelog of hydxlib
 
 - Replaced GDAL with pyproj.
 
-- The profiles of 'RHK' pipes and weirs (overstorten) are now closed rectangles.
+- An 'RHK' profile is now interpreted as a closed (instead of open) rectangle.
 
 
 0.7 (2020-03-03)

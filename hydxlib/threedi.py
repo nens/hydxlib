@@ -394,7 +394,7 @@ class Threedi:
             "start_node.code": hydx_connection.identificatieknooppunt1,
             "end_node.code": hydx_connection.identificatieknooppunt2,
             "cross_section_details": {
-                "shape": CrossSectionShape.CLOSED_RECTANGLE.value,
+                "shape": CrossSectionShape.RECTANGLE.value,
                 "width": hydx_structure.breedteoverstortdrempel,
                 "height": None,
             },
