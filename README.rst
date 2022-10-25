@@ -6,10 +6,10 @@ hydxlib can be used to import sewerage data from a hydx format (``*.csv``) to
 3Di native spatialite files, or alternatively JSON.
 
 For more information about GWSW-hydx:
-https://apps.gwsw.nl/item_definition
+https://apps.gwsw.nl/item_hyddef
 
 For more information about the database scheme of 3Di:
-https://docs.3di.lizard.net/en/stable/d_before_you_begin.html#database-overview
+https://docs.3di.live/
 
 Purporse of this script is to exchange information between different formats.
 This means that this library doesn't improve lacking or incorrect data.
