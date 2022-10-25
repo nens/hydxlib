@@ -14,6 +14,8 @@ Changelog of hydxlib
 
 - Replaced GDAL with pyproj.
 
+- Add JSON export format.
+
 
 0.7 (2020-03-03)
 ----------------

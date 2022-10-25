@@ -84,7 +84,7 @@ def test_check_init_connectionnode():
         "toelichtingregel": None,
     }
     connection_node = ConnectionNode.import_csvline(csvline=line_in)
-    assert connection_node.__dict__ == line_out
+    assert connection_node.dict() == line_out
 
 
 def test_check_init_connection():
@@ -131,7 +131,7 @@ def test_check_init_connection():
         "toelichtingregel": None,
     }
     connection = Connection.import_csvline(csvline=line_in)
-    assert connection.__dict__ == line_out
+    assert connection.dict() == line_out
 
 
 class TestHydx(TestCase):
@@ -204,7 +204,7 @@ def test_check_init_structure():
         "toelichtingregel": None,
     }
     structure = Structure.import_csvline(csvline=line_in)
-    assert structure.__dict__ == line_out
+    assert structure.dict() == line_out
 
 
 def test_check_init_profile():
@@ -231,7 +231,7 @@ def test_check_init_profile():
         "toelichtingregel": "Standaard maat",
     }
     profile = Profile.import_csvline(csvline=line_in)
-    assert profile.__dict__ == line_out
+    assert profile.dict() == line_out
 
 
 def test_check_init_surface():
@@ -254,7 +254,7 @@ def test_check_init_surface():
         "toelichtingregel": None,
     }
     connection_node = Surface.import_csvline(csvline=line_in)
-    assert connection_node.__dict__ == line_out
+    assert connection_node.dict() == line_out
 
 
 @pytest.mark.parametrize(
