@@ -140,7 +140,7 @@ class Threedi:
             if connection.typeverbinding in ["GSL", "OPL", "ITR", "DRL"]:
                 if connection.identificatieprofieldefinitie is None:
                     logger.error(
-                        "Connection %r has no profile defined",
+                        "Verbiding %r has no profile defined",
                         connection.identificatieknooppuntofverbinding,
                     )
                 else:
@@ -153,14 +153,14 @@ class Threedi:
 
                     if len(linkedprofiles) > 1:
                         logger.error(
-                            "Only first profile is used to create a profile %r for connection %r",
+                            "Only first profile is used to create a profile %r for verbinding %r",
                             connection.identificatieprofieldefinitie,
                             connection.identificatieknooppuntofverbinding,
                         )
 
                     if len(linkedprofiles) == 0:
                         logger.error(
-                            "Profile %r does not exist for connection %r",
+                            "Profile %r does not exist for verbinding %r",
                             connection.identificatieprofieldefinitie,
                             connection.identificatieknooppuntofverbinding,
                         )
@@ -606,23 +606,13 @@ class Threedi:
         code2 = connection.identificatieknooppunt2
 
         manh_list = [manhole["code"] for manhole in self.manholes]
-        if code1 is None:
-            logger.error(
-                "Record %r has no start connection node defined",
-                connection_code,
-            )
-        elif code1 not in manh_list:
+        if code1 is not None and code1 not in manh_list:
             logger.error(
                 "Start connection node %r could not be found for record %r",
                 code1,
                 connection_code,
             )
-        if code2 is None:
-            logger.error(
-                "Record %r has no end connection node defined",
-                connection_code,
-            )
-        elif code2 not in manh_list:
+        elif code2 is not None and code2 not in manh_list:
             logger.error(
                 "End connection node %r could not be found for record %r",
                 code2,

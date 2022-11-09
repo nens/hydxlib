@@ -5,7 +5,17 @@ Changelog of hydxlib
 1.1 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Log through the hydxlib.* logger instead of the root logger.
+
+- Emit error log if a value is required according to GWSW, but missing.
+
+- Made log messages more comprehensible by using terminology from GWSW instead
+  of internal model and field names.
+
+- Set KNP_MAT to not required.
+
+- Emit more comprehensible error if a verbinding with types GSL, OPL, ITR,
+  or DRL has no profile.
 
 
 1.0 (2022-10-25)
