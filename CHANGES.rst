@@ -2,7 +2,7 @@ Changelog of hydxlib
 ===================================================
 
 
-1.1 (unreleased)
+1.1 (2022-11-09)
 ----------------
 
 - Log through the hydxlib.* logger instead of the root logger.
