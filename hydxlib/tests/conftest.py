@@ -1,7 +1,8 @@
+from hydxlib.importer import import_hydx
 from threedi_modelchecker import ThreediDatabase
 from threedi_modelchecker.schema import ModelSchema
 from unittest import mock
-from hydxlib.importer import import_hydx
+
 import pytest
 
 

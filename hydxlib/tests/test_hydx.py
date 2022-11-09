@@ -10,8 +10,8 @@ from hydxlib.hydx import Structure
 from hydxlib.hydx import Surface
 from hydxlib.hydx import Variation
 
-import pytest
 import logging
+import pytest
 
 
 def test_check_headers(caplog):
@@ -133,14 +133,14 @@ def test_check_init_connection():
     assert connection.dict() == line_out
 
 
-
 def test_check_on_unique(hydx, caplog):
     caplog.set_level(logging.ERROR)
-    hydx._check_on_unique(
-        hydx.connection_nodes, "identificatieknooppuntofverbinding"
-    )
+    hydx._check_on_unique(hydx.connection_nodes, "identificatieknooppuntofverbinding")
     assert len(caplog.records) == 1
-    assert caplog.records[0].message == "Non-unique 'identificatieknooppuntofverbinding' value encountered in Knooppunt knp9"
+    assert (
+        caplog.records[0].message
+        == "Non-unique 'identificatieknooppuntofverbinding' value encountered in Knooppunt knp9"
+    )
 
 
 def test_check_init_structure():

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tests for importer.py"""
 from hydxlib.importer import import_hydx
+
 import logging
 
 
@@ -13,4 +14,7 @@ def test_import_profile_csv_into_hydx_class(hydx, caplog):
     assert hydx.structures[7].identificatieknooppuntofverbinding == "ovs84"
     assert hydx.profiles[37].breedte_diameterprofiel == "400"
     assert len(caplog.records) == 1
-    assert caplog.records[0].message == "Non-unique 'identificatieknooppuntofverbinding' value encountered in Knooppunt knp9"
+    assert (
+        caplog.records[0].message
+        == "Non-unique 'identificatieknooppuntofverbinding' value encountered in Knooppunt knp9"
+    )

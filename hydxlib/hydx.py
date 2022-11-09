@@ -28,16 +28,23 @@ class Generic:
             required = field.get("required", False)
 
             # set fields to defined data type and load into object
-            if value is None or value in ("", "null"):
+            if value in (None, "", "null"):
                 if required:
                     logger.error(
-                        "%s (%s) in %s is required but missing", fieldname, csvheader, instance
+                        "%s (%s) in %s is required but missing",
+                        fieldname,
+                        csvheader,
+                        instance,
                     )
                 setattr(instance, fieldname, None)
             elif datatype == float and not check_string_to_float(value):
                 setattr(instance, fieldname, None)
                 logger.error(
-                    "%s (%s) in %s does not contain a float: %r", fieldname, csvheader, instance, value
+                    "%s (%s) in %s does not contain a float: %r",
+                    fieldname,
+                    csvheader,
+                    instance,
+                    value,
                 )
             else:
                 setattr(instance, fieldname, datatype(value))
@@ -178,7 +185,9 @@ class ConnectionNode(Generic):
         pass
 
     def __repr__(self):
-        return "<Knooppunt %s>" % getattr(self, "identificatieknooppuntofverbinding", None)
+        return "<Knooppunt %s>" % getattr(
+            self, "identificatieknooppuntofverbinding", None
+        )
 
 
 class Connection(Generic):

@@ -6,7 +6,6 @@ from hydxlib.threedi import Threedi
 from unittest import mock
 
 
-
 MANHOLE_SHAPE_RECTANGLE = "rect"
 MANHOLE_SHAPE_ROUND = "rnd"
 
