@@ -139,7 +139,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     #                      ] = connection_node_dict[link['start_node.code']]
     #     except KeyError:
     #         self.log.add(
-    #             logging.ERROR,
+    #             logger.ERROR,
     #             'node of link not found in nodes',
     #             {},
     #             'start node {start_node} or end_node {end_node} of link '
@@ -160,7 +160,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         if manhole["connection_node_id"] not in unique_values:
             man_list.append(Manhole(**manhole))
         else:
-            logging.error(
+            logger.error(
                 "Manhole with %r could not be created in 3di due to double values in ConnectionNode",
                 manhole["code"],
             )
@@ -278,7 +278,7 @@ def get_start_and_end_connection_node(connection, connection_node_dict):
         ]
     else:
         connection["connection_node_end_id"] = None
-        logging.error(
+        logger.error(
             "End node of connection %r not found in connection nodes",
             connection["code"],
         )
