@@ -9,9 +9,8 @@ from hydxlib.hydx import Profile
 from hydxlib.hydx import Structure
 from hydxlib.hydx import Surface
 from hydxlib.hydx import Variation
-from hydxlib.importer import import_hydx
-from unittest import TestCase
 
+import logging
 import pytest
 
 
@@ -134,20 +133,14 @@ def test_check_init_connection():
     assert connection.dict() == line_out
 
 
-class TestHydx(TestCase):
-    def setUp(self):
-        hydx_path = "hydxlib/tests/example_files_structures_hydx/"
-        self.hydx = import_hydx(hydx_path)
-
-    @pytest.fixture(autouse=True)
-    def inject_fixtures(self, caplog):
-        self._caplog = caplog
-
-    def test_check_on_unique(self):
-        self.hydx._check_on_unique(
-            self.hydx.connection_nodes, "identificatieknooppuntofverbinding"
-        )
-        assert "double" in self._caplog.text
+def test_check_on_unique(hydx, caplog):
+    caplog.set_level(logging.ERROR)
+    hydx._check_on_unique(hydx.connection_nodes, "identificatieknooppuntofverbinding")
+    assert len(caplog.records) == 1
+    assert (
+        caplog.records[0].message
+        == "Non-unique 'identificatieknooppuntofverbinding' value encountered in Knooppunt knp9"
+    )
 
 
 def test_check_init_structure():

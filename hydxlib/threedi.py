@@ -138,28 +138,34 @@ class Threedi:
 
             linkedprofile = None
             if connection.typeverbinding in ["GSL", "OPL", "ITR", "DRL"]:
-                linkedprofiles = [
-                    profile
-                    for profile in hydx.profiles
-                    if profile.identificatieprofieldefinitie
-                    == connection.identificatieprofieldefinitie
-                ]
-
-                if len(linkedprofiles) > 1:
-                    logging.error(
-                        "Only first profile is used to create a profile %r for connection %r",
-                        connection.identificatieprofieldefinitie,
-                        connection.identificatieknooppuntofverbinding,
-                    )
-
-                if len(linkedprofiles) == 0:
-                    logging.error(
-                        "Profile %r does not exist for connection %r",
-                        connection.identificatieprofieldefinitie,
+                if connection.identificatieprofieldefinitie is None:
+                    logger.error(
+                        "Verbiding %r has no profile defined",
                         connection.identificatieknooppuntofverbinding,
                     )
                 else:
-                    linkedprofile = linkedprofiles[0]
+                    linkedprofiles = [
+                        profile
+                        for profile in hydx.profiles
+                        if profile.identificatieprofieldefinitie
+                        == connection.identificatieprofieldefinitie
+                    ]
+
+                    if len(linkedprofiles) > 1:
+                        logger.error(
+                            "Only first profile is used to create a profile %r for verbinding %r",
+                            connection.identificatieprofieldefinitie,
+                            connection.identificatieknooppuntofverbinding,
+                        )
+
+                    if len(linkedprofiles) == 0:
+                        logger.error(
+                            "Profile %r does not exist for verbinding %r",
+                            connection.identificatieprofieldefinitie,
+                            connection.identificatieknooppuntofverbinding,
+                        )
+                    else:
+                        linkedprofile = linkedprofiles[0]
 
             if connection.typeverbinding in ["GSL", "OPL", "ITR"]:
                 if linkedprofile is None:
@@ -176,20 +182,20 @@ class Threedi:
                 ]
 
                 if len(linkedstructures) > 1:
-                    logging.error(
+                    logger.error(
                         "Only first structure information is used to create a structure for connection %r",
                         connection.identificatieknooppuntofverbinding,
                     )
 
                 if len(linkedstructures) == 0:
-                    logging.error(
+                    logger.error(
                         "Structure does not exist for connection %r",
                         connection.identificatieknooppuntofverbinding,
                     )
                 else:
                     self.add_structure(connection, linkedstructures[0], linkedprofile)
             else:
-                logger.warning(
+                logger.error(
                     'The following "typeverbinding" is not recognized by 3Di exporter: %s',
                     connection.typeverbinding,
                 )
@@ -209,7 +215,7 @@ class Threedi:
                 if variation.verloopidentificatie == discharge.verloopidentificatie
             ]
             if len(linkedvariations) == 0 and discharge.afvoerendoppervlak is None:
-                logger.warning(
+                logger.error(
                     "The following discharge object misses information to be used by 3Di exporter: %s",
                     discharge.identificatieknooppuntofverbinding,
                 )
@@ -565,7 +571,7 @@ class Threedi:
                     break
 
         if node_code is None:
-            logging.error(
+            logger.error(
                 "Connection node %r could not be found for surface %r",
                 manhole_or_line_id,
                 surface["code"],
@@ -583,11 +589,14 @@ class Threedi:
         self.impervious_surface_maps.append(surface_map)
 
     def get_mapping_value(self, mapping, hydx_value, record_code, name_for_logging):
+        if hydx_value is None:
+            return None
+
         if hydx_value in mapping:
             return mapping[hydx_value]
         else:
-            logging.warning(
-                "Unknown %s: %s (code %r)", name_for_logging, hydx_value, record_code
+            logger.error(
+                "%s has an unknown %s: %s", record_code, name_for_logging, hydx_value
             )
             return None
 
@@ -597,14 +606,14 @@ class Threedi:
         code2 = connection.identificatieknooppunt2
 
         manh_list = [manhole["code"] for manhole in self.manholes]
-        if code1 not in manh_list:
-            logging.error(
+        if code1 is not None and code1 not in manh_list:
+            logger.error(
                 "Start connection node %r could not be found for record %r",
                 code1,
                 connection_code,
             )
-        if code2 not in manh_list:
-            logging.error(
+        elif code2 is not None and code2 not in manh_list:
+            logger.error(
                 "End connection node %r could not be found for record %r",
                 code2,
                 connection_code,
@@ -637,7 +646,7 @@ class Threedi:
     def get_discharge_coefficients(self, hydx_connection, hydx_structure):
         if hydx_connection.stromingsrichting not in ["GSL", "1_2", "2_1", "OPN"]:
             hydx_connection.stromingsrichting = "OPN"
-            logger.warning(
+            logger.error(
                 'Flow direction is not recognized for %r with record %r, "OPN" is assumed',
                 hydx_connection.typeverbinding,
                 hydx_connection.identificatieknooppuntofverbinding,

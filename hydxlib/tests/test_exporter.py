@@ -5,7 +5,6 @@ from hydxlib.exporter import export_threedi
 from hydxlib.exporter import get_cross_section_definition_id
 from hydxlib.exporter import get_start_and_end_connection_node
 from hydxlib.exporter import write_threedi_to_db
-from hydxlib.importer import import_hydx
 from hydxlib.threedi import Threedi
 
 import json
@@ -34,10 +33,8 @@ def test_get_cross_section_definition_id_wrong(caplog):
 
 
 @pytest.fixture
-def hydx_setup():
+def hydx_setup(hydx):
     threedi = Threedi()
-    hydx_path = "hydxlib/tests/example_files_structures_hydx/"
-    hydx = import_hydx(hydx_path)
     threedi.import_hydx(hydx)
     return hydx, threedi
 

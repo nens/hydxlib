@@ -22,16 +22,29 @@ class Generic:
 
         for field in cls.FIELDS:
             fieldname = field["fieldname"].lower()
+            csvheader = field["csvheader"]
             value = csvline[field["csvheader"]]
             datatype = field["type"]
+            required = field.get("required", False)
 
             # set fields to defined data type and load into object
-            if value is None or value == "":
+            if value in (None, "", "null"):
+                if required:
+                    logger.error(
+                        "%s (%s) in %s is required but missing",
+                        fieldname,
+                        csvheader,
+                        instance,
+                    )
                 setattr(instance, fieldname, None)
             elif datatype == float and not check_string_to_float(value):
                 setattr(instance, fieldname, None)
                 logger.error(
-                    "%s in %s does not contain a float: %r", fieldname, instance, value
+                    "%s (%s) in %s does not contain a float: %r",
+                    fieldname,
+                    csvheader,
+                    instance,
+                    value,
                 )
             else:
                 setattr(instance, fieldname, datatype(value))
@@ -109,7 +122,7 @@ class ConnectionNode(Generic):
             "csvheader": "KNP_MAT",
             "fieldname": "MateriaalPut",
             "type": str,
-            "required": True,
+            "required": False,
         },
         {"csvheader": "KNP_VRM", "fieldname": "VormPut", "type": str, "required": True},
         {
@@ -172,7 +185,9 @@ class ConnectionNode(Generic):
         pass
 
     def __repr__(self):
-        return "<ConnectionNode %s>" % getattr(self, "identificatierioolput", None)
+        return "<Knooppunt %s>" % getattr(
+            self, "identificatieknooppuntofverbinding", None
+        )
 
 
 class Connection(Generic):
@@ -291,7 +306,7 @@ class Connection(Generic):
         pass
 
     def __repr__(self):
-        return "<Connection %s: %s>" % (
+        return "<Verbinding %s: %s>" % (
             getattr(self, "typeverbinding", None),
             getattr(self, "identificatieknooppuntofverbinding", None),
         )
@@ -443,7 +458,7 @@ class Structure(Generic):
         pass
 
     def __repr__(self):
-        return "<Structure %s: %s>" % (
+        return "<Kunstwerk %s: %s>" % (
             getattr(self, "typekunstwerk", None),
             getattr(self, "identificatieknooppuntofverbinding", None),
         )
@@ -505,7 +520,7 @@ class Profile(Generic):
         pass
 
     def __repr__(self):
-        return "<Profile %s>" % (getattr(self, "identificatieprofieldefinitie", None),)
+        return "<Profiel %s>" % (getattr(self, "identificatieprofieldefinitie", None),)
 
 
 class Surface(Generic):
@@ -552,7 +567,7 @@ class Surface(Generic):
         pass
 
     def __repr__(self):
-        return "<Surface %s>" % (
+        return "<Oppervlak %s>" % (
             getattr(self, "identificatieknooppuntofverbinding", None),
         )
 
@@ -601,7 +616,7 @@ class Discharge(Generic):
         pass
 
     def __repr__(self):
-        return "<Discharge %s>" % (
+        return "<Debiet %s>" % (
             getattr(self, "identificatieknooppuntofverbinding", None),
         )
 
@@ -788,7 +803,7 @@ class Variation(Generic):
         pass
 
     def __repr__(self):
-        return "<Variation %s>" % (getattr(self, "VerloopIdentificatie", None),)
+        return "<Verloop %s>" % (getattr(self, "VerloopIdentificatie", None),)
 
 
 class Meta:
@@ -839,17 +854,18 @@ class Hydx:
         self._check_on_unique(self.structures, "identificatieknooppuntofverbinding")
         self._check_on_unique(self.profiles, "identificatieprofieldefinitie")
 
-    def _check_on_unique(self, records, unique_field, remove_double=False):
-        values = [m.__dict__[unique_field] for m in records]
+    def _check_on_unique(self, records, unique_field):
+        values = [getattr(m, unique_field) for m in records]
         counter = Counter(values)
-        doubles = [key for key, count in counter.items() if count > 1]
+        duplicates = [(r, v) for (r, v) in zip(records, values) if counter[v] > 1]
 
-        for double in doubles:
-            logging.error(
-                "double values in %s for records with %s %r",
-                records[0].__class__.__name__,
-                unique_field,
-                double,
+        seen = set()
+        for duplicate, value in duplicates:
+            if value in seen:
+                continue
+            seen.add(value)
+            logger.error(
+                "Non-unique '%s' value encountered in %s", unique_field, duplicate
             )
 
 
