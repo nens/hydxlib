@@ -142,7 +142,7 @@ class Threedi:
             if connection.typeverbinding in ["GSL", "OPL", "ITR", "DRL"]:
                 if connection.identificatieprofieldefinitie is None:
                     logger.error(
-                        "Verbiding %r has no profile defined",
+                        "Verbinding %r has no profile defined",
                         connection.identificatieknooppuntofverbinding,
                     )
                 else:
