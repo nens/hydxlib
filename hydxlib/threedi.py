@@ -73,6 +73,8 @@ SEWERAGE_TYPE_MAPPING = {
 MANHOLE_INDICATOR_MAPPING = {
     "INS": ManholeIndicator.MANHOLE.value,
     "UIT": ManholeIndicator.OUTLET.value,
+    "ITP": ManholeIndicator.MANHOLE.value,
+    "CMP": ManholeIndicator.MANHOLE.value,
 }
 
 # for now skipping, "HEU"
