@@ -73,6 +73,8 @@ SEWERAGE_TYPE_MAPPING = {
 MANHOLE_INDICATOR_MAPPING = {
     "INS": ManholeIndicator.MANHOLE.value,
     "UIT": ManholeIndicator.OUTLET.value,
+    "ITP": ManholeIndicator.MANHOLE.value,
+    "CMP": ManholeIndicator.MANHOLE.value,
 }
 
 # for now skipping, "HEU"
@@ -140,7 +142,7 @@ class Threedi:
             if connection.typeverbinding in ["GSL", "OPL", "ITR", "DRL"]:
                 if connection.identificatieprofieldefinitie is None:
                     logger.error(
-                        "Verbiding %r has no profile defined",
+                        "Verbinding %r has no profile defined",
                         connection.identificatieknooppuntofverbinding,
                     )
                 else:
