@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
 """Tests for threedi.py"""
-from hydxlib.threedi import check_if_element_is_created_with_same_code
-from hydxlib.threedi import get_hydx_default_profile, get_mapping_value, get_cross_section_details
-from hydxlib.threedi import Threedi
 from hydxlib.hydx import Profile
+from hydxlib.threedi import check_if_element_is_created_with_same_code
+from hydxlib.threedi import get_cross_section_details
+from hydxlib.threedi import get_hydx_default_profile
+from hydxlib.threedi import get_mapping_value
+from hydxlib.threedi import Threedi
 from unittest import mock
+
 import pytest
+
 
 MANHOLE_SHAPE_RECTANGLE = "rect"
 MANHOLE_SHAPE_ROUND = "rnd"
@@ -38,9 +42,7 @@ def test_get_mapping_value_right():
 
 
 def test_get_mapping_value_missing(caplog):
-    actual = get_mapping_value(
-        {}, None, "01_TEST", name_for_logging="manhole shape"
-    )
+    actual = get_mapping_value({}, None, "01_TEST", name_for_logging="manhole shape")
     assert not caplog.text
     assert actual is None
 
@@ -210,28 +212,43 @@ def get_profile(**kwargs):
     for (k, v) in kwargs.items():
         setattr(x, k, v)
     return x
-    
 
 
-@pytest.mark.parametrize("vrm,bre,hgt,expected", [
-    ("RND", 500, None, {"shape": 2, "width": 0.5, "height": None}),
-    ("EIV", 1100, None, {"shape": 3, "width": 1.1, "height": None}),
-    ("RHK", 800, 500, {"shape": 0, "width": 0.8, "height": 0.5}),
-])
+@pytest.mark.parametrize(
+    "vrm,bre,hgt,expected",
+    [
+        ("RND", 500, None, {"shape": 2, "width": 0.5, "height": None}),
+        ("EIV", 1100, None, {"shape": 3, "width": 1.1, "height": None}),
+        ("RHK", 800, 500, {"shape": 0, "width": 0.8, "height": 0.5}),
+    ],
+)
 def test_get_cross_section_details(vrm, bre, hgt, expected):
-    profiel = get_profile(vormprofiel=vrm, breedte_diameterprofiel=bre, hoogteprofiel=hgt)
+    profiel = get_profile(
+        vormprofiel=vrm, breedte_diameterprofiel=bre, hoogteprofiel=hgt
+    )
     actual = get_cross_section_details(profiel, None, None)
     assert actual == expected
 
 
-@pytest.mark.parametrize("vrm,expected_shape", [
-    ("TAB", 5),
-    ("HEU", 6),
-    ("MVR", 6),
-    ("UVR", 6),
-    ("OVA", 6),
-])
+@pytest.mark.parametrize(
+    "vrm,expected_shape",
+    [
+        ("TAB", 5),
+        ("HEU", 6),
+        ("MVR", 6),
+        ("UVR", 6),
+        ("OVA", 6),
+    ],
+)
 def test_get_cross_section_details_tabulated(vrm, expected_shape):
-    profiel = get_profile(vormprofiel=vrm, tabulatedbreedte="0.1 0.5 1 1.5", tabulatedhoogte="0 0.25 0.5 1")
+    profiel = get_profile(
+        vormprofiel=vrm,
+        tabulatedbreedte="0.1 0.5 1 1.5",
+        tabulatedhoogte="0 0.25 0.5 1",
+    )
     actual = get_cross_section_details(profiel, None, None)
-    assert actual == {"shape": expected_shape, "width": profiel.tabulatedbreedte, "height": profiel.tabulatedhoogte}
+    assert actual == {
+        "shape": expected_shape,
+        "width": profiel.tabulatedbreedte,
+        "height": profiel.tabulatedhoogte,
+    }

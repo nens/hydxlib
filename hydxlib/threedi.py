@@ -134,14 +134,14 @@ def get_cross_section_details(hydx_profile, record_code, name_for_logging):
     shape = SHAPE_MAPPING.get(hydx_profile.vormprofiel)
     if shape is None:
         logger.error(
-            "%s has an unknown %s: %s", record_code, name_for_logging, hydx_profile.vormprofiel
+            "%s has an unknown %s: %s",
+            record_code,
+            name_for_logging,
+            hydx_profile.vormprofiel,
         )
 
-    return {
-        "shape": shape,
-        "width": breedte_diameterprofiel,
-        "height": hoogteprofiel
-    }
+    return {"shape": shape, "width": breedte_diameterprofiel, "height": hoogteprofiel}
+
 
 class Threedi:
     def __init__(self):
@@ -330,11 +330,10 @@ class Threedi:
             "start_node.code": hydx_connection.identificatieknooppunt1,
             "end_node.code": hydx_connection.identificatieknooppunt2,
             "cross_section_details": get_cross_section_details(
-                    hydx_profile,
-                    record_code=hydx_connection.identificatieprofieldefinitie,
-                    name_for_logging="shape of pipe",
-                )
-            ,
+                hydx_profile,
+                record_code=hydx_connection.identificatieprofieldefinitie,
+                name_for_logging="shape of pipe",
+            ),
             "invert_level_start_point": hydx_connection.bobknooppunt1,
             "invert_level_end_point": hydx_connection.bobknooppunt2,
             "original_length": hydx_connection.lengteverbinding,
@@ -455,10 +454,10 @@ class Threedi:
             "start_node.code": hydx_connection.identificatieknooppunt1,
             "end_node.code": hydx_connection.identificatieknooppunt2,
             "cross_section_details": get_cross_section_details(
-                    hydx_profile,
-                    record_code=hydx_connection.identificatieprofieldefinitie,
-                    name_for_logging="shape of orifice",
-                ),
+                hydx_profile,
+                record_code=hydx_connection.identificatieprofieldefinitie,
+                name_for_logging="shape of orifice",
+            ),
             "discharge_coefficient_positive": hydx_connection.discharge_coefficient_positive,
             "discharge_coefficient_negative": hydx_connection.discharge_coefficient_negative,
             "sewerage": True,
