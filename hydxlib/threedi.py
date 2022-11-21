@@ -468,7 +468,6 @@ class Threedi:
 
         connections_with_cross_sections = self.weirs + self.orifices + self.pipes
         for connection in connections_with_cross_sections:
-            print(connection)
             cross_section = connection["cross_section_details"]
             if cross_section["shape"] == CrossSectionShape.CIRCLE.value:
                 code = "round_{width}".format(**cross_section)
