@@ -83,8 +83,10 @@ SHAPE_MAPPING = {
     "EIV": CrossSectionShape.EGG.value,
     "RHK": CrossSectionShape.CLOSED_RECTANGLE.value,
     "TAB": CrossSectionShape.TABULATED_RECTANGLE.value,
-    "TPZ": CrossSectionShape.TABULATED_TRAPEZIUM.value,
+    "HEU": CrossSectionShape.TABULATED_TRAPEZIUM.value,
     "MVR": CrossSectionShape.TABULATED_TRAPEZIUM.value,
+    "UVR": CrossSectionShape.TABULATED_TRAPEZIUM.value,
+    "OVA": CrossSectionShape.TABULATED_TRAPEZIUM.value,
 }
 
 DISCHARGE_COEFFICIENT_MAPPING = {
@@ -105,6 +107,41 @@ SURFACE_INCLINATION_MAPPING = {
     "VLU": SurfaceInclinationType.UITGESTREKT.value,
 }
 
+
+def get_mapping_value(mapping, hydx_value, record_code, name_for_logging):
+    if hydx_value is None:
+        return None
+
+    if hydx_value in mapping:
+        return mapping[hydx_value]
+    else:
+        logger.error(
+            "%s has an unknown %s: %s", record_code, name_for_logging, hydx_value
+        )
+        return None
+
+
+def get_cross_section_details(hydx_profile, record_code, name_for_logging):
+    if hydx_profile.vormprofiel in ("EIV", "RND", "RHK"):
+        breedte_diameterprofiel = transform_unit_mm_to_m(
+            hydx_profile.breedte_diameterprofiel
+        )
+        hoogteprofiel = transform_unit_mm_to_m(hydx_profile.hoogteprofiel)
+    else:
+        breedte_diameterprofiel = hydx_profile.tabulatedbreedte
+        hoogteprofiel = hydx_profile.tabulatedhoogte
+
+    shape = SHAPE_MAPPING.get(hydx_profile.vormprofiel)
+    if shape is None:
+        logger.error(
+            "%s has an unknown %s: %s", record_code, name_for_logging, hydx_profile.vormprofiel
+        )
+
+    return {
+        "shape": shape,
+        "width": breedte_diameterprofiel,
+        "height": hoogteprofiel
+    }
 
 class Threedi:
     def __init__(self):
@@ -258,20 +295,20 @@ class Threedi:
             "surface_level": hydx_connection_node.niveaumaaiveld,
             "width": breedte,
             "length": lengte,
-            "shape": self.get_mapping_value(
+            "shape": get_mapping_value(
                 MANHOLE_SHAPE_MAPPING,
                 hydx_connection_node.vormput,
                 hydx_connection_node.identificatierioolput,
                 name_for_logging="manhole shape",
             ),
             "bottom_level": hydx_connection_node.niveaubinnenonderkantput,
-            "calculation_type": self.get_mapping_value(
+            "calculation_type": get_mapping_value(
                 CALCULATION_TYPE_MAPPING,
                 hydx_connection_node.maaiveldschematisering,
                 hydx_connection_node.identificatierioolput,
                 name_for_logging="manhole surface schematization",
             ),
-            "manhole_indicator": self.get_mapping_value(
+            "manhole_indicator": get_mapping_value(
                 MANHOLE_INDICATOR_MAPPING,
                 hydx_connection_node.typeknooppunt,
                 hydx_connection_node.identificatierioolput,
@@ -286,40 +323,28 @@ class Threedi:
         combined_display_name_string = self.get_connection_display_names_from_manholes(
             hydx_connection
         )
-        if hydx_profile.vormprofiel in ("EIV", "RND", "RHK", "MVR"):
-            breedte_diameterprofiel = transform_unit_mm_to_m(
-                hydx_profile.breedte_diameterprofiel
-            )
-            hoogteprofiel = transform_unit_mm_to_m(hydx_profile.hoogteprofiel)
-        else:
-            breedte_diameterprofiel = hydx_profile.tabulatedbreedte
-            hoogteprofiel = hydx_profile.tabulatedhoogte
 
         pipe = {
             "code": hydx_connection.identificatieknooppuntofverbinding,
             "display_name": combined_display_name_string,
             "start_node.code": hydx_connection.identificatieknooppunt1,
             "end_node.code": hydx_connection.identificatieknooppunt2,
-            "cross_section_details": {
-                "shape": self.get_mapping_value(
-                    SHAPE_MAPPING,
-                    hydx_profile.vormprofiel,
-                    hydx_connection.identificatieprofieldefinitie,
+            "cross_section_details": get_cross_section_details(
+                    hydx_profile,
+                    record_code=hydx_connection.identificatieprofieldefinitie,
                     name_for_logging="shape of pipe",
-                ),
-                "width": breedte_diameterprofiel,
-                "height": hoogteprofiel,
-            },
+                )
+            ,
             "invert_level_start_point": hydx_connection.bobknooppunt1,
             "invert_level_end_point": hydx_connection.bobknooppunt2,
             "original_length": hydx_connection.lengteverbinding,
-            "material": self.get_mapping_value(
+            "material": get_mapping_value(
                 MATERIAL_MAPPING,
                 hydx_profile.materiaal,
                 combined_display_name_string,
                 name_for_logging="pipe material",
             ),
-            "sewerage_type": self.get_mapping_value(
+            "sewerage_type": get_mapping_value(
                 SEWERAGE_TYPE_MAPPING,
                 hydx_connection.typeinzameling,
                 combined_display_name_string,
@@ -424,30 +449,16 @@ class Threedi:
         hydx_connection = self.get_discharge_coefficients(
             hydx_connection, hydx_structure
         )
-        if hydx_profile.vormprofiel in ("EIV", "RND", "RHK", "MVR"):
-            breedte_diameterprofiel = transform_unit_mm_to_m(
-                hydx_profile.breedte_diameterprofiel
-            )
-            hoogteprofiel = transform_unit_mm_to_m(hydx_profile.hoogteprofiel)
-        else:
-            breedte_diameterprofiel = hydx_profile.tabulatedbreedte
-            hoogteprofiel = hydx_profile.tabulatedhoogte
-
         orifice = {
             "code": hydx_connection.identificatieknooppuntofverbinding,
             "display_name": combined_display_name_string,
             "start_node.code": hydx_connection.identificatieknooppunt1,
             "end_node.code": hydx_connection.identificatieknooppunt2,
-            "cross_section_details": {
-                "shape": self.get_mapping_value(
-                    SHAPE_MAPPING,
-                    hydx_profile.vormprofiel,
-                    hydx_connection.identificatieknooppuntofverbinding,
+            "cross_section_details": get_cross_section_details(
+                    hydx_profile,
+                    record_code=hydx_connection.identificatieprofieldefinitie,
                     name_for_logging="shape of orifice",
                 ),
-                "width": breedte_diameterprofiel,
-                "height": hoogteprofiel,
-            },
             "discharge_coefficient_positive": hydx_connection.discharge_coefficient_positive,
             "discharge_coefficient_negative": hydx_connection.discharge_coefficient_negative,
             "sewerage": True,
@@ -503,13 +514,13 @@ class Threedi:
             "code": str(surface_nr),
             "display_name": hydx_surface.identificatieknooppuntofverbinding,
             "area": hydx_surface.afvoerendoppervlak,
-            "surface_class": self.get_mapping_value(
+            "surface_class": get_mapping_value(
                 SURFACE_CLASS_MAPPING,
                 hydx_surface.afvoerkenmerken.split("_")[0],
                 hydx_surface.identificatieknooppuntofverbinding,
                 name_for_logging="surface class",
             ),
-            "surface_inclination": self.get_mapping_value(
+            "surface_inclination": get_mapping_value(
                 SURFACE_INCLINATION_MAPPING,
                 hydx_surface.afvoerkenmerken.split("_")[1],
                 hydx_surface.identificatieknooppuntofverbinding,
@@ -590,18 +601,6 @@ class Threedi:
         self.impervious_surfaces.append(surface)
         self.impervious_surface_maps.append(surface_map)
 
-    def get_mapping_value(self, mapping, hydx_value, record_code, name_for_logging):
-        if hydx_value is None:
-            return None
-
-        if hydx_value in mapping:
-            return mapping[hydx_value]
-        else:
-            logger.error(
-                "%s has an unknown %s: %s", record_code, name_for_logging, hydx_value
-            )
-            return None
-
     def check_if_nodes_of_connection_exists(self, connection):
         connection_code = connection.identificatieknooppuntofverbinding
         code1 = connection.identificatieknooppunt1
@@ -660,7 +659,7 @@ class Threedi:
             hydx_connection.discharge_coefficient_positive = (
                 hydx_structure.contractiecoefficientdoorlaatprofiel
                 or hydx_structure.afvoercoefficientoverstortdrempel
-                or self.get_mapping_value(
+                or get_mapping_value(
                     DISCHARGE_COEFFICIENT_MAPPING,
                     hydx_structure.typekunstwerk,
                     hydx_structure.identificatieknooppuntofverbinding,
@@ -670,7 +669,7 @@ class Threedi:
             hydx_connection.discharge_coefficient_negative = (
                 hydx_structure.contractiecoefficientdoorlaatprofiel
                 or hydx_structure.afvoercoefficientoverstortdrempel
-                or self.get_mapping_value(
+                or get_mapping_value(
                     DISCHARGE_COEFFICIENT_MAPPING,
                     hydx_structure.typekunstwerk,
                     hydx_structure.identificatieknooppuntofverbinding,
@@ -682,7 +681,7 @@ class Threedi:
             hydx_connection.discharge_coefficient_positive = (
                 hydx_structure.contractiecoefficientdoorlaatprofiel
                 or hydx_structure.afvoercoefficientoverstortdrempel
-                or self.get_mapping_value(
+                or get_mapping_value(
                     DISCHARGE_COEFFICIENT_MAPPING,
                     hydx_structure.typekunstwerk,
                     hydx_structure.identificatieknooppuntofverbinding,
@@ -694,7 +693,7 @@ class Threedi:
             hydx_connection.discharge_coefficient_negative = (
                 hydx_structure.contractiecoefficientdoorlaatprofiel
                 or hydx_structure.afvoercoefficientoverstortdrempel
-                or self.get_mapping_value(
+                or get_mapping_value(
                     DISCHARGE_COEFFICIENT_MAPPING,
                     hydx_structure.typekunstwerk,
                     hydx_structure.identificatieknooppuntofverbinding,
