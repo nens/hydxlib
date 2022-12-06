@@ -2,7 +2,7 @@ Changelog of hydxlib
 ===================================================
 
 
-1.2 (unreleased)
+1.2 (2022-12-06)
 ----------------
 
 - Added Heul (HEU), U-Vorm (UVR), Ovaal (OVA) profielen, fixed Muil (MVR),
