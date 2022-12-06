@@ -5,7 +5,8 @@ Changelog of hydxlib
 1.2 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Added Heul (HEU), U-Vorm (UVR), Ovaal (OVA) profielen, fixed Muil (MVR),
+  removed trapezium (TPZ).
 
 
 1.1 (2022-11-09)

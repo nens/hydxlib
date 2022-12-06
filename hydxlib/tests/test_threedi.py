@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
 """Tests for threedi.py"""
+from hydxlib.hydx import Profile
 from hydxlib.threedi import check_if_element_is_created_with_same_code
+from hydxlib.threedi import get_cross_section_details
 from hydxlib.threedi import get_hydx_default_profile
+from hydxlib.threedi import get_mapping_value
 from hydxlib.threedi import Threedi
 from unittest import mock
+
+import pytest
 
 
 MANHOLE_SHAPE_RECTANGLE = "rect"
@@ -17,8 +22,7 @@ def test_get_mapping_value_wrong(caplog):
     }
     shape_code = "SQR"
     record_code = "01_TEST"
-    threedi = Threedi()
-    threedi.get_mapping_value(
+    get_mapping_value(
         MANHOLE_SHAPE_MAPPING, shape_code, record_code, name_for_logging="manhole shape"
     )
     assert "01_TEST has an unknown manhole shape: SQR" in caplog.text
@@ -31,18 +35,14 @@ def test_get_mapping_value_right():
     }
     shape_code = "RND"
     record_code = "01_TEST"
-    threedi = Threedi()
-    shape = threedi.get_mapping_value(
+    shape = get_mapping_value(
         MANHOLE_SHAPE_MAPPING, shape_code, record_code, name_for_logging="manhole shape"
     )
     assert shape == "rnd"
 
 
 def test_get_mapping_value_missing(caplog):
-    threedi = Threedi()
-    actual = threedi.get_mapping_value(
-        {}, None, "01_TEST", name_for_logging="manhole shape"
-    )
+    actual = get_mapping_value({}, None, "01_TEST", name_for_logging="manhole shape")
     assert not caplog.text
     assert actual is None
 
@@ -204,4 +204,51 @@ def test_import_hydx(hydx):
         "crest_type": 4,
         "crest_level": 0.0,
         "cross_section_code": "round_0.4",
+    }
+
+
+def get_profile(**kwargs):
+    x = Profile()
+    for (k, v) in kwargs.items():
+        setattr(x, k, v)
+    return x
+
+
+@pytest.mark.parametrize(
+    "vrm,bre,hgt,expected",
+    [
+        ("RND", 500, None, {"shape": 2, "width": 0.5, "height": None}),
+        ("EIV", 1100, None, {"shape": 3, "width": 1.1, "height": None}),
+        ("RHK", 800, 500, {"shape": 0, "width": 0.8, "height": 0.5}),
+    ],
+)
+def test_get_cross_section_details(vrm, bre, hgt, expected):
+    profiel = get_profile(
+        vormprofiel=vrm, breedte_diameterprofiel=bre, hoogteprofiel=hgt
+    )
+    actual = get_cross_section_details(profiel, None, None)
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "vrm,expected_shape",
+    [
+        ("TAB", 5),
+        ("HEU", 6),
+        ("MVR", 6),
+        ("UVR", 6),
+        ("OVA", 6),
+    ],
+)
+def test_get_cross_section_details_tabulated(vrm, expected_shape):
+    profiel = get_profile(
+        vormprofiel=vrm,
+        tabulatedbreedte="0.1 0.5 1 1.5",
+        tabulatedhoogte="0 0.25 0.5 1",
+    )
+    actual = get_cross_section_details(profiel, None, None)
+    assert actual == {
+        "shape": expected_shape,
+        "width": profiel.tabulatedbreedte,
+        "height": profiel.tabulatedhoogte,
     }
