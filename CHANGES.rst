@@ -8,6 +8,8 @@ Changelog of hydxlib
 - Added Heul (HEU), U-Vorm (UVR), Ovaal (OVA) profielen, fixed Muil (MVR),
   removed trapezium (TPZ).
 
+- Fixed empty connection_node.the_geom column.
+
 
 1.1 (2022-11-09)
 ----------------

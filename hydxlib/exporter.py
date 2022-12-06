@@ -41,7 +41,7 @@ def transform(x, y, source_epsg, target_epsg):
 
 
 def to_ewkt(x, y, srid):
-    return "srid={};POINT ({}, {})".format(srid, x, y)
+    return "srid={};POINT ({} {})".format(srid, x, y)
 
 
 def quote_nullable(x):
