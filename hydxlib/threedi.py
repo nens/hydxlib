@@ -77,7 +77,6 @@ MANHOLE_INDICATOR_MAPPING = {
     "CMP": ManholeIndicator.MANHOLE.value,
 }
 
-# for now skipping, "HEU"
 SHAPE_MAPPING = {
     "RND": CrossSectionShape.CIRCLE.value,
     "EIV": CrossSectionShape.EGG.value,
