@@ -5,7 +5,12 @@ Changelog of hydxlib
 1.3 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Fixed all tabulated profiles (TAB, HEU, MVR, UVR, OVA) and added TPZ and YZP.
+
+- Added inverted egg (EIG) profile.
+
+- Add all cross sections to the 3Di spatialite and use the identifications from the
+  input file.
 
 
 1.2 (2022-12-06)

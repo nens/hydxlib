@@ -2,7 +2,6 @@
 from .hydx import Profile
 from collections import OrderedDict
 from enum import Enum
-from math import sqrt
 from threedi_modelchecker.threedi_model.constants import BoundaryType
 from threedi_modelchecker.threedi_model.constants import CrestType
 from threedi_modelchecker.threedi_model.constants import CrossSectionShape
@@ -80,12 +79,15 @@ MANHOLE_INDICATOR_MAPPING = {
 SHAPE_MAPPING = {
     "RND": CrossSectionShape.CIRCLE.value,
     "EIV": CrossSectionShape.EGG.value,
+    "EIG": CrossSectionShape.INVERTED_EGG.value,
     "RHK": CrossSectionShape.CLOSED_RECTANGLE.value,
-    "TAB": CrossSectionShape.TABULATED_RECTANGLE.value,
-    "HEU": CrossSectionShape.TABULATED_TRAPEZIUM.value,
-    "MVR": CrossSectionShape.TABULATED_TRAPEZIUM.value,
-    "UVR": CrossSectionShape.TABULATED_TRAPEZIUM.value,
-    "OVA": CrossSectionShape.TABULATED_TRAPEZIUM.value,
+    "TAB": CrossSectionShape.YZ_PROFILE.value,
+    "HEU": CrossSectionShape.YZ_PROFILE.value,
+    "MVR": CrossSectionShape.YZ_PROFILE.value,
+    "UVR": CrossSectionShape.YZ_PROFILE.value,
+    "OVA": CrossSectionShape.YZ_PROFILE.value,
+    "TPZ": CrossSectionShape.YZ_PROFILE.value,
+    "YZP": CrossSectionShape.YZ_PROFILE.value,
 }
 
 DISCHARGE_COEFFICIENT_MAPPING = {
@@ -121,14 +123,20 @@ def get_mapping_value(mapping, hydx_value, record_code, name_for_logging):
 
 
 def get_cross_section_details(hydx_profile, record_code, name_for_logging):
-    if hydx_profile.vormprofiel in ("EIV", "RND", "RHK"):
-        breedte_diameterprofiel = transform_unit_mm_to_m(
-            hydx_profile.breedte_diameterprofiel
-        )
-        hoogteprofiel = transform_unit_mm_to_m(hydx_profile.hoogteprofiel)
+    if hydx_profile.vormprofiel in {"EIV", "RND", "RHK", "EIG"}:
+        width = transform_unit_mm_to_m(hydx_profile.breedte_diameterprofiel)
+        height = transform_unit_mm_to_m(hydx_profile.hoogteprofiel)
     else:
-        breedte_diameterprofiel = hydx_profile.tabulatedbreedte
-        hoogteprofiel = hydx_profile.tabulatedhoogte
+        width = hydx_profile.tabulatedbreedte
+        height = hydx_profile.tabulatedhoogte
+
+    if not width:
+        logger.error(
+            "%s has an undefined %s.width: %s",
+            record_code,
+            name_for_logging,
+            hydx_profile.vormprofiel,
+        )
 
     shape = SHAPE_MAPPING.get(hydx_profile.vormprofiel)
     if shape is None:
@@ -139,7 +147,20 @@ def get_cross_section_details(hydx_profile, record_code, name_for_logging):
             hydx_profile.vormprofiel,
         )
 
-    return {"shape": shape, "width": breedte_diameterprofiel, "height": hoogteprofiel}
+    material = get_mapping_value(
+        MATERIAL_MAPPING,
+        hydx_profile.materiaal,
+        record_code,
+        name_for_logging=name_for_logging,
+    )
+
+    return {
+        "code": hydx_profile.identificatieprofieldefinitie,
+        "shape": shape,
+        "width": width,
+        "height": height,
+        "material": material,
+    }
 
 
 class Threedi:
@@ -153,11 +174,11 @@ class Threedi:
         self.pumpstations = []
         self.weirs = []
         self.orifices = []
-        self.cross_sections = []
         self.pipes = []
         self.impervious_surfaces = []
         self.impervious_surface_maps = []
         self.outlets = []
+        self.cross_sections = []
 
         for connection_node in hydx.connection_nodes:
             check_if_element_is_created_with_same_code(
@@ -167,6 +188,15 @@ class Threedi:
             )
             self.add_connection_node(connection_node)
 
+        self.add_cross_section(get_hydx_default_profile())
+        for hydx_profile in hydx.profiles:
+            check_if_element_is_created_with_same_code(
+                hydx_profile.identificatieprofieldefinitie,
+                self.cross_sections,
+                "Profile",
+            )
+            self.add_cross_section(hydx_profile)
+
         for connection in hydx.connections:
             check_if_element_is_created_with_same_code(
                 connection.identificatieknooppuntofverbinding,
@@ -174,7 +204,6 @@ class Threedi:
                 "Connection",
             )
 
-            linkedprofile = None
             if connection.typeverbinding in ["GSL", "OPL", "ITR", "DRL"]:
                 if connection.identificatieprofieldefinitie is None:
                     logger.error(
@@ -182,35 +211,21 @@ class Threedi:
                         connection.identificatieknooppuntofverbinding,
                     )
                 else:
-                    linkedprofiles = [
-                        profile
-                        for profile in hydx.profiles
-                        if profile.identificatieprofieldefinitie
-                        == connection.identificatieprofieldefinitie
-                    ]
-
-                    if len(linkedprofiles) > 1:
-                        logger.error(
-                            "Only first profile is used to create a profile %r for verbinding %r",
-                            connection.identificatieprofieldefinitie,
-                            connection.identificatieknooppuntofverbinding,
-                        )
-
-                    if len(linkedprofiles) == 0:
+                    linkedprofile = self.find_cross_section(
+                        connection.identificatieprofieldefinitie
+                    )
+                    if linkedprofile is None:
                         logger.error(
                             "Profile %r does not exist for verbinding %r",
                             connection.identificatieprofieldefinitie,
                             connection.identificatieknooppuntofverbinding,
                         )
+                        material = None
                     else:
-                        linkedprofile = linkedprofiles[0]
+                        material = linkedprofile["material"]
 
             if connection.typeverbinding in ["GSL", "OPL", "ITR"]:
-                if linkedprofile is None:
-                    linkedprofile = get_hydx_default_profile()
-                    self.add_pipe(connection, linkedprofile)
-                else:
-                    self.add_pipe(connection, linkedprofile)
+                self.add_pipe(connection, material)
             elif connection.typeverbinding in ["PMP", "OVS", "DRL"]:
                 linkedstructures = [
                     structure
@@ -231,14 +246,12 @@ class Threedi:
                         connection.identificatieknooppuntofverbinding,
                     )
                 else:
-                    self.add_structure(connection, linkedstructures[0], linkedprofile)
+                    self.add_structure(connection, linkedstructures[0])
             else:
                 logger.error(
                     'The following "typeverbinding" is not recognized by 3Di exporter: %s',
                     connection.typeverbinding,
                 )
-
-        self.generate_cross_sections()
 
         surface_nr = 1
         for surface in hydx.surfaces:
@@ -317,7 +330,7 @@ class Threedi:
 
         self.manholes.append(manhole)
 
-    def add_pipe(self, hydx_connection, hydx_profile=None):
+    def add_pipe(self, hydx_connection, material):
         self.check_if_nodes_of_connection_exists(hydx_connection)
         combined_display_name_string = self.get_connection_display_names_from_manholes(
             hydx_connection
@@ -328,20 +341,11 @@ class Threedi:
             "display_name": combined_display_name_string,
             "start_node.code": hydx_connection.identificatieknooppunt1,
             "end_node.code": hydx_connection.identificatieknooppunt2,
-            "cross_section_details": get_cross_section_details(
-                hydx_profile,
-                record_code=hydx_connection.identificatieprofieldefinitie,
-                name_for_logging="shape of pipe",
-            ),
+            "cross_section_code": hydx_connection.identificatieprofieldefinitie,
             "invert_level_start_point": hydx_connection.bobknooppunt1,
             "invert_level_end_point": hydx_connection.bobknooppunt2,
             "original_length": hydx_connection.lengteverbinding,
-            "material": get_mapping_value(
-                MATERIAL_MAPPING,
-                hydx_profile.materiaal,
-                combined_display_name_string,
-                name_for_logging="pipe material",
-            ),
+            "material": material,
             "sewerage_type": get_mapping_value(
                 SEWERAGE_TYPE_MAPPING,
                 hydx_connection.typeinzameling,
@@ -352,7 +356,7 @@ class Threedi:
         }
         self.pipes.append(pipe)
 
-    def add_structure(self, hydx_connection, hydx_structure, hydx_profile=None):
+    def add_structure(self, hydx_connection, hydx_structure):
         """Add hydx.structure and hydx.connection into threedi.pumpstation"""
         self.check_if_nodes_of_connection_exists(hydx_connection)
         combined_display_name_string = self.get_connection_display_names_from_manholes(
@@ -366,12 +370,9 @@ class Threedi:
         elif hydx_structure.typekunstwerk == "OVS":
             self.add_weir(hydx_connection, hydx_structure, combined_display_name_string)
         elif hydx_structure.typekunstwerk == "DRL":
-            if hydx_profile is None:
-                hydx_profile = get_hydx_default_profile()
             self.add_orifice(
                 hydx_connection,
                 hydx_structure,
-                hydx_profile,
                 combined_display_name_string,
             )
 
@@ -419,16 +420,20 @@ class Threedi:
             hydx_connection, hydx_structure
         )
 
+        profile = {
+            "code": f"weir_{hydx_connection.identificatieknooppuntofverbinding}",
+            "shape": CrossSectionShape.RECTANGLE.value,
+            "width": hydx_structure.breedteoverstortdrempel,
+            "height": None,
+        }
+        self.cross_sections.append(profile)
+
         weir = {
             "code": hydx_connection.identificatieknooppuntofverbinding,
             "display_name": combined_display_name_string,
             "start_node.code": hydx_connection.identificatieknooppunt1,
             "end_node.code": hydx_connection.identificatieknooppunt2,
-            "cross_section_details": {
-                "shape": CrossSectionShape.RECTANGLE.value,
-                "width": hydx_structure.breedteoverstortdrempel,
-                "height": None,
-            },
+            "cross_section_code": profile["code"],
             "crest_type": CrestType.SHORT_CRESTED.value,
             "crest_level": hydx_structure.niveauoverstortdrempel,
             "discharge_coefficient_positive": hydx_connection.discharge_coefficient_positive,
@@ -441,7 +446,6 @@ class Threedi:
         self,
         hydx_connection,
         hydx_structure,
-        hydx_profile,
         combined_display_name_string,
     ):
         hydx_connection = self.get_discharge_coefficients(
@@ -452,11 +456,7 @@ class Threedi:
             "display_name": combined_display_name_string,
             "start_node.code": hydx_connection.identificatieknooppunt1,
             "end_node.code": hydx_connection.identificatieknooppunt2,
-            "cross_section_details": get_cross_section_details(
-                hydx_profile,
-                record_code=hydx_connection.identificatieprofieldefinitie,
-                name_for_logging="shape of orifice",
-            ),
+            "cross_section_code": hydx_connection.identificatieprofieldefinitie,
             "discharge_coefficient_positive": hydx_connection.discharge_coefficient_positive,
             "discharge_coefficient_negative": hydx_connection.discharge_coefficient_negative,
             "sewerage": True,
@@ -466,45 +466,20 @@ class Threedi:
 
         self.orifices.append(orifice)
 
-    def generate_cross_sections(self):
-        cross_sections = {}
-        cross_sections["unknown"] = {
-            "width": 1,
-            "height": 1,
-            "shape": CrossSectionShape.CIRCLE.value,
-            "code": "unknown",
-        }
+    def add_cross_section(self, hydx_profile):
+        self.cross_sections.append(
+            get_cross_section_details(
+                hydx_profile,
+                record_code=hydx_profile.identificatieprofieldefinitie,
+                name_for_logging="profile",
+            )
+        )
 
-        connections_with_cross_sections = self.weirs + self.orifices + self.pipes
-        for connection in connections_with_cross_sections:
-            cross_section = connection["cross_section_details"]
-            if cross_section["shape"] == CrossSectionShape.CIRCLE.value:
-                code = "round_{width}".format(**cross_section)
-            elif cross_section["shape"] == CrossSectionShape.EGG.value:
-                code = "egg_w{width}_h{height}".format(**cross_section)
-            elif cross_section["shape"] == CrossSectionShape.RECTANGLE.value:
-                code = "rectangle_w{width}_open".format(**cross_section)
-            elif cross_section["shape"] == CrossSectionShape.CLOSED_RECTANGLE.value:
-                code = "rectangle_w{width}_closed".format(**cross_section)
-            elif cross_section["shape"] == CrossSectionShape.TABULATED_RECTANGLE.value:
-                code = "rectangle_w{width}_h{height}".format(**cross_section)
-                cross_section["width"] = "{0}".format(cross_section["width"])
-                cross_section["height"] = "{0}".format(cross_section["height"])
-            elif cross_section["shape"] == CrossSectionShape.TABULATED_TRAPEZIUM.value:
-                code = "muil_w{width}_h{height}".format(**cross_section)
-                height, width = muil_to_tabulated(cross_section)
-                cross_section["width"] = width
-                cross_section["height"] = height
-            else:
-                code = "unknown"
-            # add unique cross_sections to cross_section definition
-            if code not in cross_sections:
-                cross_sections[code] = cross_section
-                cross_sections[code]["code"] = code
-
-            connection["cross_section_code"] = code
-
-        self.cross_sections = cross_sections
+    def find_cross_section(self, identificatieprofieldefinitie):
+        code = identificatieprofieldefinitie or "DEFAULT"
+        for profile in self.cross_sections:
+            if profile["code"] == code:
+                return profile
 
     def add_impervious_surface_from_surface(self, hydx_surface, surface_nr):
         surface = {
@@ -756,64 +731,3 @@ def determine_area(width, height):
         return height * height
     else:
         return 0
-
-
-def muil_to_tabulated(cross_section):
-    hoogte = cross_section["height"]
-    breedte = cross_section["width"]
-    if None not in (hoogte, breedte):
-        increment = hoogte / 15
-        breedte_punt = hoogte / 3 - hoogte / 2
-        hoogte_temp_list = []
-        hoogte_list = []
-        breedte_list = []
-        for x in range(15):
-            if x == 0:
-                hoogte_temp_list.append(hoogte / -2)
-                breedte_list.append(
-                    round(
-                        sqrt(
-                            (
-                                ((hoogte / 2) ** 2 - hoogte_temp_list[x] ** 2)
-                                * (breedte / 2) ** 2
-                            )
-                            / (
-                                (hoogte / 2) ** 2
-                                + 2 * breedte_punt * hoogte_temp_list[x]
-                                + breedte_punt**2
-                            )
-                        )
-                        * 2,
-                        2,
-                    )
-                )
-            else:
-                hoogte_temp_list.append(hoogte_temp_list[x - 1] + increment)
-                breedte_list.append(
-                    round(
-                        sqrt(
-                            (
-                                ((hoogte / 2) ** 2 - hoogte_temp_list[x] ** 2)
-                                * (breedte / 2) ** 2
-                            )
-                            / (
-                                (hoogte / 2) ** 2
-                                + 2 * breedte_punt * hoogte_temp_list[x]
-                                + breedte_punt**2
-                            )
-                        )
-                        * 2,
-                        2,
-                    )
-                )
-            hoogte_list.append(round(hoogte_temp_list[x] * -1 + hoogte / 2, 2))
-        hoogte_list.append(0)
-        breedte_list.append(0)
-        hoogte_list_rev = hoogte_list[::-1]
-        breedte_list_rev = breedte_list[::-1]
-        hoogte_profiel = " ".join([str(elem) for elem in hoogte_list_rev])
-        breedte_profiel = " ".join([str(elem) for elem in breedte_list_rev])
-    else:
-        hoogte_profiel = None
-        breedte_profiel = None
-    return hoogte_profiel, breedte_profiel
