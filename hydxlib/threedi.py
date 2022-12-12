@@ -86,7 +86,7 @@ SHAPE_MAPPING = {
     "MVR": CrossSectionShape.YZ_PROFILE.value,
     "UVR": CrossSectionShape.YZ_PROFILE.value,
     "OVA": CrossSectionShape.YZ_PROFILE.value,
-    "TPZ": CrossSectionShape.YZ_PROFILE.value,
+    # "TPZ": CrossSectionShape.YZ_PROFILE.value, different implementation
     "YZP": CrossSectionShape.YZ_PROFILE.value,
 }
 
@@ -122,10 +122,88 @@ def get_mapping_value(mapping, hydx_value, record_code, name_for_logging):
         return None
 
 
+def get_cross_section_details_tpz(
+    hydx_profile, record_code, name_for_logging, material
+):
+    """https://data.gwsw.nl/?menu_item=individuals&item=../../def/1.5.2/Basis/Trapezium
+
+    Als er geen profiel-geometrie is meegegeven geldt: de
+    breedte leiding = bodembreedte, de hellingshoek aan beide
+    zijden = 45 graden. De hoogte leiding bepaalt dan de bovenbreedte.
+
+    We pick a closed profile here, optionally we open it later
+    """
+    if hydx_profile.tabulatedbreedte and hydx_profile.tabulatedhoogte:
+        return {
+            "code": hydx_profile.identificatieprofieldefinitie,
+            "shape": CrossSectionShape.YZ_PROFILE.value,
+            "width": hydx_profile.tabulatedbreedte,
+            "height": hydx_profile.tabulatedhoogte,
+            "material": material,
+        }
+    else:
+        w = transform_unit_mm_to_m(hydx_profile.breedte_diameterprofiel)
+        h = transform_unit_mm_to_m(hydx_profile.hoogteprofiel)
+        if w is not None and h is not None:
+            height = f"0 {h} {h}"
+            width = f"{w} {w + 2 * h} 0"
+        else:
+            logger.error(
+                "%s has an undefined %s.width: %s",
+                record_code,
+                name_for_logging,
+                hydx_profile.vormprofiel,
+            )
+            width = ""
+            height = ""
+
+        return {
+            "code": hydx_profile.identificatieprofieldefinitie,
+            "shape": CrossSectionShape.TABULATED_TRAPEZIUM.value,
+            "width": width,
+            "height": height,
+            "material": material,
+        }
+
+
+def is_closed(cross_section):
+    if cross_section["shape"] == CrossSectionShape.YZ_PROFILE.value:
+        if not cross_section["height"] or not cross_section["width"]:
+            return None
+        heights = cross_section["height"].split(" ")
+        widths = cross_section["width"].split(" ")
+        return heights[0] == heights[-1] and widths[0] == widths[-1]
+    elif cross_section["shape"] == CrossSectionShape.TABULATED_TRAPEZIUM.value:
+        heights = cross_section["height"].split(" ")
+        widths = cross_section["width"].split(" ")
+        return float(widths[-1]) == 0.0
+    else:
+        return True
+
+
+def make_open(cross_section):
+    """Transform a TPZ cross section from closed to open"""
+    if cross_section["shape"] != CrossSectionShape.TABULATED_TRAPEZIUM.value:
+        raise ValueError("Can't open a profile of type {cross_section['shape']}")
+    cross_section["width"] = cross_section["width"].rsplit(" ", 1)[0]
+    cross_section["height"] = cross_section["height"].rsplit(" ", 1)[0]
+
+
 def get_cross_section_details(hydx_profile, record_code, name_for_logging):
-    if hydx_profile.vormprofiel in {"EIV", "RND", "RHK", "EIG"}:
+    vormprofiel = hydx_profile.vormprofiel
+    material = get_mapping_value(
+        MATERIAL_MAPPING,
+        hydx_profile.materiaal,
+        record_code,
+        name_for_logging=name_for_logging,
+    )
+    if vormprofiel in {"EIV", "RND", "RHK", "EIG"}:
         width = transform_unit_mm_to_m(hydx_profile.breedte_diameterprofiel)
         height = transform_unit_mm_to_m(hydx_profile.hoogteprofiel)
+    elif vormprofiel == "TPZ":
+        return get_cross_section_details_tpz(
+            hydx_profile, record_code, name_for_logging, material
+        )
     else:
         width = hydx_profile.tabulatedbreedte
         height = hydx_profile.tabulatedhoogte
@@ -146,13 +224,6 @@ def get_cross_section_details(hydx_profile, record_code, name_for_logging):
             name_for_logging,
             hydx_profile.vormprofiel,
         )
-
-    material = get_mapping_value(
-        MATERIAL_MAPPING,
-        hydx_profile.materiaal,
-        record_code,
-        name_for_logging=name_for_logging,
-    )
 
     return {
         "code": hydx_profile.identificatieprofieldefinitie,
@@ -223,6 +294,27 @@ class Threedi:
                         material = None
                     else:
                         material = linkedprofile["material"]
+                        profile_is_closed = is_closed(linkedprofile)
+                        if profile_is_closed is not None:
+                            if connection.typeverbinding == "OPL" and is_closed(
+                                linkedprofile
+                            ):
+                                try:
+                                    make_open(linkedprofile)
+                                except ValueError:
+                                    logger.error(
+                                        "Verbinding %r is open (OPL) but uses a closed profiel (%r)",
+                                        connection.identificatieknooppuntofverbinding,
+                                        connection.identificatieprofieldefinitie,
+                                    )
+                            elif connection.typeverbinding != "OPL" and not is_closed(
+                                linkedprofile
+                            ):
+                                logger.error(
+                                    "Verbinding %r is closed but uses an open profiel (%r)",
+                                    connection.identificatieknooppuntofverbinding,
+                                    connection.identificatieprofieldefinitie,
+                                )
 
             if connection.typeverbinding in ["GSL", "OPL", "ITR"]:
                 self.add_pipe(connection, material)

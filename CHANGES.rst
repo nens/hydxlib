@@ -9,8 +9,12 @@ Changelog of hydxlib
 
 - Added inverted egg (EIG) profile.
 
+- Added trapezium profile in case no tabulated profile is given.
+
 - Add all cross sections to the 3Di spatialite and use the identifications from the
   input file.
+
+- Check if a profile is open/closed depending on the verbinding type (OPL or not).
 
 
 1.2 (2022-12-06)

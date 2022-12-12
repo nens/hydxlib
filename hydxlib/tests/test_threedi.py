@@ -5,6 +5,8 @@ from hydxlib.threedi import check_if_element_is_created_with_same_code
 from hydxlib.threedi import get_cross_section_details
 from hydxlib.threedi import get_hydx_default_profile
 from hydxlib.threedi import get_mapping_value
+from hydxlib.threedi import is_closed
+from hydxlib.threedi import make_open
 from hydxlib.threedi import Threedi
 from unittest import mock
 
@@ -210,6 +212,7 @@ def get_profile(**kwargs):
         ("EIV", 1100, None, {"shape": 3, "width": 1.1, "height": None}),
         ("RHK", 800, 500, {"shape": 0, "width": 0.8, "height": 0.5}),
         ("EIG", 1100, None, {"shape": 8, "width": 1.1, "height": None}),
+        ("TPZ", 800, 400, {"shape": 6, "width": "0.8 1.6 0", "height": "0 0.4 0.4"}),
     ],
 )
 def test_get_cross_section_details(vrm, bre, hgt, expected):
@@ -219,6 +222,8 @@ def test_get_cross_section_details(vrm, bre, hgt, expected):
         breedte_diameterprofiel=bre,
         hoogteprofiel=hgt,
         materiaal="PVC",
+        tabulatedbreedte="",
+        tabulatedhoogte="",
     )
     actual = get_cross_section_details(profiel, None, None)
     expected.setdefault("code", "PRO")
@@ -254,3 +259,44 @@ def test_get_cross_section_details_tabulated(vrm, expected_shape):
         "height": profiel.tabulatedhoogte,
         "material": 1,
     }
+
+
+@pytest.mark.parametrize(
+    "cross_section,expected",
+    [
+        ({"shape": 0, "width": 0.5, "height": 0.3}, True),
+        ({"shape": 1, "width": 0.5, "height": 0.3}, True),
+        ({"shape": 2, "width": 0.5, "height": 0.3}, True),
+        ({"shape": 3, "width": 0.5, "height": 0.3}, True),
+        ({"shape": 8, "width": 0.5, "height": 0.3}, True),
+        ({"shape": 7, "width": "0 1 2", "height": "0.5 0 0.5"}, False),
+        ({"shape": 7, "width": "0 1 2 1 0", "height": "0.5 0 0.5 1.0 0.5"}, True),
+        ({"shape": 6, "width": "0 1 0", "height": "0 1 1"}, True),
+        ({"shape": 6, "width": "0 1", "height": "0 1"}, False),
+    ],
+)
+def test_cross_section_is_closed(cross_section, expected):
+    assert is_closed(cross_section) == expected
+
+
+def test_cross_section_make_open():
+    cross_section = {"shape": 6, "width": "0 1 0", "height": "0 1 1"}
+    make_open(cross_section)
+    assert cross_section == {"shape": 6, "width": "0 1", "height": "0 1"}
+
+
+@pytest.mark.parametrize(
+    "cross_section",
+    [
+        {"shape": 0, "width": 0.5, "height": 0.3},
+        {"shape": 1, "width": 0.5, "height": 0.3},
+        {"shape": 2, "width": 0.5, "height": 0.3},
+        {"shape": 3, "width": 0.5, "height": 0.3},
+        {"shape": 8, "width": 0.5, "height": 0.3},
+        {"shape": 7, "width": "0 1 2", "height": "0.5 0 0.5"},
+        {"shape": 7, "width": "0 1 2 1 0", "height": "0.5 0 0.5 1.0 0.5"},
+    ],
+)
+def test_cross_section_make_open_err(cross_section):
+    with pytest.raises(ValueError):
+        assert make_open(cross_section)
