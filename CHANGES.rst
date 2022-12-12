@@ -2,7 +2,7 @@ Changelog of hydxlib
 ===================================================
 
 
-1.3 (unreleased)
+1.3 (2022-12-12)
 ----------------
 
 - Fixed all tabulated profiles (TAB, HEU, MVR, UVR, OVA) and added TPZ and YZP.
