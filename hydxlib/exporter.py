@@ -82,8 +82,15 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     session = db.get_session()
 
     cross_section_list = []
-    for cross_section in threedi.cross_sections.values():
-        cross_section_list.append(CrossSectionDefinition(**cross_section))
+    for profile in threedi.cross_sections:
+        cross_section_list.append(
+            CrossSectionDefinition(
+                code=profile["code"],
+                width=profile["width"],
+                height=profile["height"],
+                shape=profile["shape"],
+            )
+        )
     commit_counts["cross_sections"] = len(cross_section_list)
     # session.bulk_save_objects(cross_section_list)
     # session.commit()
@@ -175,7 +182,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         del pipe["start_node.code"]
         del pipe["end_node.code"]
         del pipe["cross_section_code"]
-        del pipe["cross_section_details"]
         pipe_list.append(Pipe(**pipe))
     commit_counts["pipes"] = len(pipe_list)
     session.bulk_save_objects(pipe_list)
@@ -199,7 +205,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         del weir["start_node.code"]
         del weir["end_node.code"]
         del weir["cross_section_code"]
-        del weir["cross_section_details"]
         weir_list.append(Weir(**weir))
     commit_counts["weirs"] = len(weir_list)
     session.bulk_save_objects(weir_list)
@@ -213,7 +218,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         del orifice["start_node.code"]
         del orifice["end_node.code"]
         del orifice["cross_section_code"]
-        del orifice["cross_section_details"]
         orifice_list.append(Orifice(**orifice))
     commit_counts["orifices"] = len(orifice_list)
     session.bulk_save_objects(orifice_list)
@@ -286,16 +290,18 @@ def get_start_and_end_connection_node(connection, connection_node_dict):
 
 
 def get_cross_section_definition_id(connection, cross_section_dict):
+    id_ = cross_section_dict.get(connection["cross_section_code"])
     if connection["cross_section_code"] in cross_section_dict:
         connection["cross_section_definition_id"] = cross_section_dict[
             connection["cross_section_code"]
         ]
-    else:
-        connection["cross_section_definition_id"] = None
+    if id_ is None:
         logger.error(
             "Cross section definition of connection %r is not found in cross section definitions",
             connection["code"],
         )
+
+    connection["cross_section_definition_id"] = id_
     return connection
 
 

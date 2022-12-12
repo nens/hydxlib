@@ -17,7 +17,7 @@ jobs:
         include:
           # 2018
           - python: 3.7
-            pins: "sqlalchemy==1.3.* threedi-modelchecker==0.30"
+            pins: "sqlalchemy==1.3.*"
             extras: "test"
           # current
           - python: "3.10"
