@@ -81,13 +81,13 @@ SHAPE_MAPPING = {
     "EIV": CrossSectionShape.EGG.value,
     "EIG": CrossSectionShape.INVERTED_EGG.value,
     "RHK": CrossSectionShape.CLOSED_RECTANGLE.value,
-    "TAB": CrossSectionShape.YZ_PROFILE.value,
-    "HEU": CrossSectionShape.YZ_PROFILE.value,
-    "MVR": CrossSectionShape.YZ_PROFILE.value,
-    "UVR": CrossSectionShape.YZ_PROFILE.value,
-    "OVA": CrossSectionShape.YZ_PROFILE.value,
-    # "TPZ": CrossSectionShape.YZ_PROFILE.value, different implementation
-    "YZP": CrossSectionShape.YZ_PROFILE.value,
+    "TAB": CrossSectionShape.TABULATED_YZ.value,
+    "HEU": CrossSectionShape.TABULATED_YZ.value,
+    "MVR": CrossSectionShape.TABULATED_YZ.value,
+    "UVR": CrossSectionShape.TABULATED_YZ.value,
+    "OVA": CrossSectionShape.TABULATED_YZ.value,
+    # "TPZ": CrossSectionShape.TABULATED_YZ.value, different implementation
+    "YZP": CrossSectionShape.TABULATED_YZ.value,
 }
 
 DISCHARGE_COEFFICIENT_MAPPING = {
@@ -136,7 +136,7 @@ def get_cross_section_details_tpz(
     if hydx_profile.tabulatedbreedte and hydx_profile.tabulatedhoogte:
         return {
             "code": hydx_profile.identificatieprofieldefinitie,
-            "shape": CrossSectionShape.YZ_PROFILE.value,
+            "shape": CrossSectionShape.TABULATED_YZ.value,
             "width": hydx_profile.tabulatedbreedte,
             "height": hydx_profile.tabulatedhoogte,
             "material": material,
@@ -167,7 +167,7 @@ def get_cross_section_details_tpz(
 
 
 def is_closed(cross_section):
-    if cross_section["shape"] == CrossSectionShape.YZ_PROFILE.value:
+    if cross_section["shape"] == CrossSectionShape.TABULATED_YZ.value:
         if not cross_section["height"] or not cross_section["width"]:
             return None
         heights = cross_section["height"].split(" ")
