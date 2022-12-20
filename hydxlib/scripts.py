@@ -79,10 +79,10 @@ def run_import_export(export_type, hydx_path=None, out_path=None):
 def write_logging_to_file(log_relpath):
     """Add file handler for writing logfile with warning and errors of hydxlib"""
     fh = logging.FileHandler(log_relpath, mode="w")
-    fh.setLevel(logging.DEBUG)
+    fh.setLevel(logging.WARNING)
     formatter = logging.Formatter("%(levelname)s: %(message)s")
     fh.setFormatter(formatter)
-    logging.getLogger("import_hydx").addHandler(fh)
+    logging.getLogger("hydxlib").addHandler(fh)
     return
 
 
