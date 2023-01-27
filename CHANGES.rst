@@ -2,7 +2,7 @@ Changelog of hydxlib
 ===================================================
 
 
-1.4 (unreleased)
+1.4 (2023-01-27)
 ----------------
 
 - Added threedi-schema as a dependency, removing threedi-modelchecker
