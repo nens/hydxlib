@@ -5,16 +5,16 @@ from pyproj import Transformer
 from pyproj.crs import CRS
 from sqlalchemy.orm import load_only
 from threedi_schema import ThreediDatabase
-from threedi_schema.models import BoundaryCondition1D
-from threedi_schema.models import ConnectionNode
-from threedi_schema.models import CrossSectionDefinition
-from threedi_schema.models import ImperviousSurface
-from threedi_schema.models import ImperviousSurfaceMap
-from threedi_schema.models import Manhole
-from threedi_schema.models import Orifice
-from threedi_schema.models import Pipe
-from threedi_schema.models import Pumpstation
-from threedi_schema.models import Weir
+from threedi_schema.domain.models import BoundaryCondition1D
+from threedi_schema.domain.models import ConnectionNode
+from threedi_schema.domain.models import CrossSectionDefinition
+from threedi_schema.domain.models import ImperviousSurface
+from threedi_schema.domain.models import ImperviousSurfaceMap
+from threedi_schema.domain.models import Manhole
+from threedi_schema.domain.models import Orifice
+from threedi_schema.domain.models import Pipe
+from threedi_schema.domain.models import Pumpstation
+from threedi_schema.domain.models import Weir
 
 import json
 import logging

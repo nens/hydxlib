@@ -1,5 +1,4 @@
 from hydxlib.importer import import_hydx
-from threedi_schema import ModelSchema
 from threedi_schema import ThreediDatabase
 from unittest import mock
 
@@ -9,7 +8,7 @@ import pytest
 @pytest.fixture
 def threedi_db():
     db = ThreediDatabase("")
-    schema = ModelSchema(db)
+    schema = db.schema()
     schema.upgrade(backup=False)
     return db
 

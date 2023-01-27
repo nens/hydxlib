@@ -2,13 +2,13 @@
 from .hydx import Profile
 from collections import OrderedDict
 from enum import Enum
-from threedi_schema.constants import BoundaryType
-from threedi_schema.constants import CrestType
-from threedi_schema.constants import CrossSectionShape
-from threedi_schema.constants import PipeCalculationType
-from threedi_schema.constants import SewerageType
-from threedi_schema.constants import SurfaceClass
-from threedi_schema.constants import SurfaceInclinationType
+from threedi_schema.domain.constants import BoundaryType
+from threedi_schema.domain.constants import CrestType
+from threedi_schema.domain.constants import CrossSectionShape
+from threedi_schema.domain.constants import PipeCalculationType
+from threedi_schema.domain.constants import SewerageType
+from threedi_schema.domain.constants import SurfaceClass
+from threedi_schema.domain.constants import SurfaceInclinationType
 
 import logging
 
