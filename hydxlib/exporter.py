@@ -4,17 +4,17 @@ from functools import lru_cache
 from pyproj import Transformer
 from pyproj.crs import CRS
 from sqlalchemy.orm import load_only
-from threedi_modelchecker import ThreediDatabase
-from threedi_modelchecker.threedi_model.models import BoundaryCondition1D
-from threedi_modelchecker.threedi_model.models import ConnectionNode
-from threedi_modelchecker.threedi_model.models import CrossSectionDefinition
-from threedi_modelchecker.threedi_model.models import ImperviousSurface
-from threedi_modelchecker.threedi_model.models import ImperviousSurfaceMap
-from threedi_modelchecker.threedi_model.models import Manhole
-from threedi_modelchecker.threedi_model.models import Orifice
-from threedi_modelchecker.threedi_model.models import Pipe
-from threedi_modelchecker.threedi_model.models import Pumpstation
-from threedi_modelchecker.threedi_model.models import Weir
+from threedi_schema import ThreediDatabase
+from threedi_schema.models import BoundaryCondition1D
+from threedi_schema.models import ConnectionNode
+from threedi_schema.models import CrossSectionDefinition
+from threedi_schema.models import ImperviousSurface
+from threedi_schema.models import ImperviousSurfaceMap
+from threedi_schema.models import Manhole
+from threedi_schema.models import Orifice
+from threedi_schema.models import Pipe
+from threedi_schema.models import Pumpstation
+from threedi_schema.models import Weir
 
 import json
 import logging
