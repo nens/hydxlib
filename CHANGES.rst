@@ -5,7 +5,7 @@ Changelog of hydxlib
 1.4 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Fixed writing logging to file
 
 
 1.3 (2022-12-12)
