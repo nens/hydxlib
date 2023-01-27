@@ -6,7 +6,7 @@ from hydxlib.exporter import get_cross_section_definition_id
 from hydxlib.exporter import get_start_and_end_connection_node
 from hydxlib.exporter import write_threedi_to_db
 from hydxlib.threedi import Threedi
-from threedi_modelchecker.threedi_model import models
+from threedi_schema import models
 
 import json
 import pytest
