@@ -5,6 +5,8 @@ Changelog of hydxlib
 1.4 (unreleased)
 ----------------
 
+- Added threedi-schema as a dependency, removing threedi-modelchecker
+
 - Fixed writing logging to file
 
 
