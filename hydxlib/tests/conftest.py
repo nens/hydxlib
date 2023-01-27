@@ -8,7 +8,7 @@ import pytest
 @pytest.fixture
 def threedi_db():
     db = ThreediDatabase("")
-    schema = db.schema()
+    schema = db.schema
     schema.upgrade(backup=False)
     return db
 
