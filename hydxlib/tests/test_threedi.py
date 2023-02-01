@@ -202,7 +202,7 @@ def test_import_hydx(hydx):
 
 def get_profile(**kwargs):
     x = Profile()
-    for (k, v) in kwargs.items():
+    for k, v in kwargs.items():
         setattr(x, k, v)
     return x
 

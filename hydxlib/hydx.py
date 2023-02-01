@@ -831,7 +831,6 @@ class Hydx:
         self.variations = []
 
     def import_csvfile(self, csvreader, csvfilename):
-
         csvfile_information = self.CSVFILES[csvfilename]
         check_headers(
             csvreader.fieldnames, csvfile_information["hydx_class"].csvheaders()

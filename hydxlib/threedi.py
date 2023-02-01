@@ -786,7 +786,6 @@ def get_hydx_default_profile():
 
 
 def point(x, y, srid_input=28992):
-
     return x, y, srid_input
 
 
