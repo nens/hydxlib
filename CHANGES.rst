@@ -1,7 +1,7 @@
 Changelog of hydxlib
 ===================================================
 
-1.4.3 (unreleased)
+1.4.3 (2023-02-01)
 ------------------
 
 - Fixed packaging (hydxlib was not listed as package in setup).
