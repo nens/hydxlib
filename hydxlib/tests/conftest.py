@@ -1,8 +1,9 @@
-from hydxlib.importer import import_hydx
-from threedi_schema import ThreediDatabase
 from unittest import mock
 
 import pytest
+from threedi_schema import ThreediDatabase
+
+from hydxlib.importer import import_hydx
 
 
 @pytest.fixture

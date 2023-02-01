@@ -1,17 +1,20 @@
 # -*- coding: utf-8 -*-
 """Tests for hydx.py"""
-from collections import OrderedDict
-from hydxlib.hydx import check_headers
-from hydxlib.hydx import Connection
-from hydxlib.hydx import ConnectionNode
-from hydxlib.hydx import Discharge
-from hydxlib.hydx import Profile
-from hydxlib.hydx import Structure
-from hydxlib.hydx import Surface
-from hydxlib.hydx import Variation
-
 import logging
+from collections import OrderedDict
+
 import pytest
+
+from hydxlib.hydx import (
+    check_headers,
+    Connection,
+    ConnectionNode,
+    Discharge,
+    Profile,
+    Structure,
+    Surface,
+    Variation,
+)
 
 
 def test_check_headers(caplog):

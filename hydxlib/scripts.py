@@ -5,17 +5,14 @@ A library for the GWSW-hydx exchange format
 Consists of a import and export functionality for currently hydx and threedi.
 Author: Arnold van 't Veld - Nelen & Schuurmans
 """
-from .exporter import export_json
-from .exporter import export_threedi
-from .importer import import_hydx
-from argparse import ArgumentDefaultsHelpFormatter
-from argparse import ArgumentParser
-from datetime import datetime
-
 import logging
 import os
 import sys
+from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
+from datetime import datetime
 
+from .exporter import export_json, export_threedi
+from .importer import import_hydx
 
 logger = logging.getLogger(__name__)
 

@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
-from .hydx import Profile
+import logging
 from collections import OrderedDict
 from enum import Enum
-from threedi_schema.domain.constants import BoundaryType
-from threedi_schema.domain.constants import CrestType
-from threedi_schema.domain.constants import CrossSectionShape
-from threedi_schema.domain.constants import PipeCalculationType
-from threedi_schema.domain.constants import SewerageType
-from threedi_schema.domain.constants import SurfaceClass
-from threedi_schema.domain.constants import SurfaceInclinationType
 
-import logging
+from threedi_schema.domain.constants import (
+    BoundaryType,
+    CrestType,
+    CrossSectionShape,
+    PipeCalculationType,
+    SewerageType,
+    SurfaceClass,
+    SurfaceInclinationType,
+)
 
+from .hydx import Profile
 
 logger = logging.getLogger(__name__)
 

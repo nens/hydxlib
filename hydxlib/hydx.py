@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
-from collections import Counter
-from collections import OrderedDict
-
 import logging
-
+from collections import Counter, OrderedDict
 
 logger = logging.getLogger(__name__)
 
