@@ -36,7 +36,7 @@ setup(
     author_email="info@nelen-schuurmans.nl",
     url="https://github.com/nens/hydxlib",
     license="MIT",
-    packages=find_packages("hydxlib*"),
+    packages=find_packages(include="hydxlib*"),
     include_package_data=True,
     zip_safe=False,
     install_requires=install_requires,
