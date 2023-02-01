@@ -41,3 +41,5 @@ docker-compose.override.yml
 # Script itself
 .log
 hydxlib/tests/example_files_structures_hydx/import_hydx_hydxlib.log
+
+.cruft.json
