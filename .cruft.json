@@ -1,0 +1,21 @@
+{
+  "template": "https://github.com/nens/cookiecutter-python-template",
+  "commit": "d4023a9ffaa636b89b724671eacb737d7936e614",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "project_name": "hydxlib",
+      "package_name": "hydxlib",
+      "project_short_description": "Importer and Exporter for GWSW",
+      "_template": "https://github.com/nens/cookiecutter-python-template"
+    }
+  },
+  "skip": [
+    "hydxlib/__init__.py",
+    "hydxlib/scripts.py",
+    "hydxlib/tests",
+    "CHANGES.rst",
+    "README.rst"
+  ],
+  "directory": null
+}

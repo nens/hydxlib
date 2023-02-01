@@ -1,5 +1,4 @@
 [run]
-omit = hydxlib/tests/*
 source = hydxlib
 
 [report]
