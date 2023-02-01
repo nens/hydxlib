@@ -1,6 +1,6 @@
 [run]
-omit = hydxlib/tests/*
 source = hydxlib
+omit = hydxlib/tests/*
 
 [report]
 show_missing = true

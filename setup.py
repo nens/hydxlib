@@ -1,6 +1,8 @@
-from setuptools import setup
-
 import pathlib
+
+from setuptools import find_packages, setup
+
+long_description = "\n\n".join([open("README.rst").read(), open("CHANGES.rst").read()])
 
 
 def get_version():
@@ -14,35 +16,31 @@ def get_version():
         raise RuntimeError("Unable to find version string.")
 
 
-version = get_version()
-long_description = "\n\n".join([open("README.rst").read(), open("CHANGES.rst").read()])
 install_requires = [
     "sqlalchemy",
     "threedi-schema==0.214.*",
     "pyproj>=3",
 ]
-tests_require = ["pytest"]
+
+tests_require = ["pytest", "pytest-cov"]
 
 setup(
     name="hydxlib",
-    version=version,
+    version=get_version(),
     description="Importer and Exporter for GWSW",
     long_description=long_description,
     # Get strings from http://www.python.org/pypi?%3Aaction=list_classifiers
-    classifiers=[
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 3",
-        "Development Status :: 4 - Beta",
-    ],
+    classifiers=["Programming Language :: Python"],
     keywords=[],
     author="Nelen & Schuurmans",
     author_email="info@nelen-schuurmans.nl",
-    url="",
+    url="https://github.com/nens/hydxlib",
     license="MIT",
-    packages=["hydxlib"],
+    packages=find_packages("hydxlib*"),
     include_package_data=True,
     zip_safe=False,
     install_requires=install_requires,
+    python_requires=">=3.7",
     tests_require=tests_require,
     extras_require={"test": tests_require},
     entry_points={"console_scripts": ["run-hydxlib = hydxlib.scripts:main"]},

@@ -16,9 +16,9 @@ node_modules/
 doc/build/
 ansible/*.retry
 .venv
-
-# We're a library, so we want a fresh lockfile
-Pipfile.lock
+bin/
+lib/
+pyvenv.cfg
 
 # Unit test / coverage reports
 .coverage
@@ -29,15 +29,9 @@ htmlcov
 coverage.xml
 .pytest_cache
 
-# Pycharm
+# Pycharm, visual studio
 .idea
+.vscode
 
 # Docker
 docker-compose.override.yml
-
-# Visual Code
-.vscode
-
-# Script itself
-.log
-hydxlib/tests/example_files_structures_hydx/import_hydx_hydxlib.log

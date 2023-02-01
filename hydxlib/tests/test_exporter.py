@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 """Tests for importer.py"""
-from hydxlib.exporter import export_json
-from hydxlib.exporter import export_threedi
-from hydxlib.exporter import get_cross_section_definition_id
-from hydxlib.exporter import get_start_and_end_connection_node
-from hydxlib.exporter import write_threedi_to_db
-from hydxlib.threedi import Threedi
+import json
+
+import pytest
 from threedi_schema import models
 
-import json
-import pytest
+from hydxlib.exporter import (
+    export_json,
+    export_threedi,
+    get_cross_section_definition_id,
+    get_start_and_end_connection_node,
+    write_threedi_to_db,
+)
+from hydxlib.threedi import Threedi
 
 
 def test_get_start_and_end_connection_node_right():
@@ -64,7 +67,7 @@ def test_write_to_db(hydx_setup, mock_exporter_db, threedi_db):
 
     assert (
         session.query(models.ConnectionNode)
-        .filter(models.ConnectionNode.the_geom != None)
+        .filter(models.ConnectionNode.the_geom.isnot(None))
         .count()
         == commit_counts_expected["connection_nodes"]
     )

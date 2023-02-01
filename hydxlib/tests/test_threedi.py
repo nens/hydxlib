@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
 """Tests for threedi.py"""
-from hydxlib.hydx import Profile
-from hydxlib.threedi import check_if_element_is_created_with_same_code
-from hydxlib.threedi import get_cross_section_details
-from hydxlib.threedi import get_hydx_default_profile
-from hydxlib.threedi import get_mapping_value
-from hydxlib.threedi import is_closed
-from hydxlib.threedi import make_open
-from hydxlib.threedi import Threedi
 from unittest import mock
 
 import pytest
 
+from hydxlib.hydx import Profile
+from hydxlib.threedi import (
+    check_if_element_is_created_with_same_code,
+    get_cross_section_details,
+    get_hydx_default_profile,
+    get_mapping_value,
+    is_closed,
+    make_open,
+    Threedi,
+)
 
 MANHOLE_SHAPE_RECTANGLE = "rect"
 MANHOLE_SHAPE_ROUND = "rnd"
@@ -200,7 +202,7 @@ def test_import_hydx(hydx):
 
 def get_profile(**kwargs):
     x = Profile()
-    for (k, v) in kwargs.items():
+    for k, v in kwargs.items():
         setattr(x, k, v)
     return x
 

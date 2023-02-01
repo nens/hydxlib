@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Tests for importer.py"""
-from hydxlib.importer import import_hydx
-
 import logging
+
+from hydxlib.importer import import_hydx
 
 
 def test_import_profile_csv_into_hydx_class(hydx, caplog):

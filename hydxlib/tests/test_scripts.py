@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """Tests for scripts.py"""
-from hydxlib import scripts
 from unittest import mock
+
+from hydxlib import scripts
 
 
 @mock.patch("sys.argv", ["program", "a", "b"])

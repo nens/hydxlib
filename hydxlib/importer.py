@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-from .hydx import Hydx
-
 import csv
 import logging
 import os
 
+from .hydx import Hydx
 
 logger = logging.getLogger(__name__)
 
