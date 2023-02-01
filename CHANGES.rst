@@ -1,10 +1,16 @@
 Changelog of hydxlib
 ===================================================
 
+1.4.2 (unreleased)
+------------------
+
+- Updated required threedi-schema version to 0.214.*
+
+
 1.4.1 (2023-01-31)
 ------------------
 
- - Updated strictly required threedi-schema version to 0.214.3
+- Updated strictly required threedi-schema version to 0.214.3
 
 
 1.4 (2023-01-27)
