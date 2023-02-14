@@ -1,6 +1,6 @@
 {
   "template": "https://github.com/nens/cookiecutter-python-template",
-  "commit": "5270a062449d6890c401eec08ef7991177e614f7",
+  "commit": "023d5ebbe1c376a025987fc2d93c8897cb671ed2",
   "checkout": null,
   "context": {
     "cookiecutter": {
