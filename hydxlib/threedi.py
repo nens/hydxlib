@@ -603,10 +603,12 @@ class Threedi:
     ):
         # aanname dat dit altijd gesloten verharding vlak is (niet duidelijk in handleiding)
         # aanname max voor dwf? of average?
-        if len(linkedvariations) > 0:
-            dwf = max([variation.verloopvolume for variation in linkedvariations])
-        else:
-            dwf = 0
+        verloopvolumes = [
+            float(variation.verloopvolume) * 1000.0
+            for variation in linkedvariations
+            if variation.verloopvolume is not None
+        ]
+        dwf = max(verloopvolumes) if len(verloopvolumes) > 0 else 0.0
 
         if hydx_discharge.afvoerendoppervlak:
             area = hydx_discharge.afvoerendoppervlak
@@ -619,7 +621,7 @@ class Threedi:
             "area": area,
             "surface_class": "gesloten verharding",
             "surface_inclination": "vlak",
-            "dry_weather_flow": float(dwf or 0) * 1000,
+            "dry_weather_flow": dwf,
             "nr_of_inhabitants": hydx_discharge.afvoereenheden,
         }
         self.append_and_map_surface(
