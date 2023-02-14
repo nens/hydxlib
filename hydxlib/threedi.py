@@ -619,7 +619,7 @@ class Threedi:
             "area": area,
             "surface_class": "gesloten verharding",
             "surface_inclination": "vlak",
-            "dry_weather_flow": float(dwf) * 1000,
+            "dry_weather_flow": float(dwf or 0) * 1000,
             "nr_of_inhabitants": hydx_discharge.afvoereenheden,
         }
         self.append_and_map_surface(
