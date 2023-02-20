@@ -4,7 +4,7 @@ Changelog of hydxlib
 1.4.4 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Fix error for missing "VerloopVolume" (VER_VOL).
 
 
 1.4.3 (2023-02-01)
