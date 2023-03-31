@@ -1,7 +1,7 @@
 Changelog of hydxlib
 ===================================================
 
-1.4.5 (unreleased)
+1.4.5 (2023-03-31)
 ------------------
 
 - Make exporter work with SQLAlchemy 2.*
