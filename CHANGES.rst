@@ -4,7 +4,9 @@ Changelog of hydxlib
 1.4.5 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Make exporter work with SQLAlchemy 2.*
+
+- Updated required threedi-schema version to 0.216.*
 
 
 1.4.4 (2023-02-20)
