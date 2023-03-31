@@ -18,7 +18,7 @@ def get_version():
 
 install_requires = [
     "sqlalchemy",
-    "threedi-schema==0.214.*",
+    "threedi-schema==0.216.*",
     "pyproj>=3",
 ]
 

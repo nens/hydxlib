@@ -5,6 +5,7 @@ from functools import lru_cache
 
 from pyproj import Transformer
 from pyproj.crs import CRS
+from sqlalchemy import text
 from sqlalchemy.orm import load_only
 from threedi_schema import ThreediDatabase
 from threedi_schema.domain.models import (
@@ -98,17 +99,24 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     # session.commit()
     for xsec in cross_section_list:
         session.execute(
-            "INSERT INTO v2_cross_section_definition(shape,width,height,code) VALUES({0}, {1}, {2}, {3})".format(
-                quote_nullable(xsec.shape),
-                quote_nullable(xsec.width),
-                quote_nullable(xsec.height),
-                quote_nullable(xsec.code),
+            text(
+                "INSERT INTO v2_cross_section_definition(shape,width,height,code) VALUES({0}, {1}, {2}, {3})".format(
+                    quote_nullable(xsec.shape),
+                    quote_nullable(xsec.width),
+                    quote_nullable(xsec.height),
+                    quote_nullable(xsec.code),
+                )
             )
         )
 
     cross_section_list = (
         session.query(CrossSectionDefinition)
-        .options(load_only("id", "code"))
+        .options(
+            load_only(
+                CrossSectionDefinition.id,
+                CrossSectionDefinition.code,
+            )
+        )
         .order_by(CrossSectionDefinition.id)
         .all()
     )
@@ -131,7 +139,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
 
     connection_node_list = (
         session.query(ConnectionNode)
-        .options(load_only("id", "code"))
+        .options(load_only(ConnectionNode.id, ConnectionNode.code))
         .order_by(ConnectionNode.id)
         .all()
     )
@@ -247,7 +255,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
 
     imp_list = (
         session.query(ImperviousSurface)
-        .options(load_only("id", "code"))
+        .options(load_only(ImperviousSurface.id, ImperviousSurface.code))
         .order_by(ImperviousSurface.id)
         .all()
     )
