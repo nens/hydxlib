@@ -1,7 +1,7 @@
 Changelog of hydxlib
 ===================================================
 
-1.4.6 (unreleased)
+1.5.0 (2023-04-12)
 ------------------
 
 - Extra release to signal updated requirements.
