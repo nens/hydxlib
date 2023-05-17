@@ -4,7 +4,7 @@ Changelog of hydxlib
 1.5.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Updated required threedi-schema version to 0.217.*
 
 
 1.5.0 (2023-04-12)
