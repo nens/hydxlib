@@ -6,6 +6,7 @@ Changelog of hydxlib
 
 - Build the release with the build package instead of setuptools.
 - Rewrite release workflow to use a supported github action for github release.
+- Updated required threedi-schema version to 0.219.*
 
 
 1.5.1 (2023-05-17)
