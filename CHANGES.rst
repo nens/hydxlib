@@ -1,7 +1,7 @@
 Changelog of hydxlib
 ===================================================
 
-1.5.2 (unreleased)
+1.5.2 (2024-03-21)
 ------------------
 
 - Build the release with the build package instead of setuptools.
