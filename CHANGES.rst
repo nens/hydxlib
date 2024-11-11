@@ -4,7 +4,7 @@ Changelog of hydxlib
 1.5.3 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Added check whether outlet code exists in connection nodes.
 
 
 1.5.2 (2024-03-21)
