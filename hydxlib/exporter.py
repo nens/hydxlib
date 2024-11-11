@@ -237,7 +237,11 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     # because of constraints) TO DO: bounds aan meerdere leidingen overslaan
     outlet_list = []
     for outlet in threedi.outlets:
-        outlet["connection_node_id"] = connection_node_dict[outlet["node.code"]]
+        if outlet["node.code"] in connection_node_dict:
+            outlet["connection_node_id"] = connection_node_dict[outlet["node.code"]]
+        else:
+            outlet["connection_node_id"] = None
+            logger.error("Node of outlet not found in connection nodes")
         del outlet["node.code"]
         outlet_list.append(BoundaryCondition1D(**outlet))
 
