@@ -1,7 +1,7 @@
 Changelog of hydxlib
 ===================================================
 
-1.5.4 (unreleased)
+1.6.0 (2025-01-29)
 ------------------
 
 - Drop support for Python 3.7 and 3.8.

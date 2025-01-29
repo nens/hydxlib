@@ -1,3 +1,3 @@
 # fmt: off
-__version__ = '1.5.4.dev0'
+__version__ = '1.6.0'
 # fmt: on
