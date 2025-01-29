@@ -40,7 +40,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=install_requires,
-    python_requires=">=3.7",
+    python_requires=">=3.9",
     tests_require=tests_require,
     extras_require={"test": tests_require},
     entry_points={"console_scripts": ["run-hydxlib = hydxlib.scripts:main"]},
