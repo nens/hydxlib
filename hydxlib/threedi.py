@@ -220,7 +220,7 @@ class Threedi:
     def import_hydx(self, hydx):
         self.connection_nodes = []
         self.connections = []
-        self.pumpstations = []
+        self.pumps = []
         self.weirs = []
         self.orifices = []
         self.pipes = []
@@ -401,14 +401,14 @@ class Threedi:
         self.pipes.append(pipe)
 
     def add_structure(self, hydx_connection, hydx_structure):
-        """Add hydx.structure and hydx.connection into threedi.pumpstation"""
+        """Add hydx.structure and hydx.connection into threedi.pumps"""
         self.check_if_nodes_of_connection_exists(hydx_connection)
         combined_display_name_string = self.get_connection_display_names_from_connection_nodes(
             hydx_connection
         )
 
         if hydx_structure.typekunstwerk == "PMP":
-            self.add_pumpstation(
+            self.add_pump(
                 hydx_connection, hydx_structure, combined_display_name_string
             )
         elif hydx_structure.typekunstwerk == "OVS":
@@ -420,32 +420,32 @@ class Threedi:
                 combined_display_name_string,
             )
 
-    def add_pumpstation(
+    def add_pump(
         self, hydx_connection, hydx_structure, combined_display_name_string
     ):
         if hydx_structure.aanslagniveaubovenstrooms is not None:
-            pumpstation_type = 2
-            pumpstation_start_level = hydx_structure.aanslagniveaubovenstrooms
-            pumpstation_stop_level = hydx_structure.afslagniveaubovenstrooms
+            pump_type = 2
+            pump_start_level = hydx_structure.aanslagniveaubovenstrooms
+            pump_stop_level = hydx_structure.afslagniveaubovenstrooms
         else:
-            pumpstation_type = 1
-            pumpstation_start_level = hydx_structure.aanslagniveaubenedenstrooms
-            pumpstation_stop_level = hydx_structure.afslagniveaubenedenstrooms
+            pump_type = 1
+            pump_start_level = hydx_structure.aanslagniveaubenedenstrooms
+            pump_stop_level = hydx_structure.afslagniveaubenedenstrooms
 
-        pumpstation = {
+        pump = {
             "code": hydx_connection.identificatieknooppuntofverbinding,
             "display_name": combined_display_name_string,
             "start_node.code": hydx_connection.identificatieknooppunt1,
             "end_node.code": hydx_connection.identificatieknooppunt2,
-            "type_": pumpstation_type,
-            "start_level": pumpstation_start_level,
-            "lower_stop_level": pumpstation_stop_level,
+            "type_": pump_type,
+            "start_level": pump_start_level,
+            "lower_stop_level": pump_stop_level,
             # upper_stop_level is not supported by hydx
             "upper_stop_level": None,
             "capacity": transform_capacity_to_ls(hydx_structure.pompcapaciteit),
             "sewerage": True,
         }
-        self.pumpstations.append(pumpstation)
+        self.pumps.append(pump)
 
     def add_weir(self, hydx_connection, hydx_structure, combined_display_name_string):
         waterlevel_boundary = getattr(hydx_structure, "buitenwaterstand", None)
@@ -650,7 +650,7 @@ class Threedi:
         display_name2 = node_dict.get(code2, default_code)
         combined_display_name_string = display_name1 + "-" + display_name2
 
-        all_connections = self.pumpstations + self.weirs + self.orifices
+        all_connections = self.pumps + self.weirs + self.orifices
         nr_connections = [
             element["display_name"]
             for element in all_connections

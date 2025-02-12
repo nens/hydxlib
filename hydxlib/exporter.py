@@ -7,6 +7,7 @@ from pyproj import Transformer
 from pyproj.crs import CRS
 from sqlalchemy import text
 from sqlalchemy.orm import load_only
+from geoalchemy2.functions import ST_AsText, ST_MakeLine
 from threedi_schema import ThreediDatabase
 from threedi_schema.domain.models import (
     BoundaryCondition1D,
@@ -15,7 +16,8 @@ from threedi_schema.domain.models import (
     ImperviousSurfaceMap,
     Orifice,
     Pipe,
-    Pumpstation,
+    Pump,
+    PumpMap,
     Weir,
 )
 
@@ -127,13 +129,42 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     session.commit()
 
     pump_list = []
-    for pump in threedi.pumpstations:
+    pump_map_list = []
+    commit_counts["pumps"] = 0
+    for pump in threedi.pumps:
         pump = get_start_and_end_connection_node(pump, connection_node_dict)
         del pump["start_node.code"]
         del pump["end_node.code"]
-        pump_list.append(Pumpstation(**pump))
-    commit_counts["pumpstations"] = len(pump_list)
-    session.bulk_save_objects(pump_list)
+        connection_node_start_id = pump["connection_node_start_id"]
+        connection_node_end_id = pump["connection_node_end_id"]
+        pump["connection_node_id"] = connection_node_start_id
+        del pump["connection_node_start_id"]
+        del pump["connection_node_end_id"]
+        pump_object = Pump(**pump)
+        pump_list.append(pump_object)
+        # without flushing and refreshing at this point there is no pump id to reference in pump_map
+        session.add(pump_object)
+        session.flush()
+        session.refresh()
+
+        pump_map_geom = session.query(
+            ST_AsText(ST_MakeLine(ConnectionNode.geom))
+        ).filter(
+            ConnectionNode.id.in_([connection_node_start_id, connection_node_end_id])
+        ).scalar()
+        pump_map_list.append(
+            PumpMap(
+                pump_id=pump_object.id,
+                connection_node_id_end=connection_node_end_id,
+                geom=pump_map_geom,
+                code=pump["code"],
+                display_name=pump["display_name"],
+            )
+        )
+
+        commit_counts["pumps"] += 1
+
+    session.bulk_save_objects(pump_map_list)
     session.commit()
 
     weir_list = []
