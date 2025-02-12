@@ -147,24 +147,26 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         session.flush()
         session.refresh()
 
-        pump_map_geom = session.query(
-            ST_AsText(ST_MakeLine(ConnectionNode.geom))
-        ).filter(
-            ConnectionNode.id.in_([connection_node_start_id, connection_node_end_id])
-        ).scalar()
-        pump_map_list.append(
-            PumpMap(
-                pump_id=pump_object.id,
-                connection_node_id_end=connection_node_end_id,
-                geom=pump_map_geom,
-                code=pump["code"],
-                display_name=pump["display_name"],
+        if connection_node_start_id != None and connection_node_end_id != None:
+            pump_map_geom = session.query(
+                ST_AsText(ST_MakeLine(ConnectionNode.geom))
+            ).filter(
+                ConnectionNode.id.in_([connection_node_start_id, connection_node_end_id])
+            ).scalar()
+            pump_map_list.append(
+                PumpMap(
+                    pump_id=pump_object.id,
+                    connection_node_id_end=connection_node_end_id,
+                    geom=pump_map_geom,
+                    code=pump["code"],
+                    display_name=pump["display_name"],
+                )
             )
-        )
 
         commit_counts["pumps"] += 1
 
-    session.bulk_save_objects(pump_map_list)
+    if len(pump_map_list) > 0:
+        session.bulk_save_objects(pump_map_list)
     session.commit()
 
     weir_list = []
