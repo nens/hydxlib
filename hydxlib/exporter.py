@@ -11,10 +11,8 @@ from threedi_schema import ThreediDatabase
 from threedi_schema.domain.models import (
     BoundaryCondition1D,
     ConnectionNode,
-    CrossSectionDefinition,
     ImperviousSurface,
     ImperviousSurfaceMap,
-    Manhole,
     Orifice,
     Pipe,
     Pumpstation,
@@ -84,43 +82,13 @@ def write_threedi_to_db(threedi, threedi_db_settings):
 
     session = db.get_session()
 
-    cross_section_list = []
+    cross_section_dict = {}
     for profile in threedi.cross_sections:
-        cross_section_list.append(
-            CrossSectionDefinition(
-                code=profile["code"],
-                width=profile["width"],
-                height=profile["height"],
-                shape=profile["shape"],
-            )
-        )
-    commit_counts["cross_sections"] = len(cross_section_list)
-    # session.bulk_save_objects(cross_section_list)
-    # session.commit()
-    for xsec in cross_section_list:
-        session.execute(
-            text(
-                "INSERT INTO v2_cross_section_definition(shape,width,height,code) VALUES({0}, {1}, {2}, {3})".format(
-                    quote_nullable(xsec.shape),
-                    quote_nullable(xsec.width),
-                    quote_nullable(xsec.height),
-                    quote_nullable(xsec.code),
-                )
-            )
-        )
-
-    cross_section_list = (
-        session.query(CrossSectionDefinition)
-        .options(
-            load_only(
-                CrossSectionDefinition.id,
-                CrossSectionDefinition.code,
-            )
-        )
-        .order_by(CrossSectionDefinition.id)
-        .all()
-    )
-    cross_section_dict = {m.code: m.id for m in cross_section_list}
+        cross_section_dict[profile["code"]] = {
+            "width": profile["width"],
+            "height": profile["height"],
+            "shape": profile["shape"],
+        }
 
     connection_node_list = []
     for connection_node in threedi.connection_nodes:
@@ -130,7 +98,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
             ConnectionNode(
                 code=connection_node["code"],
                 storage_area=connection_node["storage_area"],
-                the_geom=to_ewkt(x, y, TARGET_EPSG),
+                geom=to_ewkt(x, y, TARGET_EPSG),
             )
         )
     commit_counts["connection_nodes"] = len(connection_node_list)
@@ -145,50 +113,11 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     )
     connection_node_dict = {m.code: m.id for m in connection_node_list}
 
-    # # add extra references for link nodes (one node, multiple linked codes
-    # for link in threedi.links:
-    #     try:
-    #         if link['end_node.code'] in connection_node_dict:
-    #             connection_node_dict[link['end_node.code']
-    #                      ] = connection_node_dict[link['start_node.code']]
-    #         else:
-    #             connection_node_dict[link['end_node.code']
-    #                      ] = connection_node_dict[link['start_node.code']]
-    #     except KeyError:
-    #         self.log.add(
-    #             logger.ERROR,
-    #             'node of link not found in nodes',
-    #             {},
-    #             'start node {start_node} or end_node {end_node} of link '
-    #             'definition not found',
-    #             {'start_node': link['start_node.code'],
-    #              'end_node': link['end_node.code']}
-    #         )
-
-    # connection_node_dict[None] = None
-    # connection_node_dict[''] = None
-
-    man_list = []
-    threedi.manholes.reverse()
-    for manhole in threedi.manholes:
-        unique_values = [m.__dict__["connection_node_id"] for m in man_list]
-        manhole["connection_node_id"] = connection_node_dict[manhole["code"]]
-
-        if manhole["connection_node_id"] not in unique_values:
-            man_list.append(Manhole(**manhole))
-        else:
-            logger.error(
-                "Manhole with %r could not be created in 3di due to double values in ConnectionNode",
-                manhole["code"],
-            )
-    commit_counts["manholes"] = len(man_list)
-    session.bulk_save_objects(man_list)
-    session.commit()
 
     pipe_list = []
     for pipe in threedi.pipes:
         pipe = get_start_and_end_connection_node(pipe, connection_node_dict)
-        pipe = get_cross_section_definition_id(pipe, cross_section_dict)
+        pipe = get_cross_section_fields(pipe, cross_section_dict)
         del pipe["start_node.code"]
         del pipe["end_node.code"]
         del pipe["cross_section_code"]
@@ -210,7 +139,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     weir_list = []
     for weir in threedi.weirs:
         weir = get_start_and_end_connection_node(weir, connection_node_dict)
-        weir = get_cross_section_definition_id(weir, cross_section_dict)
+        weir = get_cross_section_fields(weir, cross_section_dict)
 
         del weir["start_node.code"]
         del weir["end_node.code"]
@@ -223,7 +152,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     orifice_list = []
     for orifice in threedi.orifices:
         orifice = get_start_and_end_connection_node(orifice, connection_node_dict)
-        orifice = get_cross_section_definition_id(orifice, cross_section_dict)
+        orifice = get_cross_section_fields(orifice, cross_section_dict)
 
         del orifice["start_node.code"]
         del orifice["end_node.code"]
@@ -303,19 +232,20 @@ def get_start_and_end_connection_node(connection, connection_node_dict):
     return connection
 
 
-def get_cross_section_definition_id(connection, cross_section_dict):
-    id_ = cross_section_dict.get(connection["cross_section_code"])
+def get_cross_section_fields(connection, cross_section_dict):
     if connection["cross_section_code"] in cross_section_dict:
-        connection["cross_section_definition_id"] = cross_section_dict[
+        profile = cross_section_dict[
             connection["cross_section_code"]
         ]
-    if id_ is None:
+        connection["cross_section_shape"] = profile["shape"]
+        connection["cross_section_width"] = profile["width"]
+        connection["cross_section_height"] = profile["height"]
+    else:
         logger.error(
             "Cross section definition of connection %r is not found in cross section definitions",
             connection["code"],
         )
 
-    connection["cross_section_definition_id"] = id_
     return connection
 
 
