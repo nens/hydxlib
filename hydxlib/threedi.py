@@ -186,6 +186,7 @@ def get_cross_section_details(hydx_profile, record_code, name_for_logging):
     else:
         width = hydx_profile.tabulatedbreedte
         height = hydx_profile.tabulatedhoogte
+        shape = CrossSectionShape.TABULATED_RECTANGLE.value
 
     if not width:
         logger.error(
@@ -386,17 +387,16 @@ class Threedi:
             "start_node.code": hydx_connection.identificatieknooppunt1,
             "end_node.code": hydx_connection.identificatieknooppunt2,
             "cross_section_code": hydx_connection.identificatieprofieldefinitie,
-            "invert_level_start_point": hydx_connection.bobknooppunt1,
-            "invert_level_end_point": hydx_connection.bobknooppunt2,
-            "original_length": hydx_connection.lengteverbinding,
-            "material": material,
+            "invert_level_start": hydx_connection.bobknooppunt1,
+            "invert_level_end": hydx_connection.bobknooppunt2,
+            "material_id": material,
             "sewerage_type": get_mapping_value(
                 SEWERAGE_TYPE_MAPPING,
                 hydx_connection.typeinzameling,
                 combined_display_name_string,
                 name_for_logging="pipe sewer type",
             ),
-            "calculation_type": 1,
+            "exchange_type": 1,
         }
         self.pipes.append(pipe)
 
