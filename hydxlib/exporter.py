@@ -97,8 +97,8 @@ def write_threedi_to_db(threedi, threedi_db_settings):
 
     session = db.get_session()
 
-    import ipdb
-    ipdb.set_trace()
+    # import ipdb
+    # ipdb.set_trace()
 
     cross_section_dict = {}
     for profile in threedi.cross_sections:
@@ -108,7 +108,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
             "shape": profile["shape"],
         }
     
-    ipdb.set_trace()
+    # ipdb.set_trace()
 
     connection_node_list = []
     for connection_node in threedi.connection_nodes:
@@ -134,7 +134,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     )
     connection_node_dict = {m.code: {"id": m.id, "geom": m.geom} for m in connection_node_list}
 
-    ipdb.set_trace()
+    # ipdb.set_trace()
 
     pipe_list = []
     for pipe in threedi.pipes:
@@ -190,31 +190,31 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     #     session.bulk_save_objects(pump_map_list)
     # session.commit()
 
-    # weir_list = []
-    # for weir in threedi.weirs:
-    #     weir = get_start_and_end_connection_node(weir, connection_node_dict)
-    #     weir = get_cross_section_fields(weir, cross_section_dict)
+    weir_list = []
+    for weir in threedi.weirs:
+        weir = get_start_and_end_connection_node(weir, connection_node_dict)
+        weir = get_cross_section_fields(weir, cross_section_dict)
+        weir = get_geom_from_nodes(weir, connection_node_dict)
+        del weir["start_node.code"]
+        del weir["end_node.code"]
+        del weir["cross_section_code"]
+        weir_list.append(Weir(**weir))
+    commit_counts["weirs"] = len(weir_list)
+    session.bulk_save_objects(weir_list)
+    session.commit()
 
-    #     del weir["start_node.code"]
-    #     del weir["end_node.code"]
-    #     del weir["cross_section_code"]
-    #     weir_list.append(Weir(**weir))
-    # commit_counts["weirs"] = len(weir_list)
-    # session.bulk_save_objects(weir_list)
-    # session.commit()
-
-    # orifice_list = []
-    # for orifice in threedi.orifices:
-    #     orifice = get_start_and_end_connection_node(orifice, connection_node_dict)
-    #     orifice = get_cross_section_fields(orifice, cross_section_dict)
-
-    #     del orifice["start_node.code"]
-    #     del orifice["end_node.code"]
-    #     del orifice["cross_section_code"]
-    #     orifice_list.append(Orifice(**orifice))
-    # commit_counts["orifices"] = len(orifice_list)
-    # session.bulk_save_objects(orifice_list)
-    # session.commit()
+    orifice_list = []
+    for orifice in threedi.orifices:
+        orifice = get_start_and_end_connection_node(orifice, connection_node_dict)
+        orifice = get_cross_section_fields(orifice, cross_section_dict)
+        orifice = get_geom_from_nodes(orifice, connection_node_dict)
+        del orifice["start_node.code"]
+        del orifice["end_node.code"]
+        del orifice["cross_section_code"]
+        orifice_list.append(Orifice(**orifice))
+    commit_counts["orifices"] = len(orifice_list)
+    session.bulk_save_objects(orifice_list)
+    session.commit()
 
     # # Outlets (must be saved after weirs, orifice, pumpstation, etc.
     # # because of constraints) TO DO: bounds aan meerdere leidingen overslaan
@@ -292,8 +292,24 @@ def get_cross_section_fields(connection, cross_section_dict):
             connection["cross_section_code"]
         ]
         connection["cross_section_shape"] = profile["shape"]
-        connection["cross_section_width"] = profile["width"]
-        connection["cross_section_height"] = profile["height"]
+        if connection["cross_section_shape"] in (5,6,7):
+            # tabulated_YZ: width -> Y; height -> Z
+            if connection["cross_section_shape"] == 7:
+                col1 = profile["width"]
+                col2 = profile["height"]
+            # tabulated_trapezium or tabulated_rectangle: height, width
+            else:
+                col1 = profile["height"]
+                col2 = profile["width"]
+            connection["cross_section_table"] = None
+            if isinstance(profile["width"], str) and isinstance(profile["height"], str):
+                col1 = col1.split()
+                col2 = col2.split()
+                if len(col1) == len(col2):
+                    connection["cross_section_table"] = '\n'.join([','.join(row) for row in zip(col1, col2)])
+        elif profile["shape"] is not None:
+            connection["cross_section_width"] = profile["width"]
+            connection["cross_section_height"] = profile["height"]
     else:
         logger.error(
             "Cross section definition of connection %r is not found in cross section definitions",
@@ -308,13 +324,13 @@ def get_geom_from_nodes(connection, connection_node_dict):
         start_node_geom = connection_node_dict[connection["start_node.code"]]["geom"]
     else:
         start_node_geom = None
-        logger.error(f"End node of connection {connection["code"]} not found in connection nodes")
+        logger.error(f'End node of connection {connection["code"]} not found in connection nodes')
     
     if connection["start_node.code"] in connection_node_dict:
         end_node_geom = connection_node_dict[connection["start_node.code"]]["geom"]
     else:
         end_node_geom = None
-        logger.error(f"Start node of connection {connection["code"]} not found in connection nodes")
+        logger.error(f'Start node of connection {connection["code"]} not found in connection nodes')
     
     if start_node_geom and end_node_geom:
         start_node_geom = to_shape(start_node_geom)
@@ -327,7 +343,7 @@ def get_geom_from_nodes(connection, connection_node_dict):
             srid=TARGET_EPSG
         )
     else:
-        logger.error(f"Cannot calculate geom for connection {connection["code"]} without start and end node")
+        logger.error(f'Cannot calculate geom for connection {connection["code"]} without start and end node')
         geom = None
     
     connection["geom"] = geom
