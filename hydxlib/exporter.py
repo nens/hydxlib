@@ -13,8 +13,10 @@ from threedi_schema import ThreediDatabase
 from threedi_schema.domain.models import (
     BoundaryCondition1D,
     ConnectionNode,
-    # ImperviousSurface,
-    # ImperviousSurfaceMap,
+    Surface,
+    DryWeatherFlow,
+    SurfaceMap,
+    DryWeatherFlowMap,
     Orifice,
     Pipe,
     Pump,
@@ -234,33 +236,78 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     session.commit()
 
     # # Impervious surfaces
-    # imp_list = []
-    # for imp in threedi.impervious_surfaces:
-    #     imp_list.append(ImperviousSurface(**imp))
-    # commit_counts["impervious_surfaces"] = len(imp_list)
-    # session.bulk_save_objects(imp_list)
-    # session.commit()
+    surf_list = []
+    dwf_list = []
+    for surface in threedi.impervious_surfaces:
+        surface['surface_parameters_id'] = get_surface_parameters_id(surface_class=surface.pop('surface_class', None),
+                                                                 surface_inclination=surface.pop('surface_inclination', None))
+        if surface['surface_parameters_id'] is None:
+            logger.error("surface parameter id not found for surface")
+        surface["geom"] = connection_node_dict[surface["node.code"]]["geom"]
+        surface.pop('node.code', None)
+        dwf = {
+            'code': surface['code'],
+            'display_name':  surface['display_name'],
+            'geom': surface['geom'],
+            'daily_total': surface.pop('dry_weather_flow', None),
+            'multiplier': surface.pop('nr_of_inhabitants', None)
+        }
+        surf_list.append(Surface(**surface))
+        if dwf['daily_total'] is not None and dwf['multiplier'] is not None:
+            dwf_list.append(DryWeatherFlow(**dwf))
+    commit_counts["impervious_surfaces"] = len(surf_list)
+    session.bulk_save_objects(surf_list)
+    session.bulk_save_objects(dwf_list)
+    session.commit()
 
-    # imp_list = (
-    #     session.query(ImperviousSurface)
-    #     .options(load_only(ImperviousSurface.id, ImperviousSurface.code))
-    #     .order_by(ImperviousSurface.id)
-    #     .all()
-    # )
-    # imp_dict = {m.code: m.id for m in imp_list}
-
-    # map_list = []
-    # for imp_map in threedi.impervious_surface_maps:
-    #     imp_map["impervious_surface_id"] = imp_dict[imp_map["imp_surface.code"]]
-    #     imp_map["connection_node_id"] = connection_node_dict[imp_map["node.code"]]
-    #     del imp_map["node.code"]
-    #     del imp_map["imp_surface.code"]
-    #     map_list.append(ImperviousSurfaceMap(**imp_map))
-    # session.bulk_save_objects(map_list)
-    # session.commit()
+    for (obj_name, obj, map_obj) in [('surface', Surface, SurfaceMap),
+                           ('dry_weather_flow', DryWeatherFlow, DryWeatherFlowMap)]:
+        obj_list = (
+            session.query(obj)
+            .options(load_only(obj.id, obj.code))
+            .order_by(obj.id)
+            .all()
+        )
+        obj_map = {m.code: m.id for m in obj_list}
+        map_list = []
+        for imp_map in threedi.impervious_surface_maps:
+            import copy
+            item = copy.copy(imp_map)
+            if not item["imp_surface.code"] in obj_map:
+                continue
+            item[f"{obj_name}_id"] = obj_map[item["imp_surface.code"]]
+            item["connection_node_id"] = connection_node_dict[item["node.code"]]["id"]
+            item["geom"] = session.query(
+                func.ST_AsText(func.PointOnSurface(obj.geom))
+            ).filter(obj.id==item[f"{obj_name}_id"]).scalar()
+            del item["node.code"]
+            del item["imp_surface.code"]
+            map_list.append(map_obj(**item))
+        session.bulk_save_objects(map_list)
+        session.commit()
 
     return commit_counts
 
+
+def get_surface_parameters_id(surface_class, surface_inclination):
+    id_map = {
+        "gesloten verharding:hellend" : 101,
+        "gesloten verharding:vlak" : 102,
+        "gesloten verharding:uitgestrekt" : 103,
+        "open verharding:hellend" : 104,
+        "open verharding:vlak" : 105,
+        "open verharding:uitgestrekt" : 106,
+        "pand:hellend" : 107,
+        "pand:vlak" : 108,
+        "pand:uitgestrekt" : 109,
+        "onverhard:hellend" : 110,
+        "onverhard:vlak" : 111,
+        "onverhard:uitgestrekt" : 112,
+        "half verhard:hellend" : 113,
+        "half verhard:vlak" : 114,
+        "half verhard:uitgestrekt" : 115,
+    }
+    return id_map.get(f'{surface_class}:{surface_inclination}', None)
 
 def get_start_and_end_connection_node(connection, connection_node_dict):
     if connection["start_node.code"] in connection_node_dict:

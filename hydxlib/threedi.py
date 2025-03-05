@@ -607,7 +607,7 @@ class Threedi:
                 connection_node_id,
                 surface["code"],
             )
-            self.impervious_surfaces.append(surface)
+            # self.impervious_surfaces.append(surface)
             return
 
         surface_map = {
@@ -615,7 +615,7 @@ class Threedi:
             "imp_surface.code": str(surface_nr),
             "percentage": 100,
         }
-
+        surface["node.code"] = node_code
         self.impervious_surfaces.append(surface)
         self.impervious_surface_maps.append(surface_map)
 
