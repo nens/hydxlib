@@ -454,7 +454,7 @@ class Threedi:
             boundary = {
                 "node.code": hydx_connection.identificatieknooppunt2,
                 "timeseries": timeseries,
-                "boundary_type": BoundaryType.WATERLEVEL.value,
+                "type": BoundaryType.WATERLEVEL.value,
             }
             self.outlets.append(boundary)
         else:
@@ -585,7 +585,7 @@ class Threedi:
             boundary = {
                 "node.code": hydx_structure.identificatieknooppuntofverbinding,
                 "timeseries": timeseries,
-                "boundary_type": BoundaryType.WATERLEVEL.value,
+                "type": BoundaryType.WATERLEVEL.value,
             }
             self.outlets.append(boundary)
 

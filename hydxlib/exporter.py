@@ -135,7 +135,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     connection_node_dict = {m.code: {"id": m.id, "geom": m.geom} for m in connection_node_list}
 
     # ipdb.set_trace()
-
     pipe_list = []
     for pipe in threedi.pipes:
         pipe = get_start_and_end_connection_node(pipe, connection_node_dict)
@@ -217,21 +216,22 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     session.bulk_save_objects(orifice_list)
     session.commit()
 
-    # # Outlets (must be saved after weirs, orifice, pumpstation, etc.
-    # # because of constraints) TO DO: bounds aan meerdere leidingen overslaan
-    # outlet_list = []
-    # for outlet in threedi.outlets:
-    #     if outlet["node.code"] in connection_node_dict:
-    #         outlet["connection_node_id"] = connection_node_dict[outlet["node.code"]]
-    #     else:
-    #         outlet["connection_node_id"] = None
-    #         logger.error("Node of outlet not found in connection nodes")
-    #     del outlet["node.code"]
-    #     outlet_list.append(BoundaryCondition1D(**outlet))
+    # Outlets (must be saved after weirs, orifice, pumpstation, etc.
+    # because of constraints) TO DO: bounds aan meerdere leidingen overslaan
+    outlet_list = []
+    for outlet in threedi.outlets:
+        if outlet["node.code"] in connection_node_dict:
+            outlet["connection_node_id"] = connection_node_dict[outlet["node.code"]]["id"]
+            outlet["geom"] = connection_node_dict[outlet["node.code"]]["geom"]
+        else:
+            outlet["connection_node_id"] = None
+            logger.error("Node of outlet not found in connection nodes")
+        del outlet["node.code"]
+        outlet_list.append(BoundaryCondition1D(**outlet))
 
-    # commit_counts["outlets"] = len(outlet_list)
-    # session.bulk_save_objects(outlet_list)
-    # session.commit()
+    commit_counts["outlets"] = len(outlet_list)
+    session.bulk_save_objects(outlet_list)
+    session.commit()
 
     # # Impervious surfaces
     # imp_list = []
@@ -288,6 +288,7 @@ def get_start_and_end_connection_node(connection, connection_node_dict):
 
 
 def get_cross_section_fields(connection, cross_section_dict):
+    # TODO: add logging!
     if connection["cross_section_code"] in cross_section_dict:
         profile = cross_section_dict[
             connection["cross_section_code"]
