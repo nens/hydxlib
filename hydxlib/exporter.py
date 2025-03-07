@@ -411,13 +411,13 @@ def get_geom_from_nodes(connection, connection_node_dict):
         start_node_geom = connection_node_dict[connection["start_node.code"]]["geom"]
     else:
         start_node_geom = None
-        logger.error(f'End node of connection {connection["code"]} not found in connection nodes')
+        logger.error(f'Start node of connection {connection["code"]} not found in connection nodes')
     
-    if connection["start_node.code"] in connection_node_dict:
-        end_node_geom = connection_node_dict[connection["start_node.code"]]["geom"]
+    if connection["end_node.code"] in connection_node_dict:
+        end_node_geom = connection_node_dict[connection["end_node.code"]]["geom"]
     else:
         end_node_geom = None
-        logger.error(f'Start node of connection {connection["code"]} not found in connection nodes')
+        logger.error(f'End node of connection {connection["code"]} not found in connection nodes')
     
     if start_node_geom and end_node_geom:
         start_node_geom = to_shape(start_node_geom)
