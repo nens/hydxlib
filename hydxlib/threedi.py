@@ -87,6 +87,17 @@ SURFACE_INCLINATION_MAPPING = {
     "VLU": SurfaceInclinationType.UITGESTREKT.value,
 }
 
+class ManholeIndicator(Enum):
+    MANHOLE = 0
+    OUTLET = 1
+
+
+MANHOLE_INDICATOR_MAPPING = {
+    "INS": ManholeIndicator.MANHOLE.value,
+    "UIT": ManholeIndicator.OUTLET.value,
+    "ITP": ManholeIndicator.MANHOLE.value,
+    "CMP": ManholeIndicator.MANHOLE.value,
+}
 
 def get_mapping_value(mapping, hydx_value, record_code, name_for_logging):
     if hydx_value is None:
@@ -370,8 +381,26 @@ class Threedi:
                 hydx_connection_node.y_coordinaat,
                 28992,
             ),
+            "exchange_type": get_mapping_value(
+                CALCULATION_TYPE_MAPPING,
+                hydx_connection_node.maaiveldschematisering,
+                hydx_connection_node.identificatierioolput,
+                name_for_logging="manhole surface schematization",
+            ),
+            "visualisation": get_mapping_value(
+                MANHOLE_INDICATOR_MAPPING,
+                hydx_connection_node.typeknooppunt,
+                hydx_connection_node.identificatierioolput,
+                name_for_logging="manhole indicator",
+            ),
         }
-
+        # TODO: better solution?
+        if connection_node["code"] in [n["code"] for n in self.connection_nodes]:
+            manhole_properties = ['manhole_surface_level', 'bottom_level', 'exchange_type']
+            for prop in manhole_properties:
+                connection_node[prop] = None
+            connection_node["visualisation"] = -1
+            # connection_node['display_name'] = ''
         self.connection_nodes.append(connection_node)
 
 

@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 import json
 import logging
+import math
 from functools import lru_cache
 
 from pyproj import Transformer
 from pyproj.crs import CRS
 from sqlalchemy import text, func
 from sqlalchemy.orm import load_only
-# from geoalchemy2.functions import ST_AsText, MakeLine
 from geoalchemy2.shape import to_shape
 from threedi_schema import ThreediDatabase
 from threedi_schema.domain.models import (
@@ -27,7 +27,7 @@ from threedi_schema.domain.models import (
 from .threedi import Threedi
 
 SOURCE_EPSG = 28992
-TARGET_EPSG = 4326
+TARGET_EPSG = 28992
 
 
 logger = logging.getLogger(__name__)
@@ -111,18 +111,25 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         }
     
     # ipdb.set_trace()
-
+    # TODO add manhole level
     connection_node_list = []
     for connection_node in threedi.connection_nodes:
         x, y, source_epsg = connection_node["geom"]
         x, y = transform(x, y, source_epsg, TARGET_EPSG)
         connection_node_list.append(
             ConnectionNode(
+                display_name=connection_node["display_name"],
                 code=connection_node["code"],
                 storage_area=connection_node["storage_area"],
                 geom=to_ewkt_point(x, y, TARGET_EPSG),
+                bottom_level=connection_node["bottom_level"],
+                # initial_water_level=connection_node["initial_waterlevel"],
+                manhole_surface_level=connection_node["manhole_surface_level"],
+                exchange_type=connection_node["exchange_type"],
+                visualisation=connection_node["visualisation"],
             )
         )
+
     # ipdb.set_trace()
     commit_counts["connection_nodes"] = len(connection_node_list)
     session.bulk_save_objects(connection_node_list)
@@ -155,7 +162,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     commit_counts["pumps"] = 0
     for pump in threedi.pumps:
         pump = get_start_and_end_connection_node(pump, connection_node_dict)
-        pump = get_geom_from_nodes(pump, connection_node_dict)
+        pump["geom"] = connection_node_dict[pump["start_node.code"]]["geom"]
         del pump["start_node.code"]
         del pump["end_node.code"]
         connection_node_start_id = pump["connection_node_id_start"]
@@ -229,6 +236,8 @@ def write_threedi_to_db(threedi, threedi_db_settings):
             outlet["connection_node_id"] = None
             logger.error("Node of outlet not found in connection nodes")
         del outlet["node.code"]
+        outlet['time_units'] = 'minutes'
+        outlet['interpolate'] = 1
         outlet_list.append(BoundaryCondition1D(**outlet))
 
     commit_counts["outlets"] = len(outlet_list)
@@ -243,19 +252,34 @@ def write_threedi_to_db(threedi, threedi_db_settings):
                                                                  surface_inclination=surface.pop('surface_inclination', None))
         if surface['surface_parameters_id'] is None:
             logger.error("surface parameter id not found for surface")
-        surface["geom"] = connection_node_dict[surface["node.code"]]["geom"]
-        surface.pop('node.code', None)
+        # surface["geom"] = (
+        node_geom = connection_node_dict[surface["node.code"]]["geom"]
+        side_length = math.sqrt(surface["area"])
+        node_x = session.query(func.ST_X(node_geom)).scalar()
+        node_y = session.query(func.ST_Y(node_geom)).scalar()
+        surface["geom"] = f"""
+            srid={TARGET_EPSG};POLYGON(({node_x - side_length / 2} {node_y - side_length / 2},
+                     {node_x + side_length / 2} {node_y - side_length / 2},
+                     {node_x + side_length / 2} {node_y + side_length / 2},
+                     {node_x - side_length / 2} {node_y + side_length / 2},
+                     {node_x - side_length / 2} {node_y - side_length / 2}
+                     ))"""
         dwf = {
             'code': surface['code'],
             'display_name':  surface['display_name'],
-            'geom': surface['geom'],
             'daily_total': surface.pop('dry_weather_flow', None),
             'multiplier': surface.pop('nr_of_inhabitants', None)
         }
-        surf_list.append(Surface(**surface))
+        dwf["geom"] = session.query(
+            func.ST_AsText(func.ST_Buffer(ConnectionNode.geom, 1))
+        ).filter(ConnectionNode.id == connection_node_dict[surface["node.code"]]["id"]).scalar()
+        surface.pop('node.code', None)
+        if surface["area"] != 0:
+            surf_list.append(Surface(**surface))
         if dwf['daily_total'] is not None and dwf['multiplier'] is not None:
             dwf_list.append(DryWeatherFlow(**dwf))
-    commit_counts["impervious_surfaces"] = len(surf_list)
+    commit_counts["surfaces"] = len(surf_list)
+    commit_counts["dry_weather_flows"] = len(dwf_list)
     session.bulk_save_objects(surf_list)
     session.bulk_save_objects(dwf_list)
     session.commit()
@@ -277,9 +301,16 @@ def write_threedi_to_db(threedi, threedi_db_settings):
                 continue
             item[f"{obj_name}_id"] = obj_map[item["imp_surface.code"]]
             item["connection_node_id"] = connection_node_dict[item["node.code"]]["id"]
-            item["geom"] = session.query(
-                func.ST_AsText(func.PointOnSurface(obj.geom))
-            ).filter(obj.id==item[f"{obj_name}_id"]).scalar()
+            node_geom = connection_node_dict[item["node.code"]]["geom"]
+            # breakpoint()
+            node_x = session.query(func.ST_X(node_geom)).scalar()
+            node_y = session.query(func.ST_Y(node_geom)).scalar()
+            obj_geom = session.query(func.PointOnSurface(obj.geom)).filter(obj.id==item[f"{obj_name}_id"]).scalar()
+            obj_x = session.query(func.ST_X(obj_geom)).scalar()
+            obj_y = session.query(func.ST_Y(obj_geom)).scalar()
+            if obj_x == node_x and obj_y == node_y:
+                obj_y += 1
+            item["geom"] = f"srid={TARGET_EPSG};LINESTRING({obj_x} {obj_y}, {node_x} {node_y})"
             del item["node.code"]
             del item["imp_surface.code"]
             map_list.append(map_obj(**item))
@@ -308,6 +339,13 @@ def get_surface_parameters_id(surface_class, surface_inclination):
         "half verhard:uitgestrekt" : 115,
     }
     return id_map.get(f'{surface_class}:{surface_inclination}', None)
+
+
+def get_geom_from_connection_node(connection_node):
+    x, y, source_epsg = connection_node["geom"]
+    x, y = transform(x, y, source_epsg, TARGET_EPSG)
+    return to_ewkt(x, y, TARGET_EPSG)
+
 
 def get_start_and_end_connection_node(connection, connection_node_dict):
     if connection["start_node.code"] in connection_node_dict:
