@@ -33,18 +33,6 @@ TARGET_EPSG = 28992
 logger = logging.getLogger(__name__)
 
 
-# Constructing a Transformer takes quite long, so we use caching here. The
-# function is deterministic so this doesn't have any side effects.
-@lru_cache(maxsize=1)
-def get_transformer(source_epsg, target_epsg):
-    return Transformer.from_crs(
-        CRS.from_epsg(source_epsg), CRS.from_epsg(target_epsg), always_xy=True
-    )
-
-
-def transform(x, y, source_epsg, target_epsg):
-    return get_transformer(source_epsg, target_epsg).transform(x, y)
-
 
 def to_ewkt_point(x, y, srid):
     return "srid={};POINT ({} {})".format(srid, x, y)
@@ -109,7 +97,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     connection_node_list = []
     for connection_node in threedi.connection_nodes:
         x, y, source_epsg = connection_node["geom"]
-        x, y = transform(x, y, source_epsg, TARGET_EPSG)
         connection_node_list.append(
             ConnectionNode(
                 display_name=connection_node["display_name"],
@@ -348,7 +335,6 @@ def get_surface_parameters_id(surface_class, surface_inclination):
 
 def get_geom_from_connection_node(connection_node):
     x, y, source_epsg = connection_node["geom"]
-    x, y = transform(x, y, source_epsg, TARGET_EPSG)
     return to_ewkt(x, y, TARGET_EPSG)
 
 
