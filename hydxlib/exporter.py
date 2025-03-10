@@ -51,10 +51,6 @@ def quote_nullable(x):
         return f"'{x}'"
 
 
-def width_height_to_table(width, height):
-    pass
-
-
 def export_threedi(hydx, threedi_db_settings):
     threedi = Threedi()
     threedi.import_hydx(hydx)
@@ -331,11 +327,6 @@ def get_surface_parameters_id(surface_class, surface_inclination):
         "half verhard:uitgestrekt" : 115,
     }
     return id_map.get(f'{surface_class}:{surface_inclination}', None)
-
-
-def get_geom_from_connection_node(connection_node):
-    x, y, source_epsg = connection_node["geom"]
-    return to_ewkt(x, y, TARGET_EPSG)
 
 
 def get_connection_node(connection, connection_node_dict, node_key):
