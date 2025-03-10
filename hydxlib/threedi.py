@@ -87,6 +87,7 @@ SURFACE_INCLINATION_MAPPING = {
     "VLU": SurfaceInclinationType.UITGESTREKT.value,
 }
 
+
 class ManholeIndicator(Enum):
     MANHOLE = 0
     OUTLET = 1
@@ -98,6 +99,7 @@ MANHOLE_INDICATOR_MAPPING = {
     "ITP": ManholeIndicator.MANHOLE.value,
     "CMP": ManholeIndicator.MANHOLE.value,
 }
+
 
 def get_mapping_value(mapping, hydx_value, record_code, name_for_logging):
     if hydx_value is None:
@@ -396,17 +398,20 @@ class Threedi:
         }
         # In case of duplicate connection node, the manhole properties should not be defined
         if connection_node["code"] in [n["code"] for n in self.connection_nodes]:
-            manhole_properties = ['manhole_surface_level', 'bottom_level', 'exchange_type']
+            manhole_properties = [
+                "manhole_surface_level",
+                "bottom_level",
+                "exchange_type",
+            ]
             for prop in manhole_properties:
                 connection_node[prop] = None
             connection_node["visualisation"] = -1
         self.connection_nodes.append(connection_node)
 
-
     def add_pipe(self, hydx_connection, material):
         self.check_if_nodes_of_connection_exists(hydx_connection)
-        combined_display_name_string = self.get_connection_display_names_from_connection_nodes(
-            hydx_connection
+        combined_display_name_string = (
+            self.get_connection_display_names_from_connection_nodes(hydx_connection)
         )
 
         pipe = {
@@ -431,14 +436,12 @@ class Threedi:
     def add_structure(self, hydx_connection, hydx_structure):
         """Add hydx.structure and hydx.connection into threedi.pumps"""
         self.check_if_nodes_of_connection_exists(hydx_connection)
-        combined_display_name_string = self.get_connection_display_names_from_connection_nodes(
-            hydx_connection
+        combined_display_name_string = (
+            self.get_connection_display_names_from_connection_nodes(hydx_connection)
         )
 
         if hydx_structure.typekunstwerk == "PMP":
-            self.add_pump(
-                hydx_connection, hydx_structure, combined_display_name_string
-            )
+            self.add_pump(hydx_connection, hydx_structure, combined_display_name_string)
         elif hydx_structure.typekunstwerk == "OVS":
             self.add_weir(hydx_connection, hydx_structure, combined_display_name_string)
         elif hydx_structure.typekunstwerk == "DRL":
@@ -448,9 +451,7 @@ class Threedi:
                 combined_display_name_string,
             )
 
-    def add_pump(
-        self, hydx_connection, hydx_structure, combined_display_name_string
-    ):
+    def add_pump(self, hydx_connection, hydx_structure, combined_display_name_string):
         if hydx_structure.aanslagniveaubovenstrooms is not None:
             pump_type = 2
             pump_start_level = hydx_structure.aanslagniveaubovenstrooms
@@ -620,7 +621,9 @@ class Threedi:
     def append_and_map_surface(
         self, surface, connection_node_id, surface_nr, node_code=None
     ):
-        connection_node_codes = [connection_node["code"] for connection_node in self.connection_nodes]
+        connection_node_codes = [
+            connection_node["code"] for connection_node in self.connection_nodes
+        ]
         if connection_node_id in connection_node_codes:
             node_code = connection_node_id
         if node_code is None:
@@ -652,7 +655,9 @@ class Threedi:
         code1 = connection.identificatieknooppunt1
         code2 = connection.identificatieknooppunt2
 
-        connection_node_list = [connection_node["code"] for connection_node in self.connection_nodes]
+        connection_node_list = [
+            connection_node["code"] for connection_node in self.connection_nodes
+        ]
         if code1 is not None and code1 not in connection_node_list:
             logger.error(
                 "Start connection node %r could not be found for record %r",

@@ -146,7 +146,7 @@ def test_import_hydx(hydx):
         "area": 9.0,
         "surface_class": "gesloten verharding",
         "surface_inclination": "uitgestrekt",
-        'node.code': 'knp8',
+        "node.code": "knp8",
     }
     assert threedi.impervious_surfaces[262] == {
         "code": "263",
@@ -156,7 +156,7 @@ def test_import_hydx(hydx):
         "surface_inclination": "vlak",
         "dry_weather_flow": 60.0,
         "nr_of_inhabitants": "2",
-        'node.code': 'knp61',
+        "node.code": "knp61",
     }
     assert threedi.outlets[0] == {
         "node.code": "knp78",
