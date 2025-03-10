@@ -1,10 +1,11 @@
 Changelog of hydxlib
 ===================================================
 
-1.6.1 (unreleased)
+1.7.0 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Support schema 300
+- Drop json export
 
 
 1.6.0 (2025-01-29)
