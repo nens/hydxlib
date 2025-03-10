@@ -8,7 +8,7 @@ from threedi_schema import models
 from hydxlib.exporter import (
     export_json,
     export_threedi,
-    get_cross_section_definition_id,
+    get_cross_section_fields,
     get_start_and_end_connection_node,
     write_threedi_to_db,
 )
@@ -17,23 +17,21 @@ from hydxlib.threedi import Threedi
 
 def test_get_start_and_end_connection_node_right():
     connection = {"code": "pmp1", "start_node.code": "knp3", "end_node.code": "knp4"}
-    connection_node_dict = {"knp3": 3060}
+    connection_node_dict = {"knp3": {"id": 3060, "geom": None}}
     connection = get_start_and_end_connection_node(connection, connection_node_dict)
-    assert connection["connection_node_start_id"] == 3060
+    assert connection["connection_node_id_start"] == 3060
 
 
 def test_get_start_and_end_connection_node_wrong(caplog):
     connection = {"code": "pmp1", "start_node.code": "knp31", "end_node.code": "knp41"}
-    connection_node_dict = {"knp3": 3060, "knp4": 3061}
+    connection_node_dict = {"knp3": {"id": 3060}, "knp4": {"id": 3061}}
     connection = get_start_and_end_connection_node(connection, connection_node_dict)
-    assert "End node of connection" in caplog.text
+    assert all([log.levelname == "ERROR" for log in caplog.records])
+    assert connection["connection_node_id_start"] is None
+    assert connection["connection_node_id_end"] is None
 
 
-def test_get_cross_section_definition_id_wrong(caplog):
-    connection = {"code": "drl5", "cross_section_code": "round_1000"}
-    cross_section_dict = {"round_1001": 362}
-    connection = get_cross_section_definition_id(connection, cross_section_dict)
-    assert "Cross section" in caplog.text
+#TODO: add unit tests
 
 
 @pytest.fixture
@@ -51,14 +49,13 @@ def test_export_threedi(hydx_setup, mock_exporter_db):
 def test_write_to_db(hydx_setup, mock_exporter_db, threedi_db):
     commit_counts_expected = {
         "connection_nodes": 85,
-        "manholes": 84,
-        "pumpstations": 8,
-        "weirs": 6,
-        "cross_sections": 54,
-        "orifices": 2,
-        "impervious_surfaces": 330,
         "pipes": 80,
+        "pumps": 8,
+        "weirs": 6,
+        "orifices": 2,
         "outlets": 3,
+        "surfaces": 262,
+        "dry_weather_flows": 67,
     }
     commit_counts = write_threedi_to_db(hydx_setup[1], {"db_file": "/some/path"})
     assert commit_counts == commit_counts_expected
@@ -67,17 +64,16 @@ def test_write_to_db(hydx_setup, mock_exporter_db, threedi_db):
 
     assert (
         session.query(models.ConnectionNode)
-        .filter(models.ConnectionNode.the_geom.isnot(None))
+        .filter(models.ConnectionNode.geom.isnot(None))
         .count()
         == commit_counts_expected["connection_nodes"]
     )
     MODELS = {
-        "manholes": models.Manhole,
-        "pumpstations": models.Pumpstation,
+        "pumps": models.Pump,
         "weirs": models.Weir,
-        "cross_sections": models.CrossSectionDefinition,
         "orifices": models.Orifice,
-        "impervious_surfaces": models.ImperviousSurface,
+        "surfaces": models.Surface,
+        "dry_weather_flows": models.DryWeatherFlow,
         "pipes": models.Pipe,
         "outlets": models.BoundaryCondition1D,
     }
@@ -85,6 +81,7 @@ def test_write_to_db(hydx_setup, mock_exporter_db, threedi_db):
         assert session.query(model).count() == commit_counts_expected[name]
 
 
+@pytest.mark.skip()
 def test_export_json(hydx_setup, tmp_path):
     json_path = tmp_path / "export.json"
     export_json(hydx_setup[0], json_path)

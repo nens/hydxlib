@@ -6,7 +6,7 @@ from functools import lru_cache
 
 from pyproj import Transformer
 from pyproj.crs import CRS
-from sqlalchemy import text, func
+from sqlalchemy import func
 from sqlalchemy.orm import load_only
 from geoalchemy2.shape import to_shape
 from threedi_schema import ThreediDatabase
@@ -96,7 +96,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     db = ThreediDatabase(path)
     schema = db.schema
     schema.upgrade(backup=False, epsg_code_override=28992)
-
     session = db.get_session()
 
     cross_section_dict = {}
@@ -141,7 +140,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     for pipe in threedi.pipes:
         pipe = get_start_and_end_connection_node(pipe, connection_node_dict)
         pipe = get_cross_section_fields(pipe, cross_section_dict)
-        pipe = get_geom_from_nodes(pipe, connection_node_dict)
+        pipe = get_line_between_nodes(pipe, connection_node_dict, "start_node.code", "end_node.code")
         # Skip creating object without geometry; error handling is handled by the functions above
         if pipe['geom'] is None:
             continue
@@ -158,15 +157,16 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     commit_counts["pumps"] = 0
     for pump in threedi.pumps:
         pump = get_start_and_end_connection_node(pump, connection_node_dict)
+        # breakpoint()
+        pump["connection_node_id"] = pump["connection_node_id_start"]
+        # skip if no connection node is linked
+        if pump["connection_node_id"] is None:
+            continue
+        pump["geom"] = get_node_geom(pump, connection_node_dict, "start_node.code")
+        connection_node_id_start = pump.pop("connection_node_id_start")
+        connection_node_id_end = pump.pop("connection_node_id_end")
         del pump["start_node.code"]
         del pump["end_node.code"]
-        pump["connection_node_id"] = pump["connection_node_start_id"]
-        # skip if no connection node is linked
-        if pump["connection_node_id"] != None:
-            continue
-        pump["geom"] = connection_node_dict[pump["connection_node_id"]]["geom"]
-        connection_node_id_start = pump.pop("connection_node_start_id")
-        connection_node_id_end = pump.pop("connection_node_end_id")
         pump_object = Pump(**pump)
         pump_list.append(pump_object)
         # without flushing and refreshing at this point there is no pump id to reference in pump_map
@@ -200,7 +200,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     for weir in threedi.weirs:
         weir = get_start_and_end_connection_node(weir, connection_node_dict)
         weir = get_cross_section_fields(weir, cross_section_dict)
-        weir = get_geom_from_nodes(weir, connection_node_dict)
+        weir = get_line_between_nodes(weir, connection_node_dict, "start_node.code", "end_node.code")
         if weir['geom'] is None:
             continue
         del weir["start_node.code"]
@@ -215,7 +215,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     for orifice in threedi.orifices:
         orifice = get_start_and_end_connection_node(orifice, connection_node_dict)
         orifice = get_cross_section_fields(orifice, cross_section_dict)
-        orifice = get_geom_from_nodes(orifice, connection_node_dict)
+        orifice = get_line_between_nodes(orifice, connection_node_dict, "start_node.code", "end_node.code")
         if orifice['geom'] is None:
             continue
         del orifice["start_node.code"]
@@ -232,7 +232,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     for outlet in threedi.outlets:
         if outlet["node.code"] in connection_node_dict:
             outlet["connection_node_id"] = connection_node_dict[outlet["node.code"]]["id"]
-            outlet["geom"] = connection_node_dict[outlet["node.code"]]["geom"]
+            outlet["geom"] = get_node_geom(outlet, connection_node_dict, "node.code")
         else:
             outlet["connection_node_id"] = None
             logger.error("Node of outlet not found in connection nodes")
@@ -352,28 +352,17 @@ def get_geom_from_connection_node(connection_node):
     return to_ewkt(x, y, TARGET_EPSG)
 
 
-def get_start_and_end_connection_node(connection, connection_node_dict):
-    if connection["start_node.code"] in connection_node_dict:
-        connection["connection_node_start_id"] = connection_node_dict[
-            connection["start_node.code"]
-        ]["id"]
+def get_connection_node(connection, connection_node_dict, node_key):
+    if connection[node_key] in connection_node_dict:
+        return connection_node_dict[connection[node_key]]["id"]
     else:
-        connection["connection_node_start_id"] = None
-        logger.error(
-            "Start node of connection %r not found in connection nodes",
-            connection["code"],
-        )
+        logger.error(f"{node_key} of connection {connection['code']} not found in connection nodes",)
+        return None
 
-    if connection["end_node.code"] in connection_node_dict:
-        connection["connection_node_end_id"] = connection_node_dict[
-            connection["end_node.code"]
-        ]["id"]
-    else:
-        connection["connection_node_end_id"] = None
-        logger.error(
-            "End node of connection %r not found in connection nodes",
-            connection["code"],
-        )
+
+def get_start_and_end_connection_node(connection, connection_node_dict):
+    connection["connection_node_id_start"] = get_connection_node(connection, connection_node_dict, "start_node.code")
+    connection["connection_node_id_end"] = get_connection_node(connection, connection_node_dict, "end_node.code")
     return connection
 
 
@@ -410,19 +399,18 @@ def get_cross_section_fields(connection, cross_section_dict):
     return connection
 
 
-def get_geom_from_nodes(connection, connection_node_dict):
-    if connection["start_node.code"] in connection_node_dict:
-        start_node_geom = connection_node_dict[connection["start_node.code"]]["geom"]
+def get_node_geom(connection, connection_node_dict, node_key):
+    node_id = connection[node_key]
+    if node_id in connection_node_dict:
+        return connection_node_dict[node_id]["geom"]
     else:
-        start_node_geom = None
-        logger.error(f'Start node of connection {connection["code"]} not found in connection nodes')
-    
-    if connection["end_node.code"] in connection_node_dict:
-        end_node_geom = connection_node_dict[connection["end_node.code"]]["geom"]
-    else:
-        end_node_geom = None
-        logger.error(f'End node of connection {connection["code"]} not found in connection nodes')
-    
+        logger.error(f'Node {node_key} of connection {connection["code"]} not found in connection nodes')
+        return None
+
+
+def get_line_between_nodes(connection, connection_node_dict, start_key, end_key):
+    start_node_geom = get_node_geom(connection, connection_node_dict, start_key)
+    end_node_geom = get_node_geom(connection, connection_node_dict, end_key)
     if start_node_geom and end_node_geom:
         start_node_geom = to_shape(start_node_geom)
         end_node_geom = to_shape(end_node_geom)
@@ -436,9 +424,7 @@ def get_geom_from_nodes(connection, connection_node_dict):
     else:
         logger.error(f'Cannot calculate geom for connection {connection["code"]} without start and end node')
         geom = None
-    
     connection["geom"] = geom
-
     return connection
 
 
