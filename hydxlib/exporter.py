@@ -404,9 +404,3 @@ def get_line_between_nodes(connection, connection_node_dict, start_key, end_key)
     connection["geom"] = geom
     return connection
 
-
-def export_json(hydx, path):
-    threedi = Threedi()
-    threedi.import_hydx(hydx)
-    with open(path, "w") as f:
-        json.dump(threedi.__dict__, f)

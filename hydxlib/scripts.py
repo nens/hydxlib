@@ -11,7 +11,7 @@ import sys
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 from datetime import datetime
 
-from .exporter import export_json, export_threedi
+from .exporter import export_threedi
 from .importer import import_hydx
 
 logger = logging.getLogger(__name__)
@@ -21,20 +21,15 @@ class OptionException(Exception):
     pass
 
 
-def run_import_export(export_type, hydx_path=None, out_path=None):
+def run_import_export(hydx_path=None, out_path=None):
     """Run import and export functionality of hydxlib
 
     Args:
-        export_type (str):          export operator ["threedi", "json"]
         hydx_path (str):            folder with your hydx *.csv files
         out_path (str):             output path
 
     Returns:
         string: "INFO: method is finished"threedi_db_settings
-
-    *export_type*
-        threedi
-        json
 
     *hydx_path*
         required when selected operator 'hydx'
@@ -57,16 +52,10 @@ def run_import_export(export_type, hydx_path=None, out_path=None):
 
     """
     logger.info("Started exchange of GWSW-hydx at %s", datetime.now())
-    logger.info("export type %r ", export_type)
 
     hydx = import_hydx(hydx_path)
 
-    if export_type == "threedi":
-        export_threedi(hydx, out_path)
-    elif export_type == "json":
-        export_json(hydx, out_path)
-    else:
-        raise OptionException("no available export type %r is selected" % export_type)
+    export_threedi(hydx, out_path)
 
     logger.info("Exchange of GWSW-hydx finished")
 
@@ -105,13 +94,6 @@ def get_parser():
         dest="verbose",
         default=False,
         help="Verbose output",
-    )
-    parser.add_argument(
-        "--export",
-        dest="export_type",
-        default="threedi",
-        choices=["threedi", "json"],
-        help="select your export operator",
     )
     return parser
 

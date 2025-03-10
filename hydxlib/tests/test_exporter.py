@@ -6,7 +6,6 @@ import pytest
 from threedi_schema import models
 
 from hydxlib.exporter import (
-    export_json,
     export_threedi,
     get_cross_section_fields,
     get_start_and_end_connection_node,
@@ -80,28 +79,3 @@ def test_write_to_db(hydx_setup, mock_exporter_db, threedi_db):
     for name, model in MODELS.items():
         assert session.query(model).count() == commit_counts_expected[name]
 
-
-@pytest.mark.skip()
-def test_export_json(hydx_setup, tmp_path):
-    json_path = tmp_path / "export.json"
-    export_json(hydx_setup[0], json_path)
-
-    with open(json_path, "r") as f:
-        data = json.load(f)
-
-    obj_count_expected = {
-        "connection_nodes": 85,
-        "manholes": 85,
-        "pumpstations": 8,
-        "weirs": 6,
-        "cross_sections": 54,
-        "orifices": 2,
-        "impervious_surfaces": 330,
-        "impervious_surface_maps": 330,
-        "pipes": 80,
-        "outlets": 3,
-        "connections": 0,
-    }
-    obj_count_actual = {k: len(data[k]) for k in data}
-
-    assert obj_count_expected == obj_count_actual
