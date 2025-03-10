@@ -99,9 +99,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
 
     session = db.get_session()
 
-    # import ipdb
-    # ipdb.set_trace()
-
     cross_section_dict = {}
     for profile in threedi.cross_sections:
         cross_section_dict[profile["code"]] = {
@@ -110,8 +107,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
             "shape": profile["shape"],
         }
     
-    # ipdb.set_trace()
-    # TODO add manhole level
     connection_node_list = []
     for connection_node in threedi.connection_nodes:
         x, y, source_epsg = connection_node["geom"]
@@ -130,7 +125,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
             )
         )
 
-    # ipdb.set_trace()
     commit_counts["connection_nodes"] = len(connection_node_list)
     session.bulk_save_objects(connection_node_list)
     session.commit()
@@ -143,7 +137,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     )
     connection_node_dict = {m.code: {"id": m.id, "geom": m.geom} for m in connection_node_list}
 
-    # ipdb.set_trace()
     pipe_list = []
     for pipe in threedi.pipes:
         pipe = get_start_and_end_connection_node(pipe, connection_node_dict)
@@ -373,7 +366,6 @@ def get_start_and_end_connection_node(connection, connection_node_dict):
 
 
 def get_cross_section_fields(connection, cross_section_dict):
-    # TODO: add logging!
     if connection["cross_section_code"] in cross_section_dict:
         profile = cross_section_dict[
             connection["cross_section_code"]

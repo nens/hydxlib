@@ -394,13 +394,12 @@ class Threedi:
                 name_for_logging="manhole indicator",
             ),
         }
-        # TODO: better solution?
+        # In case of duplicate connection node, the manhole properties should not be defined
         if connection_node["code"] in [n["code"] for n in self.connection_nodes]:
             manhole_properties = ['manhole_surface_level', 'bottom_level', 'exchange_type']
             for prop in manhole_properties:
                 connection_node[prop] = None
             connection_node["visualisation"] = -1
-            # connection_node['display_name'] = ''
         self.connection_nodes.append(connection_node)
 
 
