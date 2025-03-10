@@ -142,6 +142,9 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         pipe = get_start_and_end_connection_node(pipe, connection_node_dict)
         pipe = get_cross_section_fields(pipe, cross_section_dict)
         pipe = get_geom_from_nodes(pipe, connection_node_dict)
+        # Skip creating object without geometry; error handling is handled by the functions above
+        if pipe['geom'] is None:
+            continue
         del pipe["start_node.code"]
         del pipe["end_node.code"]
         del pipe["cross_section_code"]
@@ -155,14 +158,15 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     commit_counts["pumps"] = 0
     for pump in threedi.pumps:
         pump = get_start_and_end_connection_node(pump, connection_node_dict)
-        pump["geom"] = connection_node_dict[pump["start_node.code"]]["geom"]
         del pump["start_node.code"]
         del pump["end_node.code"]
-        connection_node_start_id = pump["connection_node_id_start"]
-        connection_node_end_id = pump["connection_node_id_end"]
-        pump["connection_node_id"] = connection_node_start_id
-        del pump["connection_node_id_start"]
-        del pump["connection_node_id_end"]
+        pump["connection_node_id"] = pump["connection_node_start_id"]
+        # skip if no connection node is linked
+        if pump["connection_node_id"] != None:
+            continue
+        pump["geom"] = connection_node_dict[pump["connection_node_id"]]["geom"]
+        connection_node_id_start = pump.pop("connection_node_start_id")
+        connection_node_id_end = pump.pop("connection_node_end_id")
         pump_object = Pump(**pump)
         pump_list.append(pump_object)
         # without flushing and refreshing at this point there is no pump id to reference in pump_map
@@ -170,16 +174,16 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         session.flush()
         session.refresh(pump_object)
 
-        if connection_node_start_id != None and connection_node_end_id != None:
+        if connection_node_id_start != None and connection_node_id_end != None:
             pump_map_geom = session.query(
                 func.ST_AsText(func.MakeLine(ConnectionNode.geom))
             ).filter(
-                ConnectionNode.id.in_([connection_node_start_id, connection_node_end_id])
+                ConnectionNode.id.in_([connection_node_id_start, connection_node_id_end])
             ).scalar()
             pump_map_list.append(
                 PumpMap(
                     pump_id=pump_object.id,
-                    connection_node_id_end=connection_node_end_id,
+                    connection_node_id_end=connection_node_id_end,
                     geom=pump_map_geom,
                     code=pump["code"],
                     display_name=pump["display_name"],
@@ -197,6 +201,8 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         weir = get_start_and_end_connection_node(weir, connection_node_dict)
         weir = get_cross_section_fields(weir, cross_section_dict)
         weir = get_geom_from_nodes(weir, connection_node_dict)
+        if weir['geom'] is None:
+            continue
         del weir["start_node.code"]
         del weir["end_node.code"]
         del weir["cross_section_code"]
@@ -210,6 +216,8 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         orifice = get_start_and_end_connection_node(orifice, connection_node_dict)
         orifice = get_cross_section_fields(orifice, cross_section_dict)
         orifice = get_geom_from_nodes(orifice, connection_node_dict)
+        if orifice['geom'] is None:
+            continue
         del orifice["start_node.code"]
         del orifice["end_node.code"]
         del orifice["cross_section_code"]
@@ -228,6 +236,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         else:
             outlet["connection_node_id"] = None
             logger.error("Node of outlet not found in connection nodes")
+            continue
         del outlet["node.code"]
         outlet['time_units'] = 'minutes'
         outlet['interpolate'] = 1
@@ -245,18 +254,21 @@ def write_threedi_to_db(threedi, threedi_db_settings):
                                                                  surface_inclination=surface.pop('surface_inclination', None))
         if surface['surface_parameters_id'] is None:
             logger.error("surface parameter id not found for surface")
-        # surface["geom"] = (
-        node_geom = connection_node_dict[surface["node.code"]]["geom"]
-        side_length = math.sqrt(surface["area"])
-        node_x = session.query(func.ST_X(node_geom)).scalar()
-        node_y = session.query(func.ST_Y(node_geom)).scalar()
-        surface["geom"] = f"""
-            srid={TARGET_EPSG};POLYGON(({node_x - side_length / 2} {node_y - side_length / 2},
-                     {node_x + side_length / 2} {node_y - side_length / 2},
-                     {node_x + side_length / 2} {node_y + side_length / 2},
-                     {node_x - side_length / 2} {node_y + side_length / 2},
-                     {node_x - side_length / 2} {node_y - side_length / 2}
-                     ))"""
+        connection_node = connection_node_dict.get(surface["node.code"], None)
+        if connection_node is None:
+            logger.error(f"node not found for surface {surface['code']}")
+        node_geom = connection_node["geom"]
+        if surface["area"] > 0:
+            side_length = math.sqrt(surface["area"])
+            node_x = session.query(func.ST_X(node_geom)).scalar()
+            node_y = session.query(func.ST_Y(node_geom)).scalar()
+            surface["geom"] = f"""
+                srid={TARGET_EPSG};POLYGON(({node_x - side_length / 2} {node_y - side_length / 2},
+                         {node_x + side_length / 2} {node_y - side_length / 2},
+                         {node_x + side_length / 2} {node_y + side_length / 2},
+                         {node_x - side_length / 2} {node_y + side_length / 2},
+                         {node_x - side_length / 2} {node_y - side_length / 2}
+                         ))"""
         dwf = {
             'code': surface['code'],
             'display_name':  surface['display_name'],
@@ -342,22 +354,22 @@ def get_geom_from_connection_node(connection_node):
 
 def get_start_and_end_connection_node(connection, connection_node_dict):
     if connection["start_node.code"] in connection_node_dict:
-        connection["connection_node_id_start"] = connection_node_dict[
+        connection["connection_node_start_id"] = connection_node_dict[
             connection["start_node.code"]
         ]["id"]
     else:
-        connection["connection_node_id_start"] = None
+        connection["connection_node_start_id"] = None
         logger.error(
             "Start node of connection %r not found in connection nodes",
             connection["code"],
         )
 
     if connection["end_node.code"] in connection_node_dict:
-        connection["connection_node_id_end"] = connection_node_dict[
+        connection["connection_node_end_id"] = connection_node_dict[
             connection["end_node.code"]
         ]["id"]
     else:
-        connection["connection_node_id_end"] = None
+        connection["connection_node_end_id"] = None
         logger.error(
             "End node of connection %r not found in connection nodes",
             connection["code"],
