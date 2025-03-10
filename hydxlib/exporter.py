@@ -118,7 +118,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         .all()
     )
     connection_node_dict = {m.code: {"id": m.id, "geom": m.geom} for m in connection_node_list}
-
     pipe_list = []
     for pipe in threedi.pipes:
         pipe = get_start_and_end_connection_node(pipe, connection_node_dict)
@@ -352,10 +351,12 @@ def get_cross_section_fields(connection, cross_section_dict):
         if connection["cross_section_shape"] in (5,6,7):
             # tabulated_YZ: width -> Y; height -> Z
             if connection["cross_section_shape"] == 7:
+                print('tabulated yz')
                 col1 = profile["width"]
                 col2 = profile["height"]
             # tabulated_trapezium or tabulated_rectangle: height, width
             else:
+                print('tabulated other')
                 col1 = profile["height"]
                 col2 = profile["width"]
             connection["cross_section_table"] = None
