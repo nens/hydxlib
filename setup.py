@@ -20,7 +20,7 @@ install_requires = [
     "sqlalchemy",
     "threedi-schema==0.300.*",
     "pyproj>=3",
-    "geoalchemy2[shapely]"
+    "geoalchemy2[shapely]",
 ]
 
 tests_require = ["pytest", "pytest-cov"]
