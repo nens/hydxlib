@@ -108,19 +108,13 @@ def test_import_hydx(hydx):
         "initial_waterlevel": None,
         "geom": (400, 50, 28992),
         "storage_area": 50.0,
-    }
-    assert threedi.manholes[0] == {
-        "code": "knp1",
         "display_name": "1001",
-        "surface_level": 2.75,
-        "width": 7.071,
-        "length": 7.071,
-        "shape": "rnd",
+        "manhole_surface_level": 2.75,
         "bottom_level": 0,
-        "calculation_type": 2,
-        "manhole_indicator": 0,
+        "exchange_type": 2,
+        "visualisation": 0,
     }
-    assert threedi.pumpstations[0] == {
+    assert threedi.pumps[0] == {
         "code": "pmp88",
         # check if connection number 1 is created for second structure with these nodes
         "display_name": "2001-1016-1",
@@ -140,12 +134,10 @@ def test_import_hydx(hydx):
         "start_node.code": "knp3",
         "end_node.code": "knp4",
         "sewerage_type": 0,
-        "invert_level_start_point": 0.10,
-        "invert_level_end_point": 0.00,
-        "original_length": 48.0,
-        "material": 0,
-        "sewerage_type": 0,
-        "calculation_type": 1,
+        "invert_level_start": 0.10,
+        "invert_level_end": 0.00,
+        "material_id": 0,
+        "exchange_type": 1,
         "cross_section_code": "BET1100",
     }
     assert threedi.impervious_surfaces[0] == {
@@ -154,6 +146,7 @@ def test_import_hydx(hydx):
         "area": 9.0,
         "surface_class": "gesloten verharding",
         "surface_inclination": "uitgestrekt",
+        "node.code": "knp8",
     }
     assert threedi.impervious_surfaces[262] == {
         "code": "263",
@@ -163,17 +156,18 @@ def test_import_hydx(hydx):
         "surface_inclination": "vlak",
         "dry_weather_flow": 60.0,
         "nr_of_inhabitants": "2",
+        "node.code": "knp61",
     }
     assert threedi.outlets[0] == {
         "node.code": "knp78",
         "timeseries": "0,-5.0\n9999,-5.0",
-        "boundary_type": 1,
+        "type": 1,
     }
     # select first manhole from dataset for check
     connection = hydx.connections[90]
     structure = hydx.structures[13]
     threedi.add_structure(connection, structure)
-    assert threedi.pumpstations[8]["type_"] == 2
+    assert threedi.pumps[8]["type_"] == 2
     assert threedi.weirs[1] == {
         "code": "ovs83",
         "display_name": "1009-1009-1",

@@ -1,31 +1,34 @@
 # -*- coding: utf-8 -*-
-import json
+
 import logging
+import math
 from functools import lru_cache
 
+from geoalchemy2.shape import to_shape
 from pyproj import Transformer
 from pyproj.crs import CRS
-from sqlalchemy import text
+from sqlalchemy import func
 from sqlalchemy.orm import load_only
 from threedi_schema import ThreediDatabase
+from threedi_schema.application.errors import (
+    InvalidSRIDException,
+    MigrationMissingError,
+)
 from threedi_schema.domain.models import (
     BoundaryCondition1D,
     ConnectionNode,
-    CrossSectionDefinition,
-    ImperviousSurface,
-    ImperviousSurfaceMap,
-    Manhole,
+    DryWeatherFlow,
+    DryWeatherFlowMap,
     Orifice,
     Pipe,
-    Pumpstation,
+    Pump,
+    PumpMap,
+    Surface,
+    SurfaceMap,
     Weir,
 )
 
 from .threedi import Threedi
-
-SOURCE_EPSG = 28992
-TARGET_EPSG = 4326
-
 
 logger = logging.getLogger(__name__)
 
@@ -43,8 +46,14 @@ def transform(x, y, source_epsg, target_epsg):
     return get_transformer(source_epsg, target_epsg).transform(x, y)
 
 
-def to_ewkt(x, y, srid):
+def to_ewkt_point(x, y, srid):
     return "srid={};POINT ({} {})".format(srid, x, y)
+
+
+def to_ewkt_linestring(coordinates: tuple[tuple[int, int]], srid: int):
+    "coordinates should be passed in as ((x1, y1), (x2, y2))"
+    coordinates_string = ", ".join((f"{coord[0]} {coord[1]}") for coord in coordinates)
+    return f"SRID={srid};LINESTRING ({coordinates_string})"
 
 
 def quote_nullable(x):
@@ -81,58 +90,45 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         path = threedi_db_settings
 
     db = ThreediDatabase(path)
-
+    schema = db.schema
+    try:
+        schema.validate_schema
+    except MigrationMissingError:
+        logger.error("Cannot export hydx to outdated schematisation")
+        return
+    try:
+        target_epsg = (
+            schema.epsg_code if schema.epsg_code is not None else schema._get_dem_epsg()
+        )
+    except InvalidSRIDException:
+        logger.error("Cannot find a valid EPSG code for the schema.")
+        return
     session = db.get_session()
-
-    cross_section_list = []
+    cross_section_dict = {}
     for profile in threedi.cross_sections:
-        cross_section_list.append(
-            CrossSectionDefinition(
-                code=profile["code"],
-                width=profile["width"],
-                height=profile["height"],
-                shape=profile["shape"],
-            )
-        )
-    commit_counts["cross_sections"] = len(cross_section_list)
-    # session.bulk_save_objects(cross_section_list)
-    # session.commit()
-    for xsec in cross_section_list:
-        session.execute(
-            text(
-                "INSERT INTO v2_cross_section_definition(shape,width,height,code) VALUES({0}, {1}, {2}, {3})".format(
-                    quote_nullable(xsec.shape),
-                    quote_nullable(xsec.width),
-                    quote_nullable(xsec.height),
-                    quote_nullable(xsec.code),
-                )
-            )
-        )
-
-    cross_section_list = (
-        session.query(CrossSectionDefinition)
-        .options(
-            load_only(
-                CrossSectionDefinition.id,
-                CrossSectionDefinition.code,
-            )
-        )
-        .order_by(CrossSectionDefinition.id)
-        .all()
-    )
-    cross_section_dict = {m.code: m.id for m in cross_section_list}
+        cross_section_dict[profile["code"]] = {
+            "width": profile["width"],
+            "height": profile["height"],
+            "shape": profile["shape"],
+        }
 
     connection_node_list = []
     for connection_node in threedi.connection_nodes:
         x, y, source_epsg = connection_node["geom"]
-        x, y = transform(x, y, source_epsg, TARGET_EPSG)
+        x, y = transform(x, y, source_epsg, target_epsg)
         connection_node_list.append(
             ConnectionNode(
+                display_name=connection_node["display_name"],
                 code=connection_node["code"],
                 storage_area=connection_node["storage_area"],
-                the_geom=to_ewkt(x, y, TARGET_EPSG),
+                geom=to_ewkt_point(x, y, target_epsg),
+                bottom_level=connection_node["bottom_level"],
+                manhole_surface_level=connection_node["manhole_surface_level"],
+                exchange_type=connection_node["exchange_type"],
+                visualisation=connection_node["visualisation"],
             )
         )
+
     commit_counts["connection_nodes"] = len(connection_node_list)
     session.bulk_save_objects(connection_node_list)
     session.commit()
@@ -143,52 +139,19 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         .order_by(ConnectionNode.id)
         .all()
     )
-    connection_node_dict = {m.code: m.id for m in connection_node_list}
-
-    # # add extra references for link nodes (one node, multiple linked codes
-    # for link in threedi.links:
-    #     try:
-    #         if link['end_node.code'] in connection_node_dict:
-    #             connection_node_dict[link['end_node.code']
-    #                      ] = connection_node_dict[link['start_node.code']]
-    #         else:
-    #             connection_node_dict[link['end_node.code']
-    #                      ] = connection_node_dict[link['start_node.code']]
-    #     except KeyError:
-    #         self.log.add(
-    #             logger.ERROR,
-    #             'node of link not found in nodes',
-    #             {},
-    #             'start node {start_node} or end_node {end_node} of link '
-    #             'definition not found',
-    #             {'start_node': link['start_node.code'],
-    #              'end_node': link['end_node.code']}
-    #         )
-
-    # connection_node_dict[None] = None
-    # connection_node_dict[''] = None
-
-    man_list = []
-    threedi.manholes.reverse()
-    for manhole in threedi.manholes:
-        unique_values = [m.__dict__["connection_node_id"] for m in man_list]
-        manhole["connection_node_id"] = connection_node_dict[manhole["code"]]
-
-        if manhole["connection_node_id"] not in unique_values:
-            man_list.append(Manhole(**manhole))
-        else:
-            logger.error(
-                "Manhole with %r could not be created in 3di due to double values in ConnectionNode",
-                manhole["code"],
-            )
-    commit_counts["manholes"] = len(man_list)
-    session.bulk_save_objects(man_list)
-    session.commit()
-
+    connection_node_dict = {
+        m.code: {"id": m.id, "geom": m.geom} for m in connection_node_list
+    }
     pipe_list = []
     for pipe in threedi.pipes:
         pipe = get_start_and_end_connection_node(pipe, connection_node_dict)
-        pipe = get_cross_section_definition_id(pipe, cross_section_dict)
+        pipe = get_cross_section_fields(pipe, cross_section_dict)
+        pipe = get_line_between_nodes(
+            pipe, connection_node_dict, "start_node.code", "end_node.code", target_epsg
+        )
+        # Skip creating object without geometry; error handling is handled by the functions above
+        if pipe["geom"] is None:
+            continue
         del pipe["start_node.code"]
         del pipe["end_node.code"]
         del pipe["cross_section_code"]
@@ -198,20 +161,62 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     session.commit()
 
     pump_list = []
-    for pump in threedi.pumpstations:
+    pump_map_list = []
+    commit_counts["pumps"] = 0
+    for pump in threedi.pumps:
         pump = get_start_and_end_connection_node(pump, connection_node_dict)
+        # breakpoint()
+        pump["connection_node_id"] = pump["connection_node_id_start"]
+        # skip if no connection node is linked
+        if pump["connection_node_id"] is None:
+            continue
+        pump["geom"] = get_node_geom(pump, connection_node_dict, "start_node.code")
+        connection_node_id_start = pump.pop("connection_node_id_start")
+        connection_node_id_end = pump.pop("connection_node_id_end")
         del pump["start_node.code"]
         del pump["end_node.code"]
-        pump_list.append(Pumpstation(**pump))
-    commit_counts["pumpstations"] = len(pump_list)
-    session.bulk_save_objects(pump_list)
+        pump_object = Pump(**pump)
+        pump_list.append(pump_object)
+        # without flushing and refreshing at this point there is no pump id to reference in pump_map
+        session.add(pump_object)
+        session.flush()
+        session.refresh(pump_object)
+
+        if connection_node_id_start is not None and connection_node_id_end is not None:
+            pump_map_geom = (
+                session.query(func.ST_AsText(func.MakeLine(ConnectionNode.geom)))
+                .filter(
+                    ConnectionNode.id.in_(
+                        [connection_node_id_start, connection_node_id_end]
+                    )
+                )
+                .scalar()
+            )
+            pump_map_list.append(
+                PumpMap(
+                    pump_id=pump_object.id,
+                    connection_node_id_end=connection_node_id_end,
+                    geom=pump_map_geom,
+                    code=pump["code"],
+                    display_name=pump["display_name"],
+                )
+            )
+
+        commit_counts["pumps"] += 1
+
+    if len(pump_map_list) > 0:
+        session.bulk_save_objects(pump_map_list)
     session.commit()
 
     weir_list = []
     for weir in threedi.weirs:
         weir = get_start_and_end_connection_node(weir, connection_node_dict)
-        weir = get_cross_section_definition_id(weir, cross_section_dict)
-
+        weir = get_cross_section_fields(weir, cross_section_dict)
+        weir = get_line_between_nodes(
+            weir, connection_node_dict, "start_node.code", "end_node.code", target_epsg
+        )
+        if weir["geom"] is None:
+            continue
         del weir["start_node.code"]
         del weir["end_node.code"]
         del weir["cross_section_code"]
@@ -223,8 +228,16 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     orifice_list = []
     for orifice in threedi.orifices:
         orifice = get_start_and_end_connection_node(orifice, connection_node_dict)
-        orifice = get_cross_section_definition_id(orifice, cross_section_dict)
-
+        orifice = get_cross_section_fields(orifice, cross_section_dict)
+        orifice = get_line_between_nodes(
+            orifice,
+            connection_node_dict,
+            "start_node.code",
+            "end_node.code",
+            target_epsg,
+        )
+        if orifice["geom"] is None:
+            continue
         del orifice["start_node.code"]
         del orifice["end_node.code"]
         del orifice["cross_section_code"]
@@ -238,89 +251,224 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     outlet_list = []
     for outlet in threedi.outlets:
         if outlet["node.code"] in connection_node_dict:
-            outlet["connection_node_id"] = connection_node_dict[outlet["node.code"]]
+            outlet["connection_node_id"] = connection_node_dict[outlet["node.code"]][
+                "id"
+            ]
+            outlet["geom"] = get_node_geom(outlet, connection_node_dict, "node.code")
         else:
             outlet["connection_node_id"] = None
             logger.error("Node of outlet not found in connection nodes")
+            continue
         del outlet["node.code"]
+        outlet["time_units"] = "minutes"
+        outlet["interpolate"] = 1
         outlet_list.append(BoundaryCondition1D(**outlet))
 
     commit_counts["outlets"] = len(outlet_list)
     session.bulk_save_objects(outlet_list)
     session.commit()
 
-    # Impervious surfaces
-    imp_list = []
-    for imp in threedi.impervious_surfaces:
-        imp_list.append(ImperviousSurface(**imp))
-    commit_counts["impervious_surfaces"] = len(imp_list)
-    session.bulk_save_objects(imp_list)
+    # 0d inflow
+    surf_list = []
+    dwf_list = []
+    for surface in threedi.impervious_surfaces:
+        surface["surface_parameters_id"] = get_surface_parameters_id(
+            surface_class=surface.pop("surface_class", None),
+            surface_inclination=surface.pop("surface_inclination", None),
+        )
+        if surface["surface_parameters_id"] is None:
+            logger.error("surface parameter id not found for surface")
+        connection_node = connection_node_dict.get(surface["node.code"], None)
+        if connection_node is None:
+            logger.error(f"node not found for surface {surface['code']}")
+        node_geom = connection_node["geom"]
+        if surface["area"] > 0:
+            side_length = math.sqrt(surface["area"])
+            node_x = session.query(func.ST_X(node_geom)).scalar()
+            node_y = session.query(func.ST_Y(node_geom)).scalar()
+            surface[
+                "geom"
+            ] = f"""
+                srid={target_epsg};POLYGON(({node_x - side_length / 2} {node_y - side_length / 2},
+                         {node_x + side_length / 2} {node_y - side_length / 2},
+                         {node_x + side_length / 2} {node_y + side_length / 2},
+                         {node_x - side_length / 2} {node_y + side_length / 2},
+                         {node_x - side_length / 2} {node_y - side_length / 2}
+                         ))"""
+        dwf = {
+            "code": surface["code"],
+            "display_name": surface["display_name"],
+            "daily_total": surface.pop("dry_weather_flow", None),
+            "multiplier": surface.pop("nr_of_inhabitants", None),
+        }
+        dwf["geom"] = (
+            session.query(func.ST_AsText(func.ST_Buffer(ConnectionNode.geom, 1)))
+            .filter(
+                ConnectionNode.id == connection_node_dict[surface["node.code"]]["id"]
+            )
+            .scalar()
+        )
+        surface.pop("node.code", None)
+        if surface["area"] != 0:
+            surf_list.append(Surface(**surface))
+        if dwf["daily_total"] is not None and dwf["multiplier"] is not None:
+            dwf_list.append(DryWeatherFlow(**dwf))
+    commit_counts["surfaces"] = len(surf_list)
+    commit_counts["dry_weather_flows"] = len(dwf_list)
+    session.bulk_save_objects(surf_list)
+    session.bulk_save_objects(dwf_list)
     session.commit()
 
-    imp_list = (
-        session.query(ImperviousSurface)
-        .options(load_only(ImperviousSurface.id, ImperviousSurface.code))
-        .order_by(ImperviousSurface.id)
-        .all()
-    )
-    imp_dict = {m.code: m.id for m in imp_list}
+    for obj_name, obj, map_obj in [
+        ("surface", Surface, SurfaceMap),
+        ("dry_weather_flow", DryWeatherFlow, DryWeatherFlowMap),
+    ]:
+        obj_list = (
+            session.query(obj)
+            .options(load_only(obj.id, obj.code))
+            .order_by(obj.id)
+            .all()
+        )
+        obj_map = {m.code: m.id for m in obj_list}
+        map_list = []
+        for imp_map in threedi.impervious_surface_maps:
+            import copy
 
-    map_list = []
-    for imp_map in threedi.impervious_surface_maps:
-        imp_map["impervious_surface_id"] = imp_dict[imp_map["imp_surface.code"]]
-        imp_map["connection_node_id"] = connection_node_dict[imp_map["node.code"]]
-        del imp_map["node.code"]
-        del imp_map["imp_surface.code"]
-        map_list.append(ImperviousSurfaceMap(**imp_map))
-    session.bulk_save_objects(map_list)
-    session.commit()
+            item = copy.copy(imp_map)
+            if not item["imp_surface.code"] in obj_map:
+                continue
+            item[f"{obj_name}_id"] = obj_map[item["imp_surface.code"]]
+            item["connection_node_id"] = connection_node_dict[item["node.code"]]["id"]
+            node_geom = connection_node_dict[item["node.code"]]["geom"]
+            node_x = session.query(func.ST_X(node_geom)).scalar()
+            node_y = session.query(func.ST_Y(node_geom)).scalar()
+            obj_geom = (
+                session.query(func.PointOnSurface(obj.geom))
+                .filter(obj.id == item[f"{obj_name}_id"])
+                .scalar()
+            )
+            obj_x = session.query(func.ST_X(obj_geom)).scalar()
+            obj_y = session.query(func.ST_Y(obj_geom)).scalar()
+            if obj_x == node_x and obj_y == node_y:
+                obj_y += 1
+            item[
+                "geom"
+            ] = f"srid={target_epsg};LINESTRING({obj_x} {obj_y}, {node_x} {node_y})"
+            del item["node.code"]
+            del item["imp_surface.code"]
+            map_list.append(map_obj(**item))
+        session.bulk_save_objects(map_list)
+        session.commit()
 
     return commit_counts
 
 
-def get_start_and_end_connection_node(connection, connection_node_dict):
-    if connection["start_node.code"] in connection_node_dict:
-        connection["connection_node_start_id"] = connection_node_dict[
-            connection["start_node.code"]
-        ]
-    else:
-        connection["connection_node_start_id"] = None
-        logger.error(
-            "Start node of connection %r not found in connection nodes",
-            connection["code"],
-        )
+def get_surface_parameters_id(surface_class, surface_inclination):
+    id_map = {
+        "gesloten verharding:hellend": 101,
+        "gesloten verharding:vlak": 102,
+        "gesloten verharding:uitgestrekt": 103,
+        "open verharding:hellend": 104,
+        "open verharding:vlak": 105,
+        "open verharding:uitgestrekt": 106,
+        "pand:hellend": 107,
+        "pand:vlak": 108,
+        "pand:uitgestrekt": 109,
+        "onverhard:hellend": 110,
+        "onverhard:vlak": 111,
+        "onverhard:uitgestrekt": 112,
+        "half verhard:hellend": 113,
+        "half verhard:vlak": 114,
+        "half verhard:uitgestrekt": 115,
+    }
+    return id_map.get(f"{surface_class}:{surface_inclination}", None)
 
-    if connection["end_node.code"] in connection_node_dict:
-        connection["connection_node_end_id"] = connection_node_dict[
-            connection["end_node.code"]
-        ]
+
+def get_connection_node(connection, connection_node_dict, node_key):
+    if connection[node_key] in connection_node_dict:
+        return connection_node_dict[connection[node_key]]["id"]
     else:
-        connection["connection_node_end_id"] = None
         logger.error(
-            "End node of connection %r not found in connection nodes",
-            connection["code"],
+            f"{node_key} of connection {connection['code']} not found in connection nodes",
         )
+        return None
+
+
+def get_start_and_end_connection_node(connection, connection_node_dict):
+    connection["connection_node_id_start"] = get_connection_node(
+        connection, connection_node_dict, "start_node.code"
+    )
+    connection["connection_node_id_end"] = get_connection_node(
+        connection, connection_node_dict, "end_node.code"
+    )
     return connection
 
 
-def get_cross_section_definition_id(connection, cross_section_dict):
-    id_ = cross_section_dict.get(connection["cross_section_code"])
+def get_cross_section_fields(connection, cross_section_dict):
     if connection["cross_section_code"] in cross_section_dict:
-        connection["cross_section_definition_id"] = cross_section_dict[
-            connection["cross_section_code"]
-        ]
-    if id_ is None:
+        profile = cross_section_dict[connection["cross_section_code"]]
+        connection["cross_section_shape"] = profile["shape"]
+        if connection["cross_section_shape"] in (5, 6, 7):
+            # tabulated_YZ: width -> Y; height -> Z
+            if connection["cross_section_shape"] == 7:
+                print("tabulated yz")
+                col1 = profile["width"]
+                col2 = profile["height"]
+            # tabulated_trapezium or tabulated_rectangle: height, width
+            else:
+                print("tabulated other")
+                col1 = profile["height"]
+                col2 = profile["width"]
+            connection["cross_section_table"] = None
+            if isinstance(profile["width"], str) and isinstance(profile["height"], str):
+                col1 = col1.split()
+                col2 = col2.split()
+                if len(col1) == len(col2):
+                    connection["cross_section_table"] = "\n".join(
+                        [",".join(row) for row in zip(col1, col2)]
+                    )
+        elif profile["shape"] is not None:
+            connection["cross_section_width"] = profile["width"]
+            connection["cross_section_height"] = profile["height"]
+    else:
         logger.error(
             "Cross section definition of connection %r is not found in cross section definitions",
             connection["code"],
         )
 
-    connection["cross_section_definition_id"] = id_
     return connection
 
 
-def export_json(hydx, path):
-    threedi = Threedi()
-    threedi.import_hydx(hydx)
-    with open(path, "w") as f:
-        json.dump(threedi.__dict__, f)
+def get_node_geom(connection, connection_node_dict, node_key):
+    node_id = connection[node_key]
+    if node_id in connection_node_dict:
+        return connection_node_dict[node_id]["geom"]
+    else:
+        logger.error(
+            f'Node {node_key} of connection {connection["code"]} not found in connection nodes'
+        )
+        return None
+
+
+def get_line_between_nodes(
+    connection, connection_node_dict, start_key, end_key, target_epsg
+):
+    start_node_geom = get_node_geom(connection, connection_node_dict, start_key)
+    end_node_geom = get_node_geom(connection, connection_node_dict, end_key)
+    if start_node_geom and end_node_geom:
+        start_node_geom = to_shape(start_node_geom)
+        end_node_geom = to_shape(end_node_geom)
+        geom = to_ewkt_linestring(
+            coordinates=(
+                (start_node_geom.x, start_node_geom.y),
+                (end_node_geom.x, end_node_geom.y),
+            ),
+            srid=target_epsg,
+        )
+    else:
+        logger.error(
+            f'Cannot calculate geom for connection {connection["code"]} without start and end node'
+        )
+        geom = None
+    connection["geom"] = geom
+    return connection

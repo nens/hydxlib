@@ -30,21 +30,6 @@ class PipeMaterialType(Enum):
     STEEL = 8
 
 
-class ManholeIndicator(Enum):
-    MANHOLE = 0
-    OUTLET = 1
-
-
-class ManholeShape(Enum):
-    RECTANGLE = "rect"
-    ROUND = "rnd"
-
-
-MANHOLE_SHAPE_MAPPING = {
-    "RND": ManholeShape.ROUND.value,
-    "RHK": ManholeShape.RECTANGLE.value,
-}
-
 # for now assuming "VRL" to be connected
 CALCULATION_TYPE_MAPPING = {
     "KNV": PipeCalculationType.ISOLATED.value,
@@ -68,14 +53,6 @@ SEWERAGE_TYPE_MAPPING = {
     "HWA": SewerageType.RAIN_WATER.value,
     "DWA": SewerageType.DRY_WEATHER_FLOW.value,
     "NVT": SewerageType.TRANSPORT.value,
-}
-
-# for now ignoring CMP and ITP
-MANHOLE_INDICATOR_MAPPING = {
-    "INS": ManholeIndicator.MANHOLE.value,
-    "UIT": ManholeIndicator.OUTLET.value,
-    "ITP": ManholeIndicator.MANHOLE.value,
-    "CMP": ManholeIndicator.MANHOLE.value,
 }
 
 SHAPE_MAPPING = {
@@ -108,6 +85,19 @@ SURFACE_INCLINATION_MAPPING = {
     "HEL": SurfaceInclinationType.HELLEND.value,
     "VLA": SurfaceInclinationType.VLAK.value,
     "VLU": SurfaceInclinationType.UITGESTREKT.value,
+}
+
+
+class ManholeIndicator(Enum):
+    MANHOLE = 0
+    OUTLET = 1
+
+
+MANHOLE_INDICATOR_MAPPING = {
+    "INS": ManholeIndicator.MANHOLE.value,
+    "UIT": ManholeIndicator.OUTLET.value,
+    "ITP": ManholeIndicator.MANHOLE.value,
+    "CMP": ManholeIndicator.MANHOLE.value,
 }
 
 
@@ -209,6 +199,7 @@ def get_cross_section_details(hydx_profile, record_code, name_for_logging):
     else:
         width = hydx_profile.tabulatedbreedte
         height = hydx_profile.tabulatedhoogte
+        shape = CrossSectionShape.TABULATED_RECTANGLE.value
 
     if not width:
         logger.error(
@@ -242,9 +233,8 @@ class Threedi:
 
     def import_hydx(self, hydx):
         self.connection_nodes = []
-        self.manholes = []
         self.connections = []
-        self.pumpstations = []
+        self.pumps = []
         self.weirs = []
         self.orifices = []
         self.pipes = []
@@ -375,7 +365,7 @@ class Threedi:
                 self.add_1d_boundary(structure)
 
     def add_connection_node(self, hydx_connection_node):
-        """Add hydx.connection_node into threedi.connection_node and threedi.manhole"""
+        """Add hydx.connection_node into threedi.connection_node"""
 
         # get connection_nodes attributes
         lengte = transform_unit_mm_to_m(hydx_connection_node.lengteputbodem)
@@ -383,51 +373,45 @@ class Threedi:
         area = determine_area(breedte, lengte)
         connection_node = {
             "code": hydx_connection_node.identificatieknooppuntofverbinding,
-            "initial_waterlevel": hydx_connection_node.initielewaterstand,
+            "display_name": hydx_connection_node.identificatierioolput,
             "storage_area": round(area, 2),
+            "initial_waterlevel": hydx_connection_node.initielewaterstand,
+            "manhole_surface_level": hydx_connection_node.niveaumaaiveld,
+            "bottom_level": hydx_connection_node.niveaubinnenonderkantput,
             "geom": point(
                 hydx_connection_node.x_coordinaat,
                 hydx_connection_node.y_coordinaat,
                 28992,
             ),
-        }
-
-        self.connection_nodes.append(connection_node)
-
-        # get manhole attributes
-        manhole = {
-            "code": hydx_connection_node.identificatieknooppuntofverbinding,
-            "display_name": hydx_connection_node.identificatierioolput,
-            "surface_level": hydx_connection_node.niveaumaaiveld,
-            "width": breedte,
-            "length": lengte,
-            "shape": get_mapping_value(
-                MANHOLE_SHAPE_MAPPING,
-                hydx_connection_node.vormput,
-                hydx_connection_node.identificatierioolput,
-                name_for_logging="manhole shape",
-            ),
-            "bottom_level": hydx_connection_node.niveaubinnenonderkantput,
-            "calculation_type": get_mapping_value(
+            "exchange_type": get_mapping_value(
                 CALCULATION_TYPE_MAPPING,
                 hydx_connection_node.maaiveldschematisering,
                 hydx_connection_node.identificatierioolput,
                 name_for_logging="manhole surface schematization",
             ),
-            "manhole_indicator": get_mapping_value(
+            "visualisation": get_mapping_value(
                 MANHOLE_INDICATOR_MAPPING,
                 hydx_connection_node.typeknooppunt,
                 hydx_connection_node.identificatierioolput,
                 name_for_logging="manhole indicator",
             ),
         }
-
-        self.manholes.append(manhole)
+        # In case of duplicate connection node, the manhole properties should not be defined
+        if connection_node["code"] in [n["code"] for n in self.connection_nodes]:
+            manhole_properties = [
+                "manhole_surface_level",
+                "bottom_level",
+                "exchange_type",
+            ]
+            for prop in manhole_properties:
+                connection_node[prop] = None
+            connection_node["visualisation"] = -1
+        self.connection_nodes.append(connection_node)
 
     def add_pipe(self, hydx_connection, material):
         self.check_if_nodes_of_connection_exists(hydx_connection)
-        combined_display_name_string = self.get_connection_display_names_from_manholes(
-            hydx_connection
+        combined_display_name_string = (
+            self.get_connection_display_names_from_connection_nodes(hydx_connection)
         )
 
         pipe = {
@@ -436,31 +420,28 @@ class Threedi:
             "start_node.code": hydx_connection.identificatieknooppunt1,
             "end_node.code": hydx_connection.identificatieknooppunt2,
             "cross_section_code": hydx_connection.identificatieprofieldefinitie,
-            "invert_level_start_point": hydx_connection.bobknooppunt1,
-            "invert_level_end_point": hydx_connection.bobknooppunt2,
-            "original_length": hydx_connection.lengteverbinding,
-            "material": material,
+            "invert_level_start": hydx_connection.bobknooppunt1,
+            "invert_level_end": hydx_connection.bobknooppunt2,
+            "material_id": material,
             "sewerage_type": get_mapping_value(
                 SEWERAGE_TYPE_MAPPING,
                 hydx_connection.typeinzameling,
                 combined_display_name_string,
                 name_for_logging="pipe sewer type",
             ),
-            "calculation_type": 1,
+            "exchange_type": 1,
         }
         self.pipes.append(pipe)
 
     def add_structure(self, hydx_connection, hydx_structure):
-        """Add hydx.structure and hydx.connection into threedi.pumpstation"""
+        """Add hydx.structure and hydx.connection into threedi.pumps"""
         self.check_if_nodes_of_connection_exists(hydx_connection)
-        combined_display_name_string = self.get_connection_display_names_from_manholes(
-            hydx_connection
+        combined_display_name_string = (
+            self.get_connection_display_names_from_connection_nodes(hydx_connection)
         )
 
         if hydx_structure.typekunstwerk == "PMP":
-            self.add_pumpstation(
-                hydx_connection, hydx_structure, combined_display_name_string
-            )
+            self.add_pump(hydx_connection, hydx_structure, combined_display_name_string)
         elif hydx_structure.typekunstwerk == "OVS":
             self.add_weir(hydx_connection, hydx_structure, combined_display_name_string)
         elif hydx_structure.typekunstwerk == "DRL":
@@ -470,32 +451,30 @@ class Threedi:
                 combined_display_name_string,
             )
 
-    def add_pumpstation(
-        self, hydx_connection, hydx_structure, combined_display_name_string
-    ):
+    def add_pump(self, hydx_connection, hydx_structure, combined_display_name_string):
         if hydx_structure.aanslagniveaubovenstrooms is not None:
-            pumpstation_type = 2
-            pumpstation_start_level = hydx_structure.aanslagniveaubovenstrooms
-            pumpstation_stop_level = hydx_structure.afslagniveaubovenstrooms
+            pump_type = 2
+            pump_start_level = hydx_structure.aanslagniveaubovenstrooms
+            pump_stop_level = hydx_structure.afslagniveaubovenstrooms
         else:
-            pumpstation_type = 1
-            pumpstation_start_level = hydx_structure.aanslagniveaubenedenstrooms
-            pumpstation_stop_level = hydx_structure.afslagniveaubenedenstrooms
+            pump_type = 1
+            pump_start_level = hydx_structure.aanslagniveaubenedenstrooms
+            pump_stop_level = hydx_structure.afslagniveaubenedenstrooms
 
-        pumpstation = {
+        pump = {
             "code": hydx_connection.identificatieknooppuntofverbinding,
             "display_name": combined_display_name_string,
             "start_node.code": hydx_connection.identificatieknooppunt1,
             "end_node.code": hydx_connection.identificatieknooppunt2,
-            "type_": pumpstation_type,
-            "start_level": pumpstation_start_level,
-            "lower_stop_level": pumpstation_stop_level,
+            "type_": pump_type,
+            "start_level": pump_start_level,
+            "lower_stop_level": pump_stop_level,
             # upper_stop_level is not supported by hydx
             "upper_stop_level": None,
             "capacity": transform_capacity_to_ls(hydx_structure.pompcapaciteit),
             "sewerage": True,
         }
-        self.pumpstations.append(pumpstation)
+        self.pumps.append(pump)
 
     def add_weir(self, hydx_connection, hydx_structure, combined_display_name_string):
         waterlevel_boundary = getattr(hydx_structure, "buitenwaterstand", None)
@@ -504,7 +483,7 @@ class Threedi:
             boundary = {
                 "node.code": hydx_connection.identificatieknooppunt2,
                 "timeseries": timeseries,
-                "boundary_type": BoundaryType.WATERLEVEL.value,
+                "type": BoundaryType.WATERLEVEL.value,
             }
             self.outlets.append(boundary)
         else:
@@ -635,29 +614,31 @@ class Threedi:
             boundary = {
                 "node.code": hydx_structure.identificatieknooppuntofverbinding,
                 "timeseries": timeseries,
-                "boundary_type": BoundaryType.WATERLEVEL.value,
+                "type": BoundaryType.WATERLEVEL.value,
             }
             self.outlets.append(boundary)
 
     def append_and_map_surface(
-        self, surface, manhole_or_line_id, surface_nr, node_code=None
+        self, surface, connection_node_id, surface_nr, node_code=None
     ):
-        manhole_codes = [manhole["code"] for manhole in self.manholes]
-        if manhole_or_line_id in manhole_codes:
-            node_code = manhole_or_line_id
+        connection_node_codes = [
+            connection_node["code"] for connection_node in self.connection_nodes
+        ]
+        if connection_node_id in connection_node_codes:
+            node_code = connection_node_id
         if node_code is None:
             for pipe in self.pipes:
-                if manhole_or_line_id == pipe["code"]:
+                if connection_node_id == pipe["code"]:
                     node_code = pipe["start_node.code"]
                     break
 
         if node_code is None:
             logger.error(
                 "Connection node %r could not be found for surface %r",
-                manhole_or_line_id,
+                connection_node_id,
                 surface["code"],
             )
-            self.impervious_surfaces.append(surface)
+            # self.impervious_surfaces.append(surface)
             return
 
         surface_map = {
@@ -665,7 +646,7 @@ class Threedi:
             "imp_surface.code": str(surface_nr),
             "percentage": 100,
         }
-
+        surface["node.code"] = node_code
         self.impervious_surfaces.append(surface)
         self.impervious_surface_maps.append(surface_map)
 
@@ -674,33 +655,35 @@ class Threedi:
         code1 = connection.identificatieknooppunt1
         code2 = connection.identificatieknooppunt2
 
-        manh_list = [manhole["code"] for manhole in self.manholes]
-        if code1 is not None and code1 not in manh_list:
+        connection_node_list = [
+            connection_node["code"] for connection_node in self.connection_nodes
+        ]
+        if code1 is not None and code1 not in connection_node_list:
             logger.error(
                 "Start connection node %r could not be found for record %r",
                 code1,
                 connection_code,
             )
-        elif code2 is not None and code2 not in manh_list:
+        elif code2 is not None and code2 not in connection_node_list:
             logger.error(
                 "End connection node %r could not be found for record %r",
                 code2,
                 connection_code,
             )
 
-    def get_connection_display_names_from_manholes(self, connection):
+    def get_connection_display_names_from_connection_nodes(self, connection):
         code1 = connection.identificatieknooppunt1
         code2 = connection.identificatieknooppunt2
         default_code = ""
 
-        manhole_dict = {
-            manhole["code"]: manhole["display_name"] for manhole in self.manholes
+        node_dict = {
+            node["code"]: node["display_name"] for node in self.connection_nodes
         }
-        display_name1 = manhole_dict.get(code1, default_code)
-        display_name2 = manhole_dict.get(code2, default_code)
+        display_name1 = node_dict.get(code1, default_code)
+        display_name2 = node_dict.get(code2, default_code)
         combined_display_name_string = display_name1 + "-" + display_name2
 
-        all_connections = self.pumpstations + self.weirs + self.orifices
+        all_connections = self.pumps + self.weirs + self.orifices
         nr_connections = [
             element["display_name"]
             for element in all_connections

@@ -7,10 +7,11 @@ from hydxlib.importer import import_hydx
 
 
 @pytest.fixture
-def threedi_db():
-    db = ThreediDatabase("")
+def threedi_db(tmp_path):
+    temp_db_path = tmp_path / "foo.sqlite"
+    db = ThreediDatabase(str(temp_db_path))
     schema = db.schema
-    schema.upgrade(backup=False)
+    schema.upgrade(backup=False, epsg_code_override=28992)
     return db
 
 
