@@ -10,7 +10,10 @@ from pyproj.crs import CRS
 from sqlalchemy import func
 from sqlalchemy.orm import load_only
 from threedi_schema import ThreediDatabase
-from threedi_schema.application.errors import InvalidSRIDException
+from threedi_schema.application.errors import (
+    InvalidSRIDException,
+    MigrationMissingError,
+)
 from threedi_schema.domain.models import (
     BoundaryCondition1D,
     ConnectionNode,
@@ -88,7 +91,11 @@ def write_threedi_to_db(threedi, threedi_db_settings):
 
     db = ThreediDatabase(path)
     schema = db.schema
-    session = db.get_session()
+    try:
+        schema.validate_schema
+    except MigrationMissingError:
+        logger.error("Cannot export hydx to outdated schematisation")
+        return
     try:
         target_epsg = (
             schema.epsg_code if schema.epsg_code is not None else schema._get_dem_epsg()
@@ -96,7 +103,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     except InvalidSRIDException:
         logger.error("Cannot find a valid EPSG code for the schema.")
         return
-
+    session = db.get_session()
     cross_section_dict = {}
     for profile in threedi.cross_sections:
         cross_section_dict[profile["code"]] = {
