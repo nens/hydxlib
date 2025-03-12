@@ -95,6 +95,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         )
     except InvalidSRIDException:
         logger.error("Cannot find a valid EPSG code for the schema.")
+        return
 
     cross_section_dict = {}
     for profile in threedi.cross_sections:
