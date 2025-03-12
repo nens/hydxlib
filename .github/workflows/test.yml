@@ -41,7 +41,7 @@ jobs:
 
       - name: Install GDAL, sqlite3 and spatialite
         run: |
-          sudo apt install --yes --no-install-recommends sqlite3 libsqlite3-mod-spatialite libgdal-dev
+          sudo apt-get install --yes --no-install-recommends sqlite3 libsqlite3-mod-spatialite libgdal-dev
 
       - name: Install python dependencies
         run: |
