@@ -2,7 +2,10 @@
 
 import logging
 import math
+from functools import lru_cache
 
+from pyproj import Transformer
+from pyproj.crs import CRS
 from geoalchemy2.shape import to_shape
 from sqlalchemy import func
 from sqlalchemy.orm import load_only
@@ -23,11 +26,21 @@ from threedi_schema.domain.models import (
 
 from .threedi import Threedi
 
-SOURCE_EPSG = 28992
-TARGET_EPSG = 28992
-
 
 logger = logging.getLogger(__name__)
+
+
+# Constructing a Transformer takes quite long, so we use caching here. The
+# function is deterministic so this doesn't have any side effects.
+@lru_cache(maxsize=1)
+def get_transformer(source_epsg, target_epsg):
+    return Transformer.from_crs(
+        CRS.from_epsg(source_epsg), CRS.from_epsg(target_epsg), always_xy=True
+    )
+
+
+def transform(x, y, source_epsg, target_epsg):
+    return get_transformer(source_epsg, target_epsg).transform(x, y)
 
 
 def to_ewkt_point(x, y, srid):
@@ -75,8 +88,11 @@ def write_threedi_to_db(threedi, threedi_db_settings):
 
     db = ThreediDatabase(path)
     schema = db.schema
-    schema.upgrade(backup=False, epsg_code_override=28992)
     session = db.get_session()
+    try:
+        target_epsg = schema.epsg_code if schema.epsg_code is not None else schema._get_dem_epsg()
+    except InvalidSRIDException:
+        logger.error("Cannot find a valid EPSG code for the schema.")
 
     cross_section_dict = {}
     for profile in threedi.cross_sections:
@@ -88,15 +104,16 @@ def write_threedi_to_db(threedi, threedi_db_settings):
 
     connection_node_list = []
     for connection_node in threedi.connection_nodes:
+        # transform
         x, y, source_epsg = connection_node["geom"]
+        x, y = transform(x, y, source_epsg, target_epsg)
         connection_node_list.append(
             ConnectionNode(
                 display_name=connection_node["display_name"],
                 code=connection_node["code"],
                 storage_area=connection_node["storage_area"],
-                geom=to_ewkt_point(x, y, TARGET_EPSG),
+                geom=to_ewkt_point(x, y, target_epsg),
                 bottom_level=connection_node["bottom_level"],
-                # initial_water_level=connection_node["initial_waterlevel"],
                 manhole_surface_level=connection_node["manhole_surface_level"],
                 exchange_type=connection_node["exchange_type"],
                 visualisation=connection_node["visualisation"],
@@ -121,7 +138,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         pipe = get_start_and_end_connection_node(pipe, connection_node_dict)
         pipe = get_cross_section_fields(pipe, cross_section_dict)
         pipe = get_line_between_nodes(
-            pipe, connection_node_dict, "start_node.code", "end_node.code"
+            pipe, connection_node_dict, "start_node.code", "end_node.code", target_epsg
         )
         # Skip creating object without geometry; error handling is handled by the functions above
         if pipe["geom"] is None:
@@ -187,7 +204,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         weir = get_start_and_end_connection_node(weir, connection_node_dict)
         weir = get_cross_section_fields(weir, cross_section_dict)
         weir = get_line_between_nodes(
-            weir, connection_node_dict, "start_node.code", "end_node.code"
+            weir, connection_node_dict, "start_node.code", "end_node.code", target_epsg
         )
         if weir["geom"] is None:
             continue
@@ -204,7 +221,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         orifice = get_start_and_end_connection_node(orifice, connection_node_dict)
         orifice = get_cross_section_fields(orifice, cross_section_dict)
         orifice = get_line_between_nodes(
-            orifice, connection_node_dict, "start_node.code", "end_node.code"
+            orifice, connection_node_dict, "start_node.code", "end_node.code", target_epsg
         )
         if orifice["geom"] is None:
             continue
@@ -238,7 +255,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     session.bulk_save_objects(outlet_list)
     session.commit()
 
-    # # Impervious surfaces
+    # 0d inflow
     surf_list = []
     dwf_list = []
     for surface in threedi.impervious_surfaces:
@@ -259,7 +276,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
             surface[
                 "geom"
             ] = f"""
-                srid={TARGET_EPSG};POLYGON(({node_x - side_length / 2} {node_y - side_length / 2},
+                srid={target_epsg};POLYGON(({node_x - side_length / 2} {node_y - side_length / 2},
                          {node_x + side_length / 2} {node_y - side_length / 2},
                          {node_x + side_length / 2} {node_y + side_length / 2},
                          {node_x - side_length / 2} {node_y + side_length / 2},
@@ -310,7 +327,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
             item[f"{obj_name}_id"] = obj_map[item["imp_surface.code"]]
             item["connection_node_id"] = connection_node_dict[item["node.code"]]["id"]
             node_geom = connection_node_dict[item["node.code"]]["geom"]
-            # breakpoint()
             node_x = session.query(func.ST_X(node_geom)).scalar()
             node_y = session.query(func.ST_Y(node_geom)).scalar()
             obj_geom = (
@@ -324,7 +340,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
                 obj_y += 1
             item[
                 "geom"
-            ] = f"srid={TARGET_EPSG};LINESTRING({obj_x} {obj_y}, {node_x} {node_y})"
+            ] = f"srid={target_epsg};LINESTRING({obj_x} {obj_y}, {node_x} {node_y})"
             del item["node.code"]
             del item["imp_surface.code"]
             map_list.append(map_obj(**item))
@@ -421,7 +437,7 @@ def get_node_geom(connection, connection_node_dict, node_key):
         return None
 
 
-def get_line_between_nodes(connection, connection_node_dict, start_key, end_key):
+def get_line_between_nodes(connection, connection_node_dict, start_key, end_key, target_epsg):
     start_node_geom = get_node_geom(connection, connection_node_dict, start_key)
     end_node_geom = get_node_geom(connection, connection_node_dict, end_key)
     if start_node_geom and end_node_geom:
@@ -432,7 +448,7 @@ def get_line_between_nodes(connection, connection_node_dict, start_key, end_key)
                 (start_node_geom.x, start_node_geom.y),
                 (end_node_geom.x, end_node_geom.y),
             ),
-            srid=TARGET_EPSG,
+            srid=target_epsg,
         )
     else:
         logger.error(

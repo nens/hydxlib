@@ -80,7 +80,7 @@ def test_get_line_between_nodes():
     connection = {"code": "pmp1", "nodeA.code": "knp3", "nodeB.code": "knp4"}
     connection_node_dict = {"knp3": {"geom": geom1}, "knp4": {"geom": geom2}}
     line = get_line_between_nodes(
-        connection, connection_node_dict, "nodeA.code", "nodeB.code"
+        connection, connection_node_dict, "nodeA.code", "nodeB.code", target_epsg=28992
     )
     assert line["geom"] == "SRID=28992;LINESTRING (400.0 50.0, 400.0 60.0)"
 
@@ -89,7 +89,7 @@ def test_get_line_between_nodes_incomplete(caplog):
     connection = {"code": "pmp1", "nodeA.code": "knp3", "nodeB.code": "knp4"}
     connection_node_dict = {"knp3": {"geom": "foo"}}
     line = get_line_between_nodes(
-        connection, connection_node_dict, "nodeA.code", "nodeB.code"
+        connection, connection_node_dict, "nodeA.code", "nodeB.code", target_epsg=28992
     )
     assert line["geom"] is None
     assert caplog.records[0].levelname == "ERROR"
