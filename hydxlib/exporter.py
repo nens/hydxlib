@@ -107,7 +107,6 @@ def write_threedi_to_db(threedi, threedi_db_settings):
 
     connection_node_list = []
     for connection_node in threedi.connection_nodes:
-        # transform
         x, y, source_epsg = connection_node["geom"]
         x, y = transform(x, y, source_epsg, target_epsg)
         connection_node_list.append(
