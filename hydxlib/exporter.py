@@ -4,12 +4,13 @@ import logging
 import math
 from functools import lru_cache
 
+from geoalchemy2.shape import to_shape
 from pyproj import Transformer
 from pyproj.crs import CRS
-from geoalchemy2.shape import to_shape
 from sqlalchemy import func
 from sqlalchemy.orm import load_only
 from threedi_schema import ThreediDatabase
+from threedi_schema.application.errors import InvalidSRIDException
 from threedi_schema.domain.models import (
     BoundaryCondition1D,
     ConnectionNode,
@@ -25,7 +26,6 @@ from threedi_schema.domain.models import (
 )
 
 from .threedi import Threedi
-
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +90,9 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     schema = db.schema
     session = db.get_session()
     try:
-        target_epsg = schema.epsg_code if schema.epsg_code is not None else schema._get_dem_epsg()
+        target_epsg = (
+            schema.epsg_code if schema.epsg_code is not None else schema._get_dem_epsg()
+        )
     except InvalidSRIDException:
         logger.error("Cannot find a valid EPSG code for the schema.")
 
@@ -221,7 +223,11 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         orifice = get_start_and_end_connection_node(orifice, connection_node_dict)
         orifice = get_cross_section_fields(orifice, cross_section_dict)
         orifice = get_line_between_nodes(
-            orifice, connection_node_dict, "start_node.code", "end_node.code", target_epsg
+            orifice,
+            connection_node_dict,
+            "start_node.code",
+            "end_node.code",
+            target_epsg,
         )
         if orifice["geom"] is None:
             continue
@@ -437,7 +443,9 @@ def get_node_geom(connection, connection_node_dict, node_key):
         return None
 
 
-def get_line_between_nodes(connection, connection_node_dict, start_key, end_key, target_epsg):
+def get_line_between_nodes(
+    connection, connection_node_dict, start_key, end_key, target_epsg
+):
     start_node_geom = get_node_geom(connection, connection_node_dict, start_key)
     end_node_geom = get_node_geom(connection, connection_node_dict, end_key)
     if start_node_geom and end_node_geom:
