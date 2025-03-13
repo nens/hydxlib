@@ -41,7 +41,7 @@ Python::
 
   from hydxlib import run_import_export
 
-  run_import_export("threedi", "path/to/hydx/dir", "path/to/threedi.sqlite")
+  run_import_export("path/to/hydx/dir", "path/to/threedi.sqlite")
 
 
 Installation for development
