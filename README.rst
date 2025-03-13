@@ -3,7 +3,7 @@ A library for the GWSW-hydx exchange format
 
 RioNED is going to release a new format for exchanging sewerage data called GWSW-hydx.
 hydxlib can be used to import sewerage data from a hydx format (``*.csv``) to
-3Di native spatialite files, or alternatively JSON.
+3Di native schematisation files.
 
 For more information about GWSW-hydx:
 https://apps.gwsw.nl/item_hyddef
