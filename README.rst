@@ -39,7 +39,7 @@ Commandline::
 
 Python::
 
-  from hydxlib import run_import_export
+  from hydxlib.scripts import run_import_export
 
   run_import_export("path/to/hydx/dir", "path/to/threedi.sqlite")
 
