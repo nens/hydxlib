@@ -4,7 +4,7 @@ Changelog of hydxlib
 1.7.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Skip adding pumps when node start and end are identical
 
 
 1.7.0 (2025-03-12)
