@@ -183,29 +183,15 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         session.refresh(pump_object)
 
         if connection_node_id_start is not None and connection_node_id_end is not None:
-            start_geom = (
-                session.query(ConnectionNode.geom)
-                .filter(ConnectionNode.id == connection_node_id_start)
-                .scalar_subquery()
+            pump_map_geom = (
+                session.query(func.ST_AsText(func.MakeLine(ConnectionNode.geom)))
+                .filter(
+                    ConnectionNode.id.in_(
+                        [connection_node_id_start, connection_node_id_end]
+                    )
+                )
+                .scalar()
             )
-            # When start and end node are the same, the end node must be moved for a valid line
-            if connection_node_id_start != connection_node_id_end:
-                end_geom = (
-                    session.query(ConnectionNode.geom)
-                    .filter(ConnectionNode.id == connection_node_id_end)
-                    .scalar_subquery()
-                )
-            else:
-                end_geom = (
-                    session.query(func.ST_Translate(ConnectionNode.geom, 1, 0, 0))
-                    .filter(ConnectionNode.id == connection_node_id_end)
-                    .scalar_subquery()
-                )
-            pump_map_geom = session.query(
-                func.AsText(func.MakeLine(start_geom, end_geom))
-            ).scalar()
-            if pump_map_geom is None:
-                breakpoint()
             pump_map_list.append(
                 PumpMap(
                     pump_id=pump_object.id,
