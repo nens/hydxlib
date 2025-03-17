@@ -173,6 +173,13 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         pump["geom"] = get_node_geom(pump, connection_node_dict, "start_node.code")
         connection_node_id_start = pump.pop("connection_node_id_start")
         connection_node_id_end = pump.pop("connection_node_id_end")
+        if connection_node_id_start is not None and (
+            connection_node_id_start == connection_node_id_end
+        ):
+            logger.error(
+                f"Pump {pump['code']} will be skipped because it has same start and end node"
+            )
+            continue
         del pump["start_node.code"]
         del pump["end_node.code"]
         pump_object = Pump(**pump)
