@@ -4,7 +4,7 @@ Changelog of hydxlib
 1.7.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Set minimum threedi-schema version of 0.300.18 instead of hard pin.
 
 
 1.7.1 (2025-03-17)

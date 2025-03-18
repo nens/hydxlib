@@ -18,7 +18,7 @@ def get_version():
 
 install_requires = [
     "sqlalchemy",
-    "threedi-schema==0.300.18",
+    "threedi-schema==0.300.*,>=0.300.18",
     "pyproj>=3",
     "geoalchemy2[shapely]",
 ]
