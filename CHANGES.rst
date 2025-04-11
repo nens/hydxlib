@@ -4,7 +4,7 @@ Changelog of hydxlib
 1.7.3 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Added SewerageType to lib.
 
 
 1.7.2 (2025-03-18)
