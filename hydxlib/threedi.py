@@ -8,7 +8,6 @@ from threedi_schema.domain.constants import (
     CrestType,
     CrossSectionShape,
     PipeCalculationType,
-    SewerageType,
     SurfaceClass,
     SurfaceInclinationType,
 )
@@ -16,6 +15,17 @@ from threedi_schema.domain.constants import (
 from .hydx import Profile
 
 logger = logging.getLogger(__name__)
+
+
+class SewerageType(Enum):
+    MIXED = 0
+    RAIN_WATER = 1
+    DRY_WEATHER_FLOW = 2
+    TRANSPORT = 3
+    SPILLWAY = 4
+    ZINKER = 5
+    STORAGE = 6
+    STORAGE_TANK = 7
 
 
 class PipeMaterialType(Enum):
