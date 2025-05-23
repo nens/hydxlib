@@ -4,7 +4,7 @@ Changelog of hydxlib
 1.7.4 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Fix importing connections without "identificatieknooppuntofverbinding" into channels (#53)
 
 
 1.7.3 (2025-04-11)

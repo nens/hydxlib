@@ -276,13 +276,14 @@ class Threedi:
                 self.connections,
                 "Connection",
             )
-
-            if connection.typeverbinding in ["GSL", "OPL", "ITR", "DRL"]:
+            if connection.typeverbinding in ["GSL", "OPL", "ITR"]:
+                material = None
                 if connection.identificatieprofieldefinitie is None:
                     logger.error(
                         "Verbinding %r has no profile defined",
                         connection.identificatieknooppuntofverbinding,
                     )
+                    linkedprofile = None
                 else:
                     linkedprofile = self.find_cross_section(
                         connection.identificatieprofieldefinitie
@@ -293,32 +294,25 @@ class Threedi:
                             connection.identificatieprofieldefinitie,
                             connection.identificatieknooppuntofverbinding,
                         )
-                        material = None
                     else:
                         material = linkedprofile["material"]
-                        profile_is_closed = is_closed(linkedprofile)
-                        if profile_is_closed is not None:
-                            if connection.typeverbinding == "OPL" and is_closed(
-                                linkedprofile
-                            ):
-                                try:
-                                    make_open(linkedprofile)
-                                except ValueError:
-                                    logger.error(
-                                        "Verbinding %r is open (OPL) but uses a closed profiel (%r)",
-                                        connection.identificatieknooppuntofverbinding,
-                                        connection.identificatieprofieldefinitie,
-                                    )
-                            elif connection.typeverbinding != "OPL" and not is_closed(
-                                linkedprofile
-                            ):
-                                logger.error(
-                                    "Verbinding %r is closed but uses an open profiel (%r)",
-                                    connection.identificatieknooppuntofverbinding,
-                                    connection.identificatieprofieldefinitie,
-                                )
-
-            if connection.typeverbinding in ["GSL", "OPL", "ITR"]:
+                if linkedprofile:
+                    profile_is_closed = is_closed(linkedprofile)
+                    if connection.typeverbinding == "OPL" and profile_is_closed:
+                        try:
+                            make_open(linkedprofile)
+                        except ValueError:
+                            logger.error(
+                                "Verbinding %r is open (OPL) but uses a closed profiel (%r)",
+                                connection.identificatieknooppuntofverbinding,
+                                connection.identificatieprofieldefinitie,
+                            )
+                    elif connection.typeverbinding != "OPL" and not profile_is_closed:
+                        logger.error(
+                            "Verbinding %r is closed but uses an open profiel (%r)",
+                            connection.identificatieknooppuntofverbinding,
+                            connection.identificatieprofieldefinitie,
+                        )
                 self.add_pipe(connection, material)
             elif connection.typeverbinding in ["PMP", "OVS", "DRL"]:
                 linkedstructures = [
