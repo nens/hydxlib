@@ -4,7 +4,7 @@ Changelog of hydxlib
 1.7.5 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Set minimum threedi-schema to 0.300.18 or above.
 
 
 1.7.4 (2025-05-26)
