@@ -539,6 +539,7 @@ class Threedi:
             "sewerage": True,
             "crest_type": CrestType.SHORT_CRESTED.value,
             "crest_level": hydx_structure.niveaubinnenonderkantprofiel,
+            "discharge_capacity": hydx_structure.maximalecapaciteitdoorlaat,
         }
 
         self.orifices.append(orifice)
