@@ -1,7 +1,7 @@
 Changelog of hydxlib
 ===================================================
 
-1.7.6 (unreleased)
+1.7.6 (2026-05-11)
 ------------------
 
 - Support discharge_capacity import
