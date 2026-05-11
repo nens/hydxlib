@@ -191,6 +191,7 @@ def test_import_hydx(hydx):
         "crest_type": 4,
         "crest_level": 0.0,
         "cross_section_code": "PVC400",
+        "discharge_capacity": 4.00,
     }
 
 

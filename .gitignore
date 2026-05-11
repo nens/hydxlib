@@ -37,3 +37,8 @@ coverage.xml
 
 # Docker
 docker-compose.override.yml
+
+# AI tools
+agents.md
+.opencode
+.minispec
