@@ -214,6 +214,23 @@ def get_profile(**kwargs):
     return x
 
 
+def test_get_cross_section_details_unknown_shape_keeps_width_height(caplog):
+    profiel = get_profile(
+        identificatieprofieldefinitie="PRO",
+        vormprofiel=None,
+        breedte_diameterprofiel="800",
+        hoogteprofiel="500",
+        materiaal="PVC",
+        tabulatedbreedte="",
+        tabulatedhoogte="",
+    )
+    actual = get_cross_section_details(profiel, "PRO", "profile")
+    assert actual["shape"] is None
+    assert actual["width"] == pytest.approx(0.8)
+    assert actual["height"] == pytest.approx(0.5)
+    assert any(r.levelname == "WARNING" for r in caplog.records)
+
+
 @pytest.mark.parametrize(
     "vrm,bre,hgt,expected",
     [
