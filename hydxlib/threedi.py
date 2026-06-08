@@ -497,11 +497,12 @@ class Threedi:
             hydx_connection, hydx_structure
         )
 
+        voh = hydx_structure.vrijeoverstorthoogte
         profile = {
             "code": f"weir_{hydx_connection.identificatieknooppuntofverbinding}",
-            "shape": CrossSectionShape.RECTANGLE.value,
+            "shape": CrossSectionShape.CLOSED_RECTANGLE.value,
             "width": hydx_structure.breedteoverstortdrempel,
-            "height": None,
+            "height": float(voh) * 1e-3 if voh else None,
         }
         self.cross_sections.append(profile)
 
