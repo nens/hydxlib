@@ -434,7 +434,7 @@ def get_cross_section_fields(connection, cross_section_dict):
                     connection["cross_section_table"] = "\n".join(
                         [",".join(row) for row in zip(col1, col2)]
                     )
-        elif profile["shape"] is not None:
+        else:
             connection["cross_section_width"] = profile["width"]
             connection["cross_section_height"] = profile["height"]
     else:

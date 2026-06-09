@@ -180,6 +180,18 @@ def test_import_hydx(hydx):
         "sewerage": True,
         "cross_section_code": "weir_ovs83",
     }
+    # weir cross-section: always closed rectangle; height from OVS_VOH (mm -> m)
+    weir_cross_section_ovs83 = next(
+        cs for cs in threedi.cross_sections if cs["code"] == "weir_ovs83"
+    )
+    assert weir_cross_section_ovs83["shape"] == 0  # CLOSED_RECTANGLE
+    assert weir_cross_section_ovs83["height"] == pytest.approx(0.00025)  # 0.25 mm -> m
+
+    weir_cross_section_ovs82 = next(
+        cs for cs in threedi.cross_sections if cs["code"] == "weir_ovs82"
+    )
+    assert weir_cross_section_ovs82["shape"] == 0  # CLOSED_RECTANGLE
+    assert weir_cross_section_ovs82["height"] is None  # no OVS_VOH set
     assert threedi.orifices[1] == {
         "code": "drl97",
         "display_name": "2002-2002-1",
@@ -200,6 +212,23 @@ def get_profile(**kwargs):
     for k, v in kwargs.items():
         setattr(x, k, v)
     return x
+
+
+def test_get_cross_section_details_unknown_shape_keeps_width_height(caplog):
+    profiel = get_profile(
+        identificatieprofieldefinitie="PRO",
+        vormprofiel=None,
+        breedte_diameterprofiel="800",
+        hoogteprofiel="500",
+        materiaal="PVC",
+        tabulatedbreedte="",
+        tabulatedhoogte="",
+    )
+    actual = get_cross_section_details(profiel, "PRO", "profile")
+    assert actual["shape"] is None
+    assert actual["width"] == pytest.approx(0.8)
+    assert actual["height"] == pytest.approx(0.5)
+    assert any(r.levelname == "WARNING" for r in caplog.records)
 
 
 @pytest.mark.parametrize(

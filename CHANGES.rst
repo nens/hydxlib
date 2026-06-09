@@ -4,7 +4,8 @@ Changelog of hydxlib
 1.7.7 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Set weir cross-section shape to closed rectangle; set cross_section_height from OVS_VOH (mm to m) when present (nens/rana#4429).
+- Profiles without a shape now import with shape=NULL and width/height preserved; unknown shape logs a warning (nens/rana#4429).
 
 
 1.7.6 (2026-05-11)

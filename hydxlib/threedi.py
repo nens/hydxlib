@@ -209,20 +209,22 @@ def get_cross_section_details(hydx_profile, record_code, name_for_logging):
     else:
         width = hydx_profile.tabulatedbreedte
         height = hydx_profile.tabulatedhoogte
-        shape = CrossSectionShape.TABULATED_RECTANGLE.value
 
-    if not width:
-        logger.error(
-            "%s has an undefined %s.width: %s",
+    shape = SHAPE_MAPPING.get(hydx_profile.vormprofiel)
+    if shape is None:
+        # Unknown/missing shape: fall back to scalar mm fields for width/height
+        width = transform_unit_mm_to_m(hydx_profile.breedte_diameterprofiel)
+        height = transform_unit_mm_to_m(hydx_profile.hoogteprofiel)
+        logger.warning(
+            "%s has an unknown %s: %s",
             record_code,
             name_for_logging,
             hydx_profile.vormprofiel,
         )
 
-    shape = SHAPE_MAPPING.get(hydx_profile.vormprofiel)
-    if shape is None:
+    if not width:
         logger.error(
-            "%s has an unknown %s: %s",
+            "%s has an undefined %s.width: %s",
             record_code,
             name_for_logging,
             hydx_profile.vormprofiel,
@@ -497,11 +499,12 @@ class Threedi:
             hydx_connection, hydx_structure
         )
 
+        voh = hydx_structure.vrijeoverstorthoogte
         profile = {
             "code": f"weir_{hydx_connection.identificatieknooppuntofverbinding}",
-            "shape": CrossSectionShape.RECTANGLE.value,
+            "shape": CrossSectionShape.CLOSED_RECTANGLE.value,
             "width": hydx_structure.breedteoverstortdrempel,
-            "height": None,
+            "height": float(voh) * 1e-3 if voh else None,
         }
         self.cross_sections.append(profile)
 
