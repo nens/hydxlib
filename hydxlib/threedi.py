@@ -211,7 +211,7 @@ def get_cross_section_details(hydx_profile, record_code, name_for_logging):
         height = hydx_profile.tabulatedhoogte
 
     shape = SHAPE_MAPPING.get(hydx_profile.vormprofiel)
-    if shape is None and vormprofiel not in SHAPE_MAPPING:
+    if shape is None:
         # Unknown/missing shape: fall back to scalar mm fields for width/height
         width = transform_unit_mm_to_m(hydx_profile.breedte_diameterprofiel)
         height = transform_unit_mm_to_m(hydx_profile.hoogteprofiel)
