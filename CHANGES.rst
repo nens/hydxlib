@@ -4,7 +4,7 @@ Changelog of hydxlib
 1.7.8 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Convert discharge_capacity to m3/s (https://docs.ranawaterintelligence.com/d_1d_objects.html#id31)
 
 
 1.7.7 (2026-06-09)
