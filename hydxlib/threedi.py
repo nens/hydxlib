@@ -542,7 +542,9 @@ class Threedi:
             "sewerage": True,
             "crest_type": CrestType.SHORT_CRESTED.value,
             "crest_level": hydx_structure.niveaubinnenonderkantprofiel,
-            "discharge_capacity": hydx_structure.maximalecapaciteitdoorlaat,
+            "discharge_capacity": transform_discharge_capacity_to_m3s(
+                hydx_structure.maximalecapaciteitdoorlaat
+            ),
         }
 
         self.orifices.append(orifice)
@@ -792,6 +794,13 @@ def check_if_element_is_created_with_same_code(
             element_type,
             checked_element,
         )
+
+
+def transform_discharge_capacity_to_m3s(capacity):
+    if capacity is not None:
+        return round(float(capacity) / 3600, 5)
+    else:
+        return None
 
 
 def transform_capacity_to_ls(capacity):
