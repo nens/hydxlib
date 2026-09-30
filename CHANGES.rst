@@ -4,7 +4,7 @@ Changelog of hydxlib
 1.7.9 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Fix bug in run-hydxlib
 
 
 1.7.8 (2026-07-02)

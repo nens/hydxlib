@@ -117,7 +117,6 @@ def main():
 
     try:
         run_import_export(
-            options.export_type,
             options.hydx_path[0],
             options.out_path[0],
         )
