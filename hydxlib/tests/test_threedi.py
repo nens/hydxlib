@@ -99,6 +99,28 @@ def test_get_hydx_default_profile():
     assert profile.breedte_diameterprofiel == "1000"
 
 
+def test_lateral_schema_supports_static_discharge():
+    from threedi_schema.domain.models import Lateral1D
+
+    columns = Lateral1D.__table__.columns
+    assert columns.timeseries.nullable
+    assert columns.time_units.nullable
+    assert columns.units.nullable
+    assert columns.offset.nullable
+    assert columns.interpolate.nullable
+    assert columns.connection_node_id.nullable
+
+
+def test_lateral_connection_resolves_to_downstream_node():
+    connection = mock.Mock(
+        identificatieknooppuntofverbinding="lei12",
+        identificatieknooppunt1="knp32",
+        identificatieknooppunt2="knp31",
+    )
+
+    assert connection.identificatieknooppunt2 == "knp31"
+
+
 def test_import_hydx(hydx):
     threedi = Threedi()
     threedi.import_hydx(hydx)

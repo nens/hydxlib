@@ -30,7 +30,7 @@ Implement the confirmed GWSW HydX importer improvements for Rana HCC: target-sch
 - **Files:** `hydxlib/threedi.py`, `hydxlib/exporter.py`, `hydxlib/tests/test_threedi.py`, `hydxlib/tests/test_exporter.py`
 - **Description:** Confirm how static `DEB_TYP=LAT` records map to Rana `Lateral1D`, including no-timeseries behavior and resolution of a `Debiet.UNI_IDE` matching a connection. Use the installed schema and current CSV fixture only.
 - **Depends on:** None
-- **Acceptance:** Tests document the selected lateral fields and endpoint convention without fabricating an unsupported timeseries.
+- **Acceptance:** Tests document that every HydX `DEB_TYP=LAT` record becomes a Rana `Lateral1D`, including static records without a timeseries, and document the downstream endpoint convention for connection references without fabricating an unsupported timeseries.
 - **Evidence:** Focused schema/conversion tests pass.
 
 ### Core Implementation
@@ -50,7 +50,7 @@ Implement the confirmed GWSW HydX importer improvements for Rana HCC: target-sch
 - **Files:** `hydxlib/threedi.py`, `hydxlib/exporter.py`, `hydxlib/tests/test_threedi.py`, `hydxlib/tests/test_exporter.py`
 - **Description:** Add an internal `laterals` collection, branch discharge handling on `DEB_TYP`, convert `LAT` records to `Lateral1D`, preserve non-lateral behavior, resolve node/connection identifiers, skip unresolved records with errors, and add export counts.
 - **Depends on:** Task 2
-- **Acceptance:** The three supplied `LAT` records are converted or receive explicit tested skip reasons; non-`LAT` records remain impervious surfaces; unresolved identifiers are logged and skipped.
+- **Acceptance:** The three supplied `LAT` records become Rana `Lateral1D` objects; non-`LAT` records remain impervious surfaces; unresolved identifiers are logged and skipped.
 - **Evidence:** Importer and exporter tests pass against the supplied CSV fixture and temporary schema.
 
 #### Task 5: Add importer provenance tags
@@ -87,6 +87,14 @@ Implement the confirmed GWSW HydX importer improvements for Rana HCC: target-sch
 - **Acceptance:** Documentation distinguishes HydX-defined behavior from Rana-specific behavior and documents fallback behavior without claiming unsupported mappings.
 - **Evidence:** Documentation review confirms all feedback points and referenced commands are accurate.
 
+#### Task 9: Fix geometry serialization and CRS validation
+- **Estimate:** ~70 lines
+- **Files:** `hydxlib/exporter.py`, `hydxlib/tests/test_exporter.py`, `hydxlib/tests/conftest.py`
+- **Description:** Replace or correct the manual EWKT geometry serialization that currently produces GeoAlchemy SQLite parse warnings. Validate the source and target CRS/units so local or millimetre-like HydX coordinates are not silently written as EPSG:28992 metre coordinates. Use a small synthetic geometry test rather than production GeoPackages.
+- **Depends on:** Task 7
+- **Acceptance:** Exported point and line geometries are valid for the target schema, SRIDs are preserved, known coordinate-unit mismatches are detected or handled explicitly, and the exporter tests no longer emit the current geometry parse warnings.
+- **Evidence:** Focused geometry tests pass, including coordinate bounds/CRS assertions, and the exporter test suite completes without GeoAlchemy WKT warnings.
+
 ## Dependencies and Parallelization
 
 - Tasks 1 and 2 are independent foundation work.
@@ -95,6 +103,7 @@ Implement the confirmed GWSW HydX importer improvements for Rana HCC: target-sch
 - Task 6 depends on Task 3 and confirmation of the actual class field.
 - Task 7 waits for implementation tasks.
 - Task 8 is last.
+- Task 9 follows Task 7 and may run alongside Task 8 if documentation does not depend on its final implementation details.
 
 ## Notes
 
@@ -114,3 +123,4 @@ Implement the confirmed GWSW HydX importer improvements for Rana HCC: target-sch
 - [ ] Task 6: Preserve and map GWSW classes
 - [ ] Task 7: Run end-to-end feedback regression suite
 - [ ] Task 8: Document settled conversion behavior
+- [ ] Task 9: Fix geometry serialization and CRS validation
