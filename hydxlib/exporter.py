@@ -19,6 +19,7 @@ from threedi_schema.domain.models import (
     ConnectionNode,
     DryWeatherFlow,
     DryWeatherFlowMap,
+    Material,
     Orifice,
     Pipe,
     Pump,
@@ -28,9 +29,21 @@ from threedi_schema.domain.models import (
     Weir,
 )
 
-from .threedi import Threedi
+from .threedi import PipeMaterialType, Threedi
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_FRICTION = {
+    PipeMaterialType.CONCRETE.value: (2, 0.0145),
+    PipeMaterialType.PVC.value: (2, 0.011),
+    PipeMaterialType.STONEWARE.value: (2, 0.0115),
+    PipeMaterialType.CAST_IRON.value: (2, 0.0135),
+    PipeMaterialType.BRICKWORK.value: (2, 0.016),
+    PipeMaterialType.HPE.value: (2, 0.011),
+    PipeMaterialType.HPDE.value: (2, 0.011),
+    PipeMaterialType.SHEET_IRON.value: (2, 0.0135),
+    PipeMaterialType.STEEL.value: (2, 0.013),
+}
 
 
 # Constructing a Transformer takes quite long, so we use caching here. The
@@ -104,6 +117,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         logger.error("Cannot find a valid EPSG code for the schema.")
         return
     session = db.get_session()
+    friction_by_material = get_material_friction(session)
     cross_section_dict = {}
     for profile in threedi.cross_sections:
         cross_section_dict[profile["code"]] = {
@@ -155,6 +169,15 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         del pipe["start_node.code"]
         del pipe["end_node.code"]
         del pipe["cross_section_code"]
+        pipe["friction_type"], pipe["friction_value"] = friction_by_material.get(
+            pipe["material_id"], DEFAULT_FRICTION.get(pipe["material_id"], (None, None))
+        )
+        if pipe["friction_type"] is None or pipe["friction_value"] is None:
+            logger.warning(
+                "No friction configuration found for material %r on pipe %r",
+                pipe["material_id"],
+                pipe["code"],
+            )
         pipe_list.append(Pipe(**pipe))
     commit_counts["pipes"] = len(pipe_list)
     session.bulk_save_objects(pipe_list)
@@ -389,6 +412,23 @@ def get_surface_parameters_id(surface_class, surface_inclination):
         "half verhard:uitgestrekt": 115,
     }
     return id_map.get(f"{surface_class}:{surface_inclination}", None)
+
+
+def get_material_friction(session):
+    """Return configured pipe friction by Rana material ID.
+
+    Args:
+        session: SQLAlchemy session connected to the target Rana GeoPackage.
+
+    Materials without both a friction type and coefficient are omitted so
+    callers can apply their explicit fallback configuration.
+    """
+    return {
+        material.id: (material.friction_type, material.friction_coefficient)
+        for material in session.query(Material).all()
+        if material.friction_type is not None
+        and material.friction_coefficient is not None
+    }
 
 
 def get_connection_node(connection, connection_node_dict, node_key):

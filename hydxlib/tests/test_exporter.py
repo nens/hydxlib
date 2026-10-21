@@ -5,9 +5,11 @@ import pytest
 from geoalchemy2.shape import from_shape
 from shapely import wkt
 from threedi_schema import models
+from threedi_schema.domain.constants import FrictionType
 
 from hydxlib.exporter import (
     export_threedi,
+    get_material_friction,
     get_connection_node,
     get_cross_section_fields,
     get_line_between_nodes,
@@ -114,6 +116,23 @@ def test_get_start_and_end_connection_node():
     connection = get_start_and_end_connection_node(connection, connection_node_dict)
     assert connection["connection_node_id_start"] == 3060
     assert connection["connection_node_id_end"] == 3061
+
+
+def test_get_material_friction(threedi_db):
+    session = threedi_db.get_session()
+    session.add(
+        models.Material(
+            id=100,
+            description="Concrete",
+            friction_type=2,
+            friction_coefficient=0.021,
+        )
+    )
+    session.commit()
+
+    friction_type, friction_value = get_material_friction(session)[100]
+    assert friction_type == FrictionType.MANNING
+    assert friction_value == pytest.approx(0.021)
 
 
 @pytest.fixture
