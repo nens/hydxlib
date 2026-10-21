@@ -19,6 +19,7 @@ from threedi_schema.domain.models import (
     ConnectionNode,
     DryWeatherFlow,
     DryWeatherFlowMap,
+    Lateral1D,
     Material,
     Orifice,
     Pipe,
@@ -181,6 +182,24 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         pipe_list.append(Pipe(**pipe))
     commit_counts["pipes"] = len(pipe_list)
     session.bulk_save_objects(pipe_list)
+    session.commit()
+
+    lateral_list = []
+    for lateral in threedi.laterals:
+        node = connection_node_dict.get(lateral["node.code"])
+        if node is None:
+            logger.error("Node of lateral %r not found in connection nodes", lateral["code"])
+            continue
+        lateral_list.append(
+            Lateral1D(
+                code=lateral["code"],
+                display_name=lateral["display_name"],
+                connection_node_id=node["id"],
+                geom=node["geom"],
+            )
+        )
+    commit_counts["laterals"] = len(lateral_list)
+    session.bulk_save_objects(lateral_list)
     session.commit()
 
     pump_list = []

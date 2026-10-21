@@ -11,7 +11,6 @@ from threedi_schema.domain.constants import (
     SurfaceClass,
     SurfaceInclinationType,
 )
-
 from .hydx import Profile
 
 logger = logging.getLogger(__name__)
@@ -260,6 +259,7 @@ class Threedi:
         self.pipes = []
         self.impervious_surfaces = []
         self.impervious_surface_maps = []
+        self.laterals = []
         self.outlets = []
         self.cross_sections = []
 
@@ -357,6 +357,9 @@ class Threedi:
             surface_nr = surface_nr + 1
 
         for discharge in hydx.discharges:
+            if discharge.debiettype == "LAT":
+                self.add_lateral(discharge)
+                continue
             linkedvariations = None
             linkedvariations = [
                 variation
@@ -627,6 +630,28 @@ class Threedi:
         }
         self.append_and_map_surface(
             surface, hydx_discharge.identificatieknooppuntofverbinding, surface_nr
+        )
+
+    def add_lateral(self, hydx_discharge):
+        endpoint = hydx_discharge.identificatieknooppuntofverbinding
+        node_codes = {node["code"] for node in self.connection_nodes}
+        node_code = endpoint if endpoint in node_codes else None
+        if node_code is None:
+            for connection in self.connections:
+                if connection["code"] == endpoint:
+                    node_code = connection["end_node.code"]
+                    break
+        if node_code is None:
+            logger.error("Connection node or connection %r could not be found for lateral", endpoint)
+            return
+
+        self.laterals.append(
+            {
+                "code": endpoint,
+                "display_name": endpoint,
+                "node.code": node_code,
+                "area": hydx_discharge.afvoerendoppervlak,
+            }
         )
 
     def add_1d_boundary(self, hydx_structure):

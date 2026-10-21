@@ -157,6 +157,7 @@ def test_write_to_db(hydx_setup, mock_exporter_db, threedi_db):
         "outlets": 3,
         "surfaces": 262,
         "dry_weather_flows": 67,
+        "laterals": 2,
     }
     commit_counts = write_threedi_to_db(hydx_setup[1], {"db_file": "/some/path"})
     assert commit_counts == commit_counts_expected

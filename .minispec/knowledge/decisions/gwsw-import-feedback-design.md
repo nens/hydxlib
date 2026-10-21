@@ -131,6 +131,8 @@ Required behavior:
 
 The known erroneous connection from the GWSW server is not to receive a hard-coded exception. Only records present in the HydX input should be processed; missing or invalid references follow existing validation behavior.
 
+The current fixture contains a `LAT` discharge for `lei4`, but no matching `lei4` connection is imported. It is logged and skipped rather than handled with a production-specific exception. The installed Rana `Lateral1D` schema has no contributing-area column, so `AFV_OPP` is retained during HydX parsing but is not persisted for 1D laterals.
+
 Required tests:
 
 - All three `LAT` fixture records become Rana `Lateral1D` objects; only genuinely unresolved references may be skipped with an explicit tested error.

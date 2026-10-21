@@ -122,6 +122,18 @@ def test_lateral_connection_resolves_to_downstream_node():
     assert connection.identificatieknooppunt2 == "knp31"
 
 
+def test_lat_discharge_becomes_lateral_and_non_lat_remains_surface(hydx):
+    threedi = Threedi()
+    threedi.import_hydx(hydx)
+
+    assert len(threedi.laterals) == 2
+    assert {lateral["node.code"] for lateral in threedi.laterals} == {
+        "knp10",
+        "knp11",
+    }
+    assert all(lateral["area"] is None for lateral in threedi.laterals)
+
+
 def test_import_hydx(hydx):
     threedi = Threedi()
     threedi.import_hydx(hydx)
@@ -177,7 +189,7 @@ def test_import_hydx(hydx):
         "surface_inclination": "uitgestrekt",
         "node.code": "knp8",
     }
-    assert threedi.impervious_surfaces[262] == {
+    assert threedi.impervious_surfaces[260] == {
         "code": "263",
         "display_name": "knp61",
         "area": 0.0,
