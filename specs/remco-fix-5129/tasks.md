@@ -117,7 +117,7 @@ Implement the confirmed GWSW HydX importer improvements for Rana HCC: target-sch
 
 - [x] Task 1: Define target material friction lookup
 - [ ] Task 2: Verify lateral schema and endpoint semantics
-- [ ] Task 3: Add OPL and ITR visualizations
+- [x] Task 3: Add OPL and ITR visualizations
 - [ ] Task 4: Implement LAT lateral conversion
 - [ ] Task 5: Add importer provenance tags
 - [ ] Task 6: Preserve and map GWSW classes
