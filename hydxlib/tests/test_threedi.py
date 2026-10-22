@@ -100,40 +100,6 @@ def test_get_hydx_default_profile():
     assert profile.breedte_diameterprofiel == "1000"
 
 
-def test_lateral_schema_supports_static_discharge():
-    from threedi_schema.domain.models import Lateral1D
-
-    columns = Lateral1D.__table__.columns
-    assert columns.timeseries.nullable
-    assert columns.time_units.nullable
-    assert columns.units.nullable
-    assert columns.offset.nullable
-    assert columns.interpolate.nullable
-    assert columns.connection_node_id.nullable
-
-
-def test_lateral_connection_resolves_to_downstream_node():
-    connection = mock.Mock(
-        identificatieknooppuntofverbinding="lei12",
-        identificatieknooppunt1="knp32",
-        identificatieknooppunt2="knp31",
-    )
-
-    assert connection.identificatieknooppunt2 == "knp31"
-
-
-def test_lat_discharge_becomes_lateral_and_non_lat_remains_surface(hydx):
-    threedi = Threedi()
-    threedi.import_hydx(hydx)
-
-    assert len(threedi.laterals) == 2
-    assert {lateral["node.code"] for lateral in threedi.laterals} == {
-        "knp10",
-        "knp11",
-    }
-    assert all(lateral["area"] is None for lateral in threedi.laterals)
-
-
 def test_import_hydx(hydx):
     threedi = Threedi()
     threedi.import_hydx(hydx)
@@ -190,14 +156,12 @@ def test_import_hydx(hydx):
         "node.code": "knp8",
     }
     assert threedi.impervious_surfaces[260] == {
-        "code": "263",
-        "display_name": "knp61",
-        "area": 0.0,
-        "surface_class": "gesloten verharding",
+        "code": "261",
+        "display_name": "lei9",
+        "area": 150.0,
+        "surface_class": "pand",
         "surface_inclination": "vlak",
-        "dry_weather_flow": 60.0,
-        "nr_of_inhabitants": "2",
-        "node.code": "knp61",
+        "node.code": "knp27",
     }
     assert threedi.outlets[0] == {
         "node.code": "knp78",

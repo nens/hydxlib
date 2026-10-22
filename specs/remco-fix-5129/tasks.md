@@ -44,14 +44,14 @@ Implement the confirmed GWSW HydX importer improvements for Rana HCC: target-sch
 - **Acceptance:** `OPL` and `ITR` receive the requested visualization values; ordinary `GSL` remains unchanged; profile validation remains active.
 - **Evidence:** Unit tests pass for `OPL`, `ITR`, ordinary `GSL`, and profile validation.
 
-#### Task 4: Implement LAT lateral conversion [P]
+#### Task 4: Implement LAT lateral conversion [WON'T DO]
 - **Estimate:** ~75 lines
 - **Parallel:** Can run with Task 3 after Task 2.
 - **Files:** `hydxlib/threedi.py`, `hydxlib/exporter.py`, `hydxlib/tests/test_threedi.py`, `hydxlib/tests/test_exporter.py`
 - **Description:** Add an internal `laterals` collection, branch discharge handling on `DEB_TYP`, convert `LAT` records to `Lateral1D`, preserve non-lateral behavior, resolve node/connection identifiers, skip unresolved records with errors, and add export counts.
 - **Depends on:** Task 2
-- **Acceptance:** The three supplied `LAT` records become Rana `Lateral1D` objects; non-`LAT` records remain impervious surfaces; unresolved identifiers are logged and skipped.
-- **Evidence:** Importer and exporter tests pass against the supplied CSV fixture and temporary schema. The fixture's `lei4` lateral is logged and skipped because no matching imported connection exists; `AFV_OPP` is not persisted because the installed `Lateral1D` schema has no contributing-area field and 1D lateral behavior does not require it.
+- **Acceptance:** The handling of `LAT` records is confirmed before implementation; non-`LAT` records retain their existing impervious-surface behavior.
+- **Evidence:** Intentionally deferred pending product-owner discussion with Jonas and Rob; no implementation will be added in this feature.
 
 #### Task 5: Add importer provenance tags
 - **Estimate:** ~60 lines
@@ -118,8 +118,8 @@ Implement the confirmed GWSW HydX importer improvements for Rana HCC: target-sch
 - [x] Task 1: Define target material friction lookup
 - [x] Task 2: Verify lateral schema and endpoint semantics
 - [x] Task 3: Add OPL and ITR visualizations
-- [x] Task 4: Implement LAT lateral conversion
-- [ ] Task 5: Add importer provenance tags
+- [wontdo] Task 4: Implement LAT lateral conversion — deferred pending product-owner discussion with Jonas and Rob
+- [x] Task 5: Add importer provenance tags
 - [ ] Task 6: Preserve and map GWSW classes
 - [ ] Task 7: Run end-to-end feedback regression suite
 - [ ] Task 8: Document settled conversion behavior

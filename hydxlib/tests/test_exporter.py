@@ -135,6 +135,17 @@ def test_get_material_friction(threedi_db):
     assert friction_value == pytest.approx(0.021)
 
 
+def test_export_models_support_importer_tag():
+    assert models.ConnectionNode(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
+    assert models.Pipe(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
+    assert models.Pump(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
+    assert models.Weir(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
+    assert models.Orifice(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
+    assert models.BoundaryCondition1D(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
+    assert models.Surface(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
+    assert models.DryWeatherFlow(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
+
+
 @pytest.fixture
 def hydx_setup(hydx):
     threedi = Threedi()
@@ -157,7 +168,6 @@ def test_write_to_db(hydx_setup, mock_exporter_db, threedi_db):
         "outlets": 3,
         "surfaces": 262,
         "dry_weather_flows": 67,
-        "laterals": 2,
     }
     commit_counts = write_threedi_to_db(hydx_setup[1], {"db_file": "/some/path"})
     assert commit_counts == commit_counts_expected

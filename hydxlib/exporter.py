@@ -19,7 +19,6 @@ from threedi_schema.domain.models import (
     ConnectionNode,
     DryWeatherFlow,
     DryWeatherFlowMap,
-    Lateral1D,
     Material,
     Orifice,
     Pipe,
@@ -33,6 +32,7 @@ from threedi_schema.domain.models import (
 from .threedi import PipeMaterialType, Threedi
 
 logger = logging.getLogger(__name__)
+IMPORTER_TAG = "gwsw-hydx-import"
 
 DEFAULT_FRICTION = {
     PipeMaterialType.CONCRETE.value: (2, 0.0145),
@@ -133,6 +133,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         x, y = transform(x, y, source_epsg, target_epsg)
         connection_node_list.append(
             ConnectionNode(
+                tags=IMPORTER_TAG,
                 display_name=connection_node["display_name"],
                 code=connection_node["code"],
                 storage_area=connection_node["storage_area"],
@@ -179,27 +180,9 @@ def write_threedi_to_db(threedi, threedi_db_settings):
                 pipe["material_id"],
                 pipe["code"],
             )
-        pipe_list.append(Pipe(**pipe))
+        pipe_list.append(Pipe(tags=IMPORTER_TAG, **pipe))
     commit_counts["pipes"] = len(pipe_list)
     session.bulk_save_objects(pipe_list)
-    session.commit()
-
-    lateral_list = []
-    for lateral in threedi.laterals:
-        node = connection_node_dict.get(lateral["node.code"])
-        if node is None:
-            logger.error("Node of lateral %r not found in connection nodes", lateral["code"])
-            continue
-        lateral_list.append(
-            Lateral1D(
-                code=lateral["code"],
-                display_name=lateral["display_name"],
-                connection_node_id=node["id"],
-                geom=node["geom"],
-            )
-        )
-    commit_counts["laterals"] = len(lateral_list)
-    session.bulk_save_objects(lateral_list)
     session.commit()
 
     pump_list = []
@@ -224,7 +207,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
             continue
         del pump["start_node.code"]
         del pump["end_node.code"]
-        pump_object = Pump(**pump)
+        pump_object = Pump(tags=IMPORTER_TAG, **pump)
         pump_list.append(pump_object)
         # without flushing and refreshing at this point there is no pump id to reference in pump_map
         session.add(pump_object)
@@ -269,7 +252,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         del weir["start_node.code"]
         del weir["end_node.code"]
         del weir["cross_section_code"]
-        weir_list.append(Weir(**weir))
+        weir_list.append(Weir(tags=IMPORTER_TAG, **weir))
     commit_counts["weirs"] = len(weir_list)
     session.bulk_save_objects(weir_list)
     session.commit()
@@ -290,7 +273,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         del orifice["start_node.code"]
         del orifice["end_node.code"]
         del orifice["cross_section_code"]
-        orifice_list.append(Orifice(**orifice))
+        orifice_list.append(Orifice(tags=IMPORTER_TAG, **orifice))
     commit_counts["orifices"] = len(orifice_list)
     session.bulk_save_objects(orifice_list)
     session.commit()
@@ -311,7 +294,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         del outlet["node.code"]
         outlet["time_units"] = "minutes"
         outlet["interpolate"] = 1
-        outlet_list.append(BoundaryCondition1D(**outlet))
+        outlet_list.append(BoundaryCondition1D(tags=IMPORTER_TAG, **outlet))
 
     commit_counts["outlets"] = len(outlet_list)
     session.bulk_save_objects(outlet_list)
@@ -359,9 +342,9 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         )
         surface.pop("node.code", None)
         if surface["area"] != 0:
-            surf_list.append(Surface(**surface))
+            surf_list.append(Surface(tags=IMPORTER_TAG, **surface))
         if dwf["daily_total"] is not None and dwf["multiplier"] is not None:
-            dwf_list.append(DryWeatherFlow(**dwf))
+            dwf_list.append(DryWeatherFlow(tags=IMPORTER_TAG, **dwf))
     commit_counts["surfaces"] = len(surf_list)
     commit_counts["dry_weather_flows"] = len(dwf_list)
     session.bulk_save_objects(surf_list)
