@@ -12,8 +12,8 @@ from hydxlib.threedi import (
     get_mapping_value,
     is_closed,
     make_open,
-    Threedi,
     SewerageType,
+    Threedi,
 )
 
 MANHOLE_SHAPE_RECTANGLE = "rect"
@@ -141,12 +141,14 @@ def test_import_hydx(hydx):
         "exchange_type": 1,
         "cross_section_code": "BET1100",
     }
-    assert next(pipe for pipe in threedi.pipes if pipe["code"] == "lei79")[
-        "sewerage_type"
-    ] == SewerageType.SLOT_OR_TRENCH_DRAIN.value
-    assert next(pipe for pipe in threedi.pipes if pipe["code"] == "lei75")[
-        "sewerage_type"
-    ] == SewerageType.INFILTRATION_DRAIN.value
+    assert (
+        next(pipe for pipe in threedi.pipes if pipe["code"] == "lei79")["sewerage_type"]
+        == SewerageType.SLOT_OR_TRENCH_DRAIN.value
+    )
+    assert (
+        next(pipe for pipe in threedi.pipes if pipe["code"] == "lei75")["sewerage_type"]
+        == SewerageType.INFILTRATION_DRAIN.value
+    )
     assert threedi.impervious_surfaces[0] == {
         "code": "1",
         "display_name": "knp8",

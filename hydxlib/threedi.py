@@ -11,6 +11,7 @@ from threedi_schema.domain.constants import (
     SurfaceClass,
     SurfaceInclinationType,
 )
+
 from .hydx import Profile
 
 logger = logging.getLogger(__name__)

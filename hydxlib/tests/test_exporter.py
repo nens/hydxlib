@@ -9,10 +9,10 @@ from threedi_schema.domain.constants import FrictionType
 
 from hydxlib.exporter import (
     export_threedi,
-    get_material_friction,
     get_connection_node,
     get_cross_section_fields,
     get_line_between_nodes,
+    get_material_friction,
     get_node_geom,
     get_start_and_end_connection_node,
     write_threedi_to_db,
@@ -141,7 +141,9 @@ def test_export_models_support_importer_tag():
     assert models.Pump(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
     assert models.Weir(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
     assert models.Orifice(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
-    assert models.BoundaryCondition1D(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
+    assert (
+        models.BoundaryCondition1D(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
+    )
     assert models.Surface(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
     assert models.DryWeatherFlow(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
 
