@@ -68,8 +68,10 @@ SEWERAGE_TYPE_MAPPING = {
     "NVT": SewerageType.TRANSPORT.value,
 }
 
-# Use these to override the sewerage_type based on 'typeverbinding' in the HydX
-# for better visualization.
+# Some pipes in 'Verbinding.csv' have a VRB_TYP we can use to choose a more
+# specific sewerage type for visualisation purposes.
+# Note: Overstortleiding is 'GSL', but that is also used for normal pipes,
+# so we can't use it here.
 PIPE_VISUALISATION_MAPPING = {
     "OPL": SewerageType.SLOT_OR_TRENCH_DRAIN.value,
     "ITR": SewerageType.INFILTRATION_DRAIN.value,
