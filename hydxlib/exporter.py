@@ -66,7 +66,7 @@ def transform(x, y, source_epsg, target_epsg):
 
 
 def to_ewkt_point(x, y, srid):
-    return "srid={};POINT ({} {})".format(srid, x, y)
+    return "SRID={};POINT ({} {})".format(srid, x, y)
 
 
 def to_ewkt_linestring(coordinates: tuple[tuple[int, int]], srid: int):
@@ -332,15 +332,15 @@ def write_threedi_to_db(threedi, threedi_db_settings):
             side_length = math.sqrt(surface["area"])
             node_x = session.query(func.ST_X(node_geom)).scalar()
             node_y = session.query(func.ST_Y(node_geom)).scalar()
-            surface[
-                "geom"
-            ] = f"""
-                srid={target_epsg};POLYGON(({node_x - side_length / 2} {node_y - side_length / 2},
-                         {node_x + side_length / 2} {node_y - side_length / 2},
-                         {node_x + side_length / 2} {node_y + side_length / 2},
-                         {node_x - side_length / 2} {node_y + side_length / 2},
-                         {node_x - side_length / 2} {node_y - side_length / 2}
-                         ))"""
+            surface["geom"] = (
+                f"SRID={target_epsg};POLYGON(("
+                f"{node_x - side_length / 2} {node_y - side_length / 2}, "
+                f"{node_x + side_length / 2} {node_y - side_length / 2}, "
+                f"{node_x + side_length / 2} {node_y + side_length / 2}, "
+                f"{node_x - side_length / 2} {node_y + side_length / 2}, "
+                f"{node_x - side_length / 2} {node_y - side_length / 2}"
+                "))"
+            )
         dwf = {
             "code": surface["code"],
             "display_name": surface["display_name"],
@@ -397,9 +397,9 @@ def write_threedi_to_db(threedi, threedi_db_settings):
             obj_y = session.query(func.ST_Y(obj_geom)).scalar()
             if obj_x == node_x and obj_y == node_y:
                 obj_y += 1
-            item[
-                "geom"
-            ] = f"srid={target_epsg};LINESTRING({obj_x} {obj_y}, {node_x} {node_y})"
+            item["geom"] = to_ewkt_linestring(
+                ((obj_x, obj_y), (node_x, node_y)), target_epsg
+            )
             del item["node.code"]
             del item["imp_surface.code"]
             map_list.append(map_obj(**item))

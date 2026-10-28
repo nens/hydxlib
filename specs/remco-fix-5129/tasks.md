@@ -61,13 +61,13 @@ Implement the confirmed GWSW HydX importer improvements for Rana HCC: target-sch
 - **Acceptance:** Every exported object type receives the importer tag without replacing unrelated existing tags.
 - **Evidence:** Exporter tests inspect constructed or persisted model objects for the tag.
 
-#### Task 6: Preserve and map GWSW classes
+#### Task 6: Preserve and map GWSW classes [WON'T DO]
 - **Estimate:** ~80 lines
 - **Files:** `hydxlib/hydx.py`, `hydxlib/threedi.py`, `hydxlib/tests/test_hydx.py`, `hydxlib/tests/test_threedi.py`
 - **Description:** After confirming the actual new export header, add optional preserved-class support and map `Trottoirkolk -> node visualization 4`, `Kolkaansluitleiding -> pipe other`, and `Overstortleiding -> pipe visualization 4`. Do not infer classes from identifiers, geometry, names, or generic HydX codes.
 - **Depends on:** Task 3
 - **Acceptance:** Explicit class metadata produces requested mappings; ordinary `GSL` remains ordinary; current fixtures without metadata remain backward compatible; incomplete records follow current validation behavior.
-- **Evidence:** Unit tests cover all classes, absent metadata, ordinary `GSL`, and incomplete records.
+- **Evidence:** Not applicable: the required GWSW class information is not preserved in the HydX format.
 
 ### Integration and Verification
 
@@ -101,7 +101,7 @@ Implement the confirmed GWSW HydX importer improvements for Rana HCC: target-sch
 - Tasks 3 and 4 can proceed in parallel after their foundations.
 - Task 5 depends on Task 4.
 - Task 6 depends on Task 3 and confirmation of the actual class field.
-- Task 7 waits for implementation tasks.
+- Task 7 waits for implementation tasks; Task 6 is explicitly not applicable because the required class information is absent from HydX.
 - Task 8 is last.
 - Task 9 follows Task 7 and may run alongside Task 8 if documentation does not depend on its final implementation details.
 
@@ -120,7 +120,7 @@ Implement the confirmed GWSW HydX importer improvements for Rana HCC: target-sch
 - [x] Task 3: Add OPL and ITR visualizations
 - [wontdo] Task 4: Implement LAT lateral conversion — deferred pending product-owner discussion with Jonas and Rob
 - [x] Task 5: Add importer provenance tags
-- [ ] Task 6: Preserve and map GWSW classes
-- [ ] Task 7: Run end-to-end feedback regression suite
+- [wontdo] Task 6: Preserve and map GWSW classes — required GWSW class information is not preserved in the HydX format
+- [x] Task 7: Run end-to-end feedback regression suite
 - [ ] Task 8: Document settled conversion behavior
-- [ ] Task 9: Fix geometry serialization and CRS validation
+- [x] Task 9: Fix geometry serialization and CRS validation

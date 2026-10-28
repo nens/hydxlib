@@ -15,6 +15,8 @@ from hydxlib.exporter import (
     get_material_friction,
     get_node_geom,
     get_start_and_end_connection_node,
+    to_ewkt_linestring,
+    to_ewkt_point,
     write_threedi_to_db,
 )
 from hydxlib.threedi import Threedi
@@ -95,6 +97,13 @@ def test_get_line_between_nodes_incomplete(caplog):
     )
     assert line["geom"] is None
     assert caplog.records[0].levelname == "ERROR"
+
+
+def test_geometry_helpers_return_parseable_ewkt():
+    assert to_ewkt_point(400, 50, 28992) == "SRID=28992;POINT (400 50)"
+    assert to_ewkt_linestring(((400, 50), (400, 60)), 28992) == (
+        "SRID=28992;LINESTRING (400 50, 400 60)"
+    )
 
 
 def test_get_connection_node():
