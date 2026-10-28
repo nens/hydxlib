@@ -4,7 +4,12 @@ Changelog of hydxlib
 1.7.10 (unreleased)
 -------------------
 
-- Nothing changed yet.
+- Add Rana pipe visualisation mappings for OPL (slot or trench drain) and ITR
+  (infiltration drain) connections.
+- Resolve pipe friction type and coefficient from the target Rana material
+  configuration, with defaults for missing configuration.
+- Add a stable `gwsw-hydx-import` provenance tag to exported Rana objects.
+- Fix GeoAlchemy warnings caused by manually serialized EWKT geometries.
 
 
 1.7.9 (2026-09-30)

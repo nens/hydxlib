@@ -19,6 +19,7 @@ from threedi_schema.domain.models import (
     ConnectionNode,
     DryWeatherFlow,
     DryWeatherFlowMap,
+    Material,
     Orifice,
     Pipe,
     Pump,
@@ -28,9 +29,27 @@ from threedi_schema.domain.models import (
     Weir,
 )
 
-from .threedi import Threedi
+from .threedi import PipeMaterialType, Threedi
 
 logger = logging.getLogger(__name__)
+
+# This tag is added to every object imported into the schematisation.
+IMPORTER_TAG = "gwsw-hydx-import"
+
+# Defaults taken from a Rana schematisation. When writing to a schematisation
+# file, the Material table in it is leading, we use these defaults if it is
+# not present.
+DEFAULT_FRICTION = {
+    PipeMaterialType.CONCRETE.value: (2, 0.0145),
+    PipeMaterialType.PVC.value: (2, 0.011),
+    PipeMaterialType.STONEWARE.value: (2, 0.0115),
+    PipeMaterialType.CAST_IRON.value: (2, 0.0135),
+    PipeMaterialType.BRICKWORK.value: (2, 0.016),
+    PipeMaterialType.HPE.value: (2, 0.011),
+    PipeMaterialType.HPDE.value: (2, 0.011),
+    PipeMaterialType.SHEET_IRON.value: (2, 0.0135),
+    PipeMaterialType.STEEL.value: (2, 0.013),
+}
 
 
 # Constructing a Transformer takes quite long, so we use caching here. The
@@ -47,7 +66,7 @@ def transform(x, y, source_epsg, target_epsg):
 
 
 def to_ewkt_point(x, y, srid):
-    return "srid={};POINT ({} {})".format(srid, x, y)
+    return "SRID={};POINT ({} {})".format(srid, x, y)
 
 
 def to_ewkt_linestring(coordinates: tuple[tuple[int, int]], srid: int):
@@ -103,7 +122,11 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     except InvalidSRIDException:
         logger.error("Cannot find a valid EPSG code for the schema.")
         return
+
+    # Get friction by material from the Materials in the output gpkg, if present.
     session = db.get_session()
+    friction_by_material_from_gpkg = get_material_friction(session)
+
     cross_section_dict = {}
     for profile in threedi.cross_sections:
         cross_section_dict[profile["code"]] = {
@@ -118,6 +141,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         x, y = transform(x, y, source_epsg, target_epsg)
         connection_node_list.append(
             ConnectionNode(
+                tags=IMPORTER_TAG,
                 display_name=connection_node["display_name"],
                 code=connection_node["code"],
                 storage_area=connection_node["storage_area"],
@@ -155,7 +179,22 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         del pipe["start_node.code"]
         del pipe["end_node.code"]
         del pipe["cross_section_code"]
-        pipe_list.append(Pipe(**pipe))
+
+        # Get friction values from the gpkg if present in there, otherwise use defaults.
+        # If not present in there either, use None.
+        (
+            pipe["friction_type"],
+            pipe["friction_value"],
+        ) = friction_by_material_from_gpkg.get(
+            pipe["material_id"], DEFAULT_FRICTION.get(pipe["material_id"], (None, None))
+        )
+        if pipe["friction_type"] is None or pipe["friction_value"] is None:
+            logger.warning(
+                "No friction configuration found for material %r on pipe %r",
+                pipe["material_id"],
+                pipe["code"],
+            )
+        pipe_list.append(Pipe(tags=IMPORTER_TAG, **pipe))
     commit_counts["pipes"] = len(pipe_list)
     session.bulk_save_objects(pipe_list)
     session.commit()
@@ -182,7 +221,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
             continue
         del pump["start_node.code"]
         del pump["end_node.code"]
-        pump_object = Pump(**pump)
+        pump_object = Pump(tags=IMPORTER_TAG, **pump)
         pump_list.append(pump_object)
         # without flushing and refreshing at this point there is no pump id to reference in pump_map
         session.add(pump_object)
@@ -227,7 +266,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         del weir["start_node.code"]
         del weir["end_node.code"]
         del weir["cross_section_code"]
-        weir_list.append(Weir(**weir))
+        weir_list.append(Weir(tags=IMPORTER_TAG, **weir))
     commit_counts["weirs"] = len(weir_list)
     session.bulk_save_objects(weir_list)
     session.commit()
@@ -248,7 +287,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         del orifice["start_node.code"]
         del orifice["end_node.code"]
         del orifice["cross_section_code"]
-        orifice_list.append(Orifice(**orifice))
+        orifice_list.append(Orifice(tags=IMPORTER_TAG, **orifice))
     commit_counts["orifices"] = len(orifice_list)
     session.bulk_save_objects(orifice_list)
     session.commit()
@@ -269,7 +308,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         del outlet["node.code"]
         outlet["time_units"] = "minutes"
         outlet["interpolate"] = 1
-        outlet_list.append(BoundaryCondition1D(**outlet))
+        outlet_list.append(BoundaryCondition1D(tags=IMPORTER_TAG, **outlet))
 
     commit_counts["outlets"] = len(outlet_list)
     session.bulk_save_objects(outlet_list)
@@ -293,15 +332,15 @@ def write_threedi_to_db(threedi, threedi_db_settings):
             side_length = math.sqrt(surface["area"])
             node_x = session.query(func.ST_X(node_geom)).scalar()
             node_y = session.query(func.ST_Y(node_geom)).scalar()
-            surface[
-                "geom"
-            ] = f"""
-                srid={target_epsg};POLYGON(({node_x - side_length / 2} {node_y - side_length / 2},
-                         {node_x + side_length / 2} {node_y - side_length / 2},
-                         {node_x + side_length / 2} {node_y + side_length / 2},
-                         {node_x - side_length / 2} {node_y + side_length / 2},
-                         {node_x - side_length / 2} {node_y - side_length / 2}
-                         ))"""
+            surface["geom"] = (
+                f"SRID={target_epsg};POLYGON(("
+                f"{node_x - side_length / 2} {node_y - side_length / 2}, "
+                f"{node_x + side_length / 2} {node_y - side_length / 2}, "
+                f"{node_x + side_length / 2} {node_y + side_length / 2}, "
+                f"{node_x - side_length / 2} {node_y + side_length / 2}, "
+                f"{node_x - side_length / 2} {node_y - side_length / 2}"
+                "))"
+            )
         dwf = {
             "code": surface["code"],
             "display_name": surface["display_name"],
@@ -317,9 +356,9 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         )
         surface.pop("node.code", None)
         if surface["area"] != 0:
-            surf_list.append(Surface(**surface))
+            surf_list.append(Surface(tags=IMPORTER_TAG, **surface))
         if dwf["daily_total"] is not None and dwf["multiplier"] is not None:
-            dwf_list.append(DryWeatherFlow(**dwf))
+            dwf_list.append(DryWeatherFlow(tags=IMPORTER_TAG, **dwf))
     commit_counts["surfaces"] = len(surf_list)
     commit_counts["dry_weather_flows"] = len(dwf_list)
     session.bulk_save_objects(surf_list)
@@ -358,9 +397,9 @@ def write_threedi_to_db(threedi, threedi_db_settings):
             obj_y = session.query(func.ST_Y(obj_geom)).scalar()
             if obj_x == node_x and obj_y == node_y:
                 obj_y += 1
-            item[
-                "geom"
-            ] = f"srid={target_epsg};LINESTRING({obj_x} {obj_y}, {node_x} {node_y})"
+            item["geom"] = to_ewkt_linestring(
+                ((obj_x, obj_y), (node_x, node_y)), target_epsg
+            )
             del item["node.code"]
             del item["imp_surface.code"]
             map_list.append(map_obj(**item))
@@ -389,6 +428,23 @@ def get_surface_parameters_id(surface_class, surface_inclination):
         "half verhard:uitgestrekt": 115,
     }
     return id_map.get(f"{surface_class}:{surface_inclination}", None)
+
+
+def get_material_friction(session):
+    """Return configured pipe friction by Rana material ID.
+
+    Args:
+        session: SQLAlchemy session connected to the target Rana GeoPackage.
+
+    Materials without both a friction type and coefficient are omitted so
+    callers can apply their explicit fallback configuration.
+    """
+    return {
+        material.id: (material.friction_type, material.friction_coefficient)
+        for material in session.query(Material).all()
+        if material.friction_type is not None
+        and material.friction_coefficient is not None
+    }
 
 
 def get_connection_node(connection, connection_node_dict, node_key):

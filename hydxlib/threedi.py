@@ -26,6 +26,9 @@ class SewerageType(Enum):
     ZINKER = 5
     STORAGE = 6
     STORAGE_TANK = 7
+    INFILTRATION_DRAIN = 8
+    SLOT_OR_TRENCH_DRAIN = 9
+    PRESSURE_SEWER = 10
 
 
 class PipeMaterialType(Enum):
@@ -63,6 +66,15 @@ SEWERAGE_TYPE_MAPPING = {
     "HWA": SewerageType.RAIN_WATER.value,
     "DWA": SewerageType.DRY_WEATHER_FLOW.value,
     "NVT": SewerageType.TRANSPORT.value,
+}
+
+# Some pipes in 'Verbinding.csv' have a VRB_TYP we can use to choose a more
+# specific sewerage type for visualisation purposes.
+# Note: Overstortleiding is 'GSL', but that is also used for normal pipes,
+# so we can't use it here.
+PIPE_VISUALISATION_MAPPING = {
+    "OPL": SewerageType.SLOT_OR_TRENCH_DRAIN.value,
+    "ITR": SewerageType.INFILTRATION_DRAIN.value,
 }
 
 SHAPE_MAPPING = {
@@ -437,6 +449,10 @@ class Threedi:
             ),
             "exchange_type": 1,
         }
+        # Open and infiltration lines use their Rana structural sewerage type.
+        pipe["sewerage_type"] = PIPE_VISUALISATION_MAPPING.get(
+            hydx_connection.typeverbinding, pipe["sewerage_type"]
+        )
         self.pipes.append(pipe)
 
     def add_structure(self, hydx_connection, hydx_structure):

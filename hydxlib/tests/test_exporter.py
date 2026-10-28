@@ -5,14 +5,18 @@ import pytest
 from geoalchemy2.shape import from_shape
 from shapely import wkt
 from threedi_schema import models
+from threedi_schema.domain.constants import FrictionType
 
 from hydxlib.exporter import (
     export_threedi,
     get_connection_node,
     get_cross_section_fields,
     get_line_between_nodes,
+    get_material_friction,
     get_node_geom,
     get_start_and_end_connection_node,
+    to_ewkt_linestring,
+    to_ewkt_point,
     write_threedi_to_db,
 )
 from hydxlib.threedi import Threedi
@@ -95,6 +99,13 @@ def test_get_line_between_nodes_incomplete(caplog):
     assert caplog.records[0].levelname == "ERROR"
 
 
+def test_geometry_helpers_return_parseable_ewkt():
+    assert to_ewkt_point(400, 50, 28992) == "SRID=28992;POINT (400 50)"
+    assert to_ewkt_linestring(((400, 50), (400, 60)), 28992) == (
+        "SRID=28992;LINESTRING (400 50, 400 60)"
+    )
+
+
 def test_get_connection_node():
     connection = {"code": "pmp1", "foo": "knp3"}
     connection_node_dict = {"knp3": {"id": 3060}, "knp4": {"id": 3061}}
@@ -114,6 +125,36 @@ def test_get_start_and_end_connection_node():
     connection = get_start_and_end_connection_node(connection, connection_node_dict)
     assert connection["connection_node_id_start"] == 3060
     assert connection["connection_node_id_end"] == 3061
+
+
+def test_get_material_friction(threedi_db):
+    session = threedi_db.get_session()
+    session.add(
+        models.Material(
+            id=100,
+            description="Concrete",
+            friction_type=2,
+            friction_coefficient=0.021,
+        )
+    )
+    session.commit()
+
+    friction_type, friction_value = get_material_friction(session)[100]
+    assert friction_type == FrictionType.MANNING
+    assert friction_value == pytest.approx(0.021)
+
+
+def test_export_models_support_importer_tag():
+    assert models.ConnectionNode(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
+    assert models.Pipe(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
+    assert models.Pump(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
+    assert models.Weir(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
+    assert models.Orifice(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
+    assert (
+        models.BoundaryCondition1D(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
+    )
+    assert models.Surface(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
+    assert models.DryWeatherFlow(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
 
 
 @pytest.fixture

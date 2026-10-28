@@ -12,6 +12,7 @@ from hydxlib.threedi import (
     get_mapping_value,
     is_closed,
     make_open,
+    SewerageType,
     Threedi,
 )
 
@@ -140,6 +141,14 @@ def test_import_hydx(hydx):
         "exchange_type": 1,
         "cross_section_code": "BET1100",
     }
+    assert (
+        next(pipe for pipe in threedi.pipes if pipe["code"] == "lei79")["sewerage_type"]
+        == SewerageType.SLOT_OR_TRENCH_DRAIN.value
+    )
+    assert (
+        next(pipe for pipe in threedi.pipes if pipe["code"] == "lei75")["sewerage_type"]
+        == SewerageType.INFILTRATION_DRAIN.value
+    )
     assert threedi.impervious_surfaces[0] == {
         "code": "1",
         "display_name": "knp8",
@@ -148,15 +157,13 @@ def test_import_hydx(hydx):
         "surface_inclination": "uitgestrekt",
         "node.code": "knp8",
     }
-    assert threedi.impervious_surfaces[262] == {
-        "code": "263",
-        "display_name": "knp61",
-        "area": 0.0,
-        "surface_class": "gesloten verharding",
+    assert threedi.impervious_surfaces[260] == {
+        "code": "261",
+        "display_name": "lei9",
+        "area": 150.0,
+        "surface_class": "pand",
         "surface_inclination": "vlak",
-        "dry_weather_flow": 60.0,
-        "nr_of_inhabitants": "2",
-        "node.code": "knp61",
+        "node.code": "knp27",
     }
     assert threedi.outlets[0] == {
         "node.code": "knp78",
