@@ -32,8 +32,13 @@ from threedi_schema.domain.models import (
 from .threedi import PipeMaterialType, Threedi
 
 logger = logging.getLogger(__name__)
+
+# This tag is added to every object imported into the schematisation.
 IMPORTER_TAG = "gwsw-hydx-import"
 
+# Defaults taken from a Rana schematisation. When writing to a schematisation
+# file, the Material table in it is leading, we use these defaults if it is
+# not present.
 DEFAULT_FRICTION = {
     PipeMaterialType.CONCRETE.value: (2, 0.0145),
     PipeMaterialType.PVC.value: (2, 0.011),
@@ -117,8 +122,11 @@ def write_threedi_to_db(threedi, threedi_db_settings):
     except InvalidSRIDException:
         logger.error("Cannot find a valid EPSG code for the schema.")
         return
+
+    # Get friction by material from the Materials in the output gpkg, if present.
     session = db.get_session()
-    friction_by_material = get_material_friction(session)
+    friction_by_material_from_gpkg = get_material_friction(session)
+
     cross_section_dict = {}
     for profile in threedi.cross_sections:
         cross_section_dict[profile["code"]] = {
@@ -171,7 +179,10 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         del pipe["start_node.code"]
         del pipe["end_node.code"]
         del pipe["cross_section_code"]
-        pipe["friction_type"], pipe["friction_value"] = friction_by_material.get(
+
+        # Get friction values from the gpkg if present in there, otherwise use defaults.
+        # If not present in there either, use None.
+        pipe["friction_type"], pipe["friction_value"] = friction_by_material_from_gpkg.get(
             pipe["material_id"], DEFAULT_FRICTION.get(pipe["material_id"], (None, None))
         )
         if pipe["friction_type"] is None or pipe["friction_value"] is None:

@@ -68,6 +68,8 @@ SEWERAGE_TYPE_MAPPING = {
     "NVT": SewerageType.TRANSPORT.value,
 }
 
+# Use these to override the sewerage_type based on 'typeverbinding' in the HydX
+# for better visualization.
 PIPE_VISUALISATION_MAPPING = {
     "OPL": SewerageType.SLOT_OR_TRENCH_DRAIN.value,
     "ITR": SewerageType.INFILTRATION_DRAIN.value,
