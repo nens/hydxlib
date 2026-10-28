@@ -182,7 +182,10 @@ def write_threedi_to_db(threedi, threedi_db_settings):
 
         # Get friction values from the gpkg if present in there, otherwise use defaults.
         # If not present in there either, use None.
-        pipe["friction_type"], pipe["friction_value"] = friction_by_material_from_gpkg.get(
+        (
+            pipe["friction_type"],
+            pipe["friction_value"],
+        ) = friction_by_material_from_gpkg.get(
             pipe["material_id"], DEFAULT_FRICTION.get(pipe["material_id"], (None, None))
         )
         if pipe["friction_type"] is None or pipe["friction_value"] is None:
