@@ -202,3 +202,6 @@ def test_write_to_db(hydx_setup, mock_exporter_db, threedi_db):
     }
     for name, model in MODELS.items():
         assert session.query(model).count() == commit_counts_expected[name]
+        assert {obj.tags for obj in session.query(model).all()} == {"1"}
+
+    assert session.query(models.Tags).one().description == "gwsw-hydx-import"

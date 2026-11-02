@@ -26,6 +26,7 @@ from threedi_schema.domain.models import (
     PumpMap,
     Surface,
     SurfaceMap,
+    Tags,
     Weir,
 )
 
@@ -125,6 +126,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
 
     # Get friction by material from the Materials in the output gpkg, if present.
     session = db.get_session()
+    importer_tag_id = str(get_or_create_tag(session, IMPORTER_TAG))
     friction_by_material_from_gpkg = get_material_friction(session)
 
     cross_section_dict = {}
@@ -141,7 +143,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         x, y = transform(x, y, source_epsg, target_epsg)
         connection_node_list.append(
             ConnectionNode(
-                tags=IMPORTER_TAG,
+                tags=importer_tag_id,
                 display_name=connection_node["display_name"],
                 code=connection_node["code"],
                 storage_area=connection_node["storage_area"],
@@ -194,7 +196,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
                 pipe["material_id"],
                 pipe["code"],
             )
-        pipe_list.append(Pipe(tags=IMPORTER_TAG, **pipe))
+        pipe_list.append(Pipe(tags=importer_tag_id, **pipe))
     commit_counts["pipes"] = len(pipe_list)
     session.bulk_save_objects(pipe_list)
     session.commit()
@@ -221,7 +223,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
             continue
         del pump["start_node.code"]
         del pump["end_node.code"]
-        pump_object = Pump(tags=IMPORTER_TAG, **pump)
+        pump_object = Pump(tags=importer_tag_id, **pump)
         pump_list.append(pump_object)
         # without flushing and refreshing at this point there is no pump id to reference in pump_map
         session.add(pump_object)
@@ -266,7 +268,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         del weir["start_node.code"]
         del weir["end_node.code"]
         del weir["cross_section_code"]
-        weir_list.append(Weir(tags=IMPORTER_TAG, **weir))
+        weir_list.append(Weir(tags=importer_tag_id, **weir))
     commit_counts["weirs"] = len(weir_list)
     session.bulk_save_objects(weir_list)
     session.commit()
@@ -287,7 +289,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         del orifice["start_node.code"]
         del orifice["end_node.code"]
         del orifice["cross_section_code"]
-        orifice_list.append(Orifice(tags=IMPORTER_TAG, **orifice))
+        orifice_list.append(Orifice(tags=importer_tag_id, **orifice))
     commit_counts["orifices"] = len(orifice_list)
     session.bulk_save_objects(orifice_list)
     session.commit()
@@ -308,7 +310,7 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         del outlet["node.code"]
         outlet["time_units"] = "minutes"
         outlet["interpolate"] = 1
-        outlet_list.append(BoundaryCondition1D(tags=IMPORTER_TAG, **outlet))
+        outlet_list.append(BoundaryCondition1D(tags=importer_tag_id, **outlet))
 
     commit_counts["outlets"] = len(outlet_list)
     session.bulk_save_objects(outlet_list)
@@ -356,9 +358,9 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         )
         surface.pop("node.code", None)
         if surface["area"] != 0:
-            surf_list.append(Surface(tags=IMPORTER_TAG, **surface))
+            surf_list.append(Surface(tags=importer_tag_id, **surface))
         if dwf["daily_total"] is not None and dwf["multiplier"] is not None:
-            dwf_list.append(DryWeatherFlow(tags=IMPORTER_TAG, **dwf))
+            dwf_list.append(DryWeatherFlow(tags=importer_tag_id, **dwf))
     commit_counts["surfaces"] = len(surf_list)
     commit_counts["dry_weather_flows"] = len(dwf_list)
     session.bulk_save_objects(surf_list)
@@ -407,6 +409,15 @@ def write_threedi_to_db(threedi, threedi_db_settings):
         session.commit()
 
     return commit_counts
+
+
+def get_or_create_tag(session, description):
+    tag = session.query(Tags).filter(Tags.description == description).first()
+    if tag is None:
+        tag = Tags(description=description)
+        session.add(tag)
+        session.flush()
+    return tag.id
 
 
 def get_surface_parameters_id(surface_class, surface_inclination):
