@@ -1,8 +1,8 @@
 Changelog of hydxlib
 ===================================================
 
-1.7.10 (unreleased)
--------------------
+1.8.0 (2026-11-04)
+------------------
 
 - Add Rana pipe visualisation mappings for OPL (slot or trench drain) and ITR
   (infiltration drain) connections (nens/rana#5129).
