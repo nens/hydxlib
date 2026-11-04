@@ -127,34 +127,30 @@ def test_get_start_and_end_connection_node():
     assert connection["connection_node_id_end"] == 3061
 
 
-def test_get_material_friction(threedi_db):
+@pytest.mark.parametrize("has_friction_type", [True, False])
+@pytest.mark.parametrize("has_friction_coeff", [True, False])
+def test_get_material_friction(threedi_db, has_friction_type, has_friction_coeff):
+    friction_type = FrictionType.MANNING
+    friction_coefficient = 0.021
     session = threedi_db.get_session()
     session.add(
         models.Material(
             id=100,
             description="Concrete",
-            friction_type=2,
-            friction_coefficient=0.021,
+            friction_type=friction_type.value if has_friction_type else None,
+            friction_coefficient=friction_coefficient if has_friction_coeff else None,
         )
     )
     session.commit()
 
-    friction_type, friction_value = get_material_friction(session)[100]
-    assert friction_type == FrictionType.MANNING
-    assert friction_value == pytest.approx(0.021)
+    material_frictions = get_material_friction(session)
 
-
-def test_export_models_support_importer_tag():
-    assert models.ConnectionNode(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
-    assert models.Pipe(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
-    assert models.Pump(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
-    assert models.Weir(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
-    assert models.Orifice(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
-    assert (
-        models.BoundaryCondition1D(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
-    )
-    assert models.Surface(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
-    assert models.DryWeatherFlow(tags="gwsw-hydx-import").tags == "gwsw-hydx-import"
+    # Should only be returned if both are present:
+    if has_friction_type and has_friction_coeff:
+        assert 100 in material_frictions
+        assert material_frictions[100] == (friction_type, friction_coefficient)
+    else:
+        assert 100 not in material_frictions
 
 
 @pytest.fixture

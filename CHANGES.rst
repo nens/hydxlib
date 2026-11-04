@@ -5,11 +5,11 @@ Changelog of hydxlib
 -------------------
 
 - Add Rana pipe visualisation mappings for OPL (slot or trench drain) and ITR
-  (infiltration drain) connections.
+  (infiltration drain) connections (nens/rana#5129).
 - Resolve pipe friction type and coefficient from the target Rana material
-  configuration, with defaults for missing configuration.
-- Add a stable `gwsw-hydx-import` provenance tag to exported Rana objects.
-- Fix GeoAlchemy warnings caused by manually serialized EWKT geometries.
+  configuration, with defaults for missing configuration (nens/rana#5129).
+- Add a stable `gwsw-hydx-import` provenance tag to exported Rana objects (nens/rana#5129).
+- Fix GeoAlchemy warnings caused by manually serialized EWKT geometries (nens/rana#5129).
 
 
 1.7.9 (2026-09-30)
