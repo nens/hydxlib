@@ -5,14 +5,18 @@ import pytest
 from geoalchemy2.shape import from_shape
 from shapely import wkt
 from threedi_schema import models
+from threedi_schema.domain.constants import FrictionType
 
 from hydxlib.exporter import (
     export_threedi,
     get_connection_node,
     get_cross_section_fields,
     get_line_between_nodes,
+    get_material_friction,
     get_node_geom,
     get_start_and_end_connection_node,
+    to_ewkt_linestring,
+    to_ewkt_point,
     write_threedi_to_db,
 )
 from hydxlib.threedi import Threedi
@@ -95,6 +99,13 @@ def test_get_line_between_nodes_incomplete(caplog):
     assert caplog.records[0].levelname == "ERROR"
 
 
+def test_geometry_helpers_return_parseable_ewkt():
+    assert to_ewkt_point(400, 50, 28992) == "SRID=28992;POINT (400 50)"
+    assert to_ewkt_linestring(((400, 50), (400, 60)), 28992) == (
+        "SRID=28992;LINESTRING (400 50, 400 60)"
+    )
+
+
 def test_get_connection_node():
     connection = {"code": "pmp1", "foo": "knp3"}
     connection_node_dict = {"knp3": {"id": 3060}, "knp4": {"id": 3061}}
@@ -114,6 +125,32 @@ def test_get_start_and_end_connection_node():
     connection = get_start_and_end_connection_node(connection, connection_node_dict)
     assert connection["connection_node_id_start"] == 3060
     assert connection["connection_node_id_end"] == 3061
+
+
+@pytest.mark.parametrize("has_friction_type", [True, False])
+@pytest.mark.parametrize("has_friction_coeff", [True, False])
+def test_get_material_friction(threedi_db, has_friction_type, has_friction_coeff):
+    friction_type = FrictionType.MANNING
+    friction_coefficient = 0.021
+    session = threedi_db.get_session()
+    session.add(
+        models.Material(
+            id=100,
+            description="Concrete",
+            friction_type=friction_type.value if has_friction_type else None,
+            friction_coefficient=friction_coefficient if has_friction_coeff else None,
+        )
+    )
+    session.commit()
+
+    material_frictions = get_material_friction(session)
+
+    # Should only be returned if both are present:
+    if has_friction_type and has_friction_coeff:
+        assert 100 in material_frictions
+        assert material_frictions[100] == (friction_type, friction_coefficient)
+    else:
+        assert 100 not in material_frictions
 
 
 @pytest.fixture
@@ -161,3 +198,6 @@ def test_write_to_db(hydx_setup, mock_exporter_db, threedi_db):
     }
     for name, model in MODELS.items():
         assert session.query(model).count() == commit_counts_expected[name]
+        assert {obj.tags for obj in session.query(model).all()} == {"1"}
+
+    assert session.query(models.Tags).one().description == "gwsw-hydx-import"

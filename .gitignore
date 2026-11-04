@@ -42,3 +42,4 @@ docker-compose.override.yml
 agents.md
 .opencode
 .minispec
+specs/
